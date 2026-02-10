@@ -1,6 +1,20 @@
-# Instalador Unico de Monitoramento e Alertas
+# Monitoramento de Servidores
 
-Este documento descreve o **script de instalacao completa** `install-monitoring.sh`, que configura em um unico fluxo: servico de e-mail (SMTP2Go), **notificacoes por Telegram**, antivirus (ClamAV), templates de alerta em HTML e monitoramento de CPU, Memoria, Disco e existencia de virus, com alertas por e-mail e Telegram.
+Repositorio: **[github.com/wmenezes2020/monitoramento-de-servidores](https://github.com/wmenezes2020/monitoramento-de-servidores)**
+
+Script de instalacao completa (`install-monitoring.sh`) que configura em um unico fluxo: servico de e-mail (SMTP2Go), **notificacoes por Telegram**, antivirus (ClamAV), templates de alerta em HTML e monitoramento de CPU, Memoria, Disco e existencia de virus, com alertas por e-mail e Telegram.
+
+---
+
+## Instalacao rapida (via curl)
+
+Execute no servidor (Linux Ubuntu/Debian com sudo):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
+```
+
+O mesmo padrao de outros instaladores (ex.: `curl -fsSL https://molt.bot/install.sh | bash`): o script e baixado e passado direto para o `bash`; use `sudo bash` porque o instalador precisa de privilegios de root.
 
 ---
 
@@ -69,56 +83,51 @@ Os destinatarios de e-mail podem ser varios, separados por **virgula** (sem espa
 
 ## Como executar o instalador
 
-### Opcao 1: Arquivo local
+### Recomendado: via curl (um comando)
 
-Se voce ja baixou o script para o servidor:
+Mesmo padrao de muitos instaladores (ex.: `curl -fsSL https://molt.bot/install.sh | bash`):
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
+```
+
+- `-f` = falha silenciosa em erros HTTP (ex.: 404)
+- `-s` = modo silencioso
+- `-S` = mostra erro quando -s esta ativo e ha falha
+- `-L` = segue redirecionamentos
+- `| sudo bash` = executa o script como root (necessario para instalar pacotes e configurar o sistema)
+
+### Opcao 2: Arquivo local
+
+Se voce clonou o repo ou baixou o script:
+
+```bash
+git clone https://github.com/wmenezes2020/monitoramento-de-servidores.git
+cd monitoramento-de-servidores
 chmod +x install-monitoring.sh
 sudo ./install-monitoring.sh
 ```
 
-### Opcao 2: Via curl (URL publica)
-
-Recomendado para executar direto a partir de um link. Substitua `URL_DO_SCRIPT` pela URL real do arquivo `install-monitoring.sh` (por exemplo, no GitHub raw ou no seu servidor).
+Ou apenas baixando o script:
 
 ```bash
-sudo bash -c "$(curl -sL 'URL_DO_SCRIPT')"
-```
-
-**Exemplo com URL ficticia (substitua pela sua):**
-
-```bash
-sudo bash -c "$(curl -sL 'https://raw.githubusercontent.com/seu-usuario/seu-repo/main/install-monitoring.sh')"
-```
-
-**Exemplo usando arquivo hospedado no seu dominio:**
-
-```bash
-sudo bash -c "$(curl -sL 'https://seudominio.com/scripts/install-monitoring.sh')"
-```
-
-### Opcao 3: Download e execucao em dois passos
-
-```bash
-curl -sL 'URL_DO_SCRIPT' -o install-monitoring.sh
-sudo bash install-monitoring.sh
+curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh -o install-monitoring.sh
+chmod +x install-monitoring.sh
+sudo ./install-monitoring.sh
 ```
 
 ---
 
-## Exemplo pratico de uso (curl)
-
-Qualquer pessoa com acesso SSH ao servidor e permissao de root pode rodar o instalador assim:
+## Exemplo pratico de uso
 
 1. Conectar no servidor:
    ```bash
    ssh usuario@ip-do-servidor
    ```
 
-2. Executar o instalador (substitua a URL pela do seu script):
+2. Executar o instalador:
    ```bash
-   sudo bash -c "$(curl -sL 'https://exemplo.com/install-monitoring.sh')"
+   curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
    ```
 
 3. Responder as perguntas:

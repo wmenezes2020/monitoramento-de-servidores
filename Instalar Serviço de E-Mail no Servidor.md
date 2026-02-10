@@ -5,7 +5,7 @@ Guia completo para configurar o Postfix como relay SMTP via SMTP2GO no Linux, pe
 **Tempo estimado:** ~20 minutos  
 **Compatibilidade:** Ubuntu/Debian
 
-> **Instalador automatico:** Para configurar e-mail + ClamAV + monitoramento (CPU, RAM, Disco) em um unico passo, use o script `install-monitoring.sh`. Veja o documento **Atualize essa documentacao com a criacao do script.md** e a secao de execucao via curl.
+> **Instalador automatico:** Para configurar e-mail + Telegram + ClamAV + monitoramento (CPU, RAM, Disco) em um unico passo, use o script do repo [monitoramento-de-servidores](https://github.com/wmenezes2020/monitoramento-de-servidores). Instalacao via curl: `curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash`. Veja o **README.md** do repositorio.
 
 ---
 

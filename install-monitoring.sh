@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 #
 # Instalador completo: E-mail (SMTP2Go), Telegram, ClamAV, Monitoramento CPU/RAM/Disco
-# Uso: sudo bash install-monitoring.sh
-# Ou via URL: bash <(curl -sL "URL_DO_SCRIPT")
+# Repo: https://github.com/wmenezes2020/monitoramento-de-servidores
+#
+# Uso local:  sudo ./install-monitoring.sh
+# Via curl:   curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
 #
 set -euo pipefail
 
