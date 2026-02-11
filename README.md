@@ -16,6 +16,8 @@ curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servi
 
 O mesmo padrao de outros instaladores (ex.: `curl -fsSL https://molt.bot/install.sh | bash`): o script e baixado e passado direto para o `bash`; use `sudo bash` porque o instalador precisa de privilegios de root.
 
+**Importante:** Execute a partir de um **terminal interativo** (por exemplo, sessao SSH). O instalador pede dados (SMTP, e-mails, Telegram); se rodar sem terminal (ex.: cron), o script avisa e encerra.
+
 ---
 
 ## O que o instalador faz
@@ -82,6 +84,12 @@ Os destinatarios de e-mail podem ser varios, separados por **virgula** (sem espa
 ---
 
 ## Como executar o instalador
+
+### Atualizar o sistema e instalar o curl
+```bash
+apt update -y && apt upgrade -y
+apt install -y curl
+```
 
 ### Recomendado: via curl (um comando)
 
