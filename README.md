@@ -79,6 +79,24 @@ Os destinatarios de e-mail podem ser varios, separados por **virgula** (sem espa
 
 ---
 
+## Atualizar threshold dos monitores
+
+Para alterar o percentual em que os alertas sao disparados (ex.: 95% em vez do padrao), use o script `update_monitor.sh` em uma unica chamada:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash -s 95
+```
+
+Ou via variavel de ambiente:
+
+```bash
+THRESHOLD=90 curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash
+```
+
+O script atualiza CPU, RAM e Disco com o valor informado (1-100).
+
+---
+
 ## Pre-requisitos
 
 - Sistema Linux (Ubuntu/Debian)
