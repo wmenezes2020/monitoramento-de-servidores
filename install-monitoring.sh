@@ -342,13 +342,16 @@ MESSAGE="${5:-Mensagem nao especificada}"
 DATE="$(date '+%Y-%m-%d %H:%M:%S %Z')"
 HOST="$(hostname)"
 SENDER_EMAIL=""
+SERVER_ID=""
 [[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf
+HOST="${SERVER_ID:-$(hostname)}"
 [[ ! -f "$TEMPLATE_PATH" ]] && { echo "Template nao encontrado: $TEMPLATE_PATH" >&2; exit 1; }
 export TITLE MESSAGE DATE HOST
 RENDERED_FILE="$(mktemp /tmp/alert-email-XXXXXX.html)"
 envsubst '${TITLE} ${MESSAGE} ${DATE} ${HOST}' < "$TEMPLATE_PATH" > "$RENDERED_FILE"
 if [[ -n "${SENDER_EMAIL:-}" ]]; then
-  cat "$RENDERED_FILE" | mail -r "$SENDER_EMAIL" -a "Content-Type: text/html; charset=UTF-8" -s "$SUBJECT" "$RECIPIENT"
+  FROM_HEADER="Monitoramento de Servidores <${SENDER_EMAIL}>"
+  cat "$RENDERED_FILE" | mail -r "$SENDER_EMAIL" -a "From: $FROM_HEADER" -a "Content-Type: text/html; charset=UTF-8" -s "$SUBJECT" "$RECIPIENT"
 else
   cat "$RENDERED_FILE" | mail -a "Content-Type: text/html; charset=UTF-8" -s "$SUBJECT" "$RECIPIENT"
 fi
@@ -357,9 +360,9 @@ SENDHTML
 chmod +x /usr/local/bin/send_html_alert.sh
 log_ok "Script send_html_alert.sh criado."
 
-# --- 4b. E-mail: remetente configurado (From dos alertas) ---
+# --- 4b. E-mail: remetente e identificador do servidor (From + nome em todos os alertas) ---
 mkdir -p /opt/monitoring
-printf 'SENDER_EMAIL="%s"\n' "$SENDER_EMAIL" > /opt/monitoring/email.conf
+printf 'SENDER_EMAIL="%s"\nSERVER_ID="%s"\n' "$SENDER_EMAIL" "$SMTP_DOMAIN" > /opt/monitoring/email.conf
 chmod 644 /opt/monitoring/email.conf
 
 # --- 4c. Telegram: config e scripts de notificacao ---
@@ -484,26 +487,30 @@ log_ok "Templates HTML criados."
 # --- 6. Scripts de monitoramento (com RECIPIENTS injetado) ---
 log_step "Scripts de monitoramento (CPU, RAM, Disco)"
 
-# monitor_cpu.sh
+# monitor_cpu.sh (SERVER_ID = dominio/nome configurado na instalacao)
 cat > /usr/local/bin/monitor_cpu.sh << MONITORCPU
 #!/usr/bin/env bash
 set -euo pipefail
+[[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf
+SERVER_ID="\${SERVER_ID:-\$(hostname)}"
 TEMPLATE_PATH="/opt/alerts/templates/cpu-alert.html"
 RECIPIENTS="${RECIPIENTS}"
 CPU_THRESHOLD=80
 CPU_USAGE=\$(timeout 3 mpstat 1 2 2>/dev/null | awk '/Average/ {print 100 - \$NF}')
 if [[ \$(echo "\$CPU_USAGE > \$CPU_THRESHOLD" | bc -l) == 1 ]]; then
   TOP_PROCS=\$(ps aux --sort=-%cpu | head -6 | tail -5 | awk '{printf "%-12s %4s%% %s\n", \$11, \$3, \$2}')
-  /usr/local/bin/send_html_alert.sh "\$TEMPLATE_PATH" "\$RECIPIENTS" "ALERTA CPU \${CPU_USAGE}% - \$(hostname)" "CPU em \${CPU_USAGE}% (CRITICO)" "Uso medio CPU: <strong>\${CPU_USAGE}%</strong> (threshold: \${CPU_THRESHOLD}%)<br/><br/>Data/Hora: <strong>\$(date)</strong><br/><br/><strong>Top 5 Processos:</strong><br/><pre>\${TOP_PROCS}</pre>"
-  /usr/local/bin/send_telegram_alert.sh "ALERTA CPU \${CPU_USAGE}% - \$(hostname)" || true
+  /usr/local/bin/send_html_alert.sh "\$TEMPLATE_PATH" "\$RECIPIENTS" "ALERTA CPU \${CPU_USAGE}% - \${SERVER_ID}" "CPU em \${CPU_USAGE}% (CRITICO)" "Uso medio CPU: <strong>\${CPU_USAGE}%</strong> (threshold: \${CPU_THRESHOLD}%)<br/><br/>Data/Hora: <strong>\$(date)</strong><br/><br/><strong>Top 5 Processos:</strong><br/><pre>\${TOP_PROCS}</pre>"
+  /usr/local/bin/send_telegram_alert.sh "ALERTA CPU \${CPU_USAGE}% - \${SERVER_ID}" || true
 fi
 MONITORCPU
 chmod +x /usr/local/bin/monitor_cpu.sh
 
-# monitor_memory.sh
+# monitor_memory.sh (SERVER_ID = dominio/nome configurado na instalacao)
 cat > /usr/local/bin/monitor_memory.sh << MONITORMEM
 #!/usr/bin/env bash
 set -euo pipefail
+[[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf
+SERVER_ID="\${SERVER_ID:-\$(hostname)}"
 TEMPLATE_PATH="/opt/alerts/templates/memory-alert.html"
 RECIPIENTS="${RECIPIENTS}"
 MEM_THRESHOLD=80
@@ -515,16 +522,18 @@ if [[ \$(echo "\$MEM_USAGE > \$MEM_THRESHOLD" | bc -l) == 1 ]]; then
   TOP_MEM=\$(ps aux --sort=-%mem | head -6 | tail -5 | awk '{printf "%-12s %4s%% %s\n", \$11, \$4, \$2}')
   TOTAL_MB=\$(echo "scale=0; \$TOTAL_MEM / 1024" | bc)
   USED_MB=\$(echo "scale=0; \$USED_MEM / 1024" | bc)
-  /usr/local/bin/send_html_alert.sh "\$TEMPLATE_PATH" "\$RECIPIENTS" "ALERTA RAM \${MEM_USAGE}% - \$(hostname)" "Memoria em \${MEM_USAGE}% (CRITICO)" "Uso RAM: <strong>\${MEM_USAGE}%</strong> (threshold: \${MEM_THRESHOLD}%)<br/>Total: \${TOTAL_MB}MB | Usado: \${USED_MB}MB<br/><br/>Data/Hora: <strong>\$(date)</strong><br/><br/><strong>Top 5 Processos por RAM:</strong><br/><pre>\${TOP_MEM}</pre>"
-  /usr/local/bin/send_telegram_alert.sh "ALERTA RAM \${MEM_USAGE}% - \$(hostname)" || true
+  /usr/local/bin/send_html_alert.sh "\$TEMPLATE_PATH" "\$RECIPIENTS" "ALERTA RAM \${MEM_USAGE}% - \${SERVER_ID}" "Memoria em \${MEM_USAGE}% (CRITICO)" "Uso RAM: <strong>\${MEM_USAGE}%</strong> (threshold: \${MEM_THRESHOLD}%)<br/>Total: \${TOTAL_MB}MB | Usado: \${USED_MB}MB<br/><br/>Data/Hora: <strong>\$(date)</strong><br/><br/><strong>Top 5 Processos por RAM:</strong><br/><pre>\${TOP_MEM}</pre>"
+  /usr/local/bin/send_telegram_alert.sh "ALERTA RAM \${MEM_USAGE}% - \${SERVER_ID}" || true
 fi
 MONITORMEM
 chmod +x /usr/local/bin/monitor_memory.sh
 
-# monitor_disk.sh
+# monitor_disk.sh (SERVER_ID = dominio/nome configurado na instalacao)
 cat > /usr/local/bin/monitor_disk.sh << MONITORDISK
 #!/usr/bin/env bash
 set -euo pipefail
+[[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf
+SERVER_ID="\${SERVER_ID:-\$(hostname)}"
 TEMPLATE_PATH="/opt/alerts/templates/disk-alert.html"
 RECIPIENTS="${RECIPIENTS}"
 DISK_THRESHOLD=80
@@ -532,8 +541,8 @@ df -P -x tmpfs -x devtmpfs -x squashfs | tail -n +2 | while read -r FS SIZE USED
   USAGE=\${PCT%%%}
   if [[ "\$USAGE" -gt "\$DISK_THRESHOLD" ]]; then
     MESSAGE="Particao: <strong>\${MOUNT}</strong><br/>Dispositivo: <strong>\${FS}</strong><br/>Uso: <strong>\${USAGE}%</strong> (threshold: \${DISK_THRESHOLD}%)<br/>Total: \${SIZE}K | Usado: \${USED}K | Livre: \${AVAIL}K<br/><br/>Data/Hora: <strong>\$(date)</strong>"
-    /usr/local/bin/send_html_alert.sh "\$TEMPLATE_PATH" "\$RECIPIENTS" "ALERTA DISCO \${USAGE}% - \$(hostname) (\${MOUNT})" "Disco em \${USAGE}% (CRITICO) em \${MOUNT}" "\$MESSAGE"
-    /usr/local/bin/send_telegram_alert.sh "ALERTA DISCO \${USAGE}% - \$(hostname) \${MOUNT}" || true
+    /usr/local/bin/send_html_alert.sh "\$TEMPLATE_PATH" "\$RECIPIENTS" "ALERTA DISCO \${USAGE}% - \${SERVER_ID} (\${MOUNT})" "Disco em \${USAGE}% (CRITICO) em \${MOUNT}" "\$MESSAGE"
+    /usr/local/bin/send_telegram_alert.sh "ALERTA DISCO \${USAGE}% - \${SERVER_ID} \${MOUNT}" || true
   fi
 done
 MONITORDISK
@@ -544,7 +553,7 @@ log_ok "Scripts de monitoramento criados."
 # --- 7. Crontab ---
 log_step "Crontab (CPU/RAM/Disco a cada 5 min, ClamAV diario 02:00)"
 # Nota: % no crontab deve ser escapado como \%
-CRON_LINE_CLAMAV="0 2 * * * /usr/bin/clamscan --infected --move=/var/virus-quarantine --exclude-dir=\"^/sys|^/proc|^/dev|^/run|^/var/lib/docker|^/boot|^/tmp\" / >/var/log/clamav/daily-scan-\$(date +\\\\%Y\\\\%m\\\\%d).log 2>&1 && grep -q \"Infected files: [1-9]\" /var/log/clamav/daily-scan-\$(date +\\\\%Y\\\\%m\\\\%d).log && /usr/local/bin/send_html_alert.sh /opt/alerts/templates/clamav-alert.html \"${RECIPIENTS}\" \"ClamAV ALERTA - \$(hostname)\" \"Malware Detectado\" \"Arquivos infectados movidos para /var/virus-quarantine. Verifique /var/log/clamav/\" && /usr/local/bin/send_telegram_alert.sh \"ClamAV: Malware detectado - \$(hostname)\" || true"
+CRON_LINE_CLAMAV="0 2 * * * . /opt/monitoring/email.conf 2>/dev/null; SERVER_ID=\${SERVER_ID:-\$(hostname)}; /usr/bin/clamscan --infected --move=/var/virus-quarantine --exclude-dir=\"^/sys|^/proc|^/dev|^/run|^/var/lib/docker|^/boot|^/tmp\" / >/var/log/clamav/daily-scan-\$(date +\\\\%Y\\\\%m\\\\%d).log 2>&1 && grep -q \"Infected files: [1-9]\" /var/log/clamav/daily-scan-\$(date +\\\\%Y\\\\%m\\\\%d).log && /usr/local/bin/send_html_alert.sh /opt/alerts/templates/clamav-alert.html \"${RECIPIENTS}\" \"ClamAV ALERTA - \${SERVER_ID}\" \"Malware Detectado\" \"Arquivos infectados movidos para /var/virus-quarantine. Verifique /var/log/clamav/\" && /usr/local/bin/send_telegram_alert.sh \"ClamAV: Malware detectado - \${SERVER_ID}\" || true"
 
 if crontab -l 2>/dev/null | grep -qF "$CRON_MARKER"; then
   log_info "Cron do monitoramento ja existe. Nao duplicando."
@@ -568,7 +577,7 @@ fi
 log_step "E-mail e Telegram de boas-vindas"
 WELCOME_SUBJECT="Monitoramento instalado com sucesso - Bem-vindo"
 WELCOME_TITLE="Instalacao concluida com sucesso"
-WELCOME_MSG="Bem-vindo ao sistema de monitoramento. A instalacao e configuracao foram concluidas com exito. Os alertas de CPU, memoria, disco e ClamAV estao ativos. Voce recebera notificacoes neste e-mail e, se configurado, no Telegram.<br/><br/>Servidor: <strong>$(hostname)</strong><br/>Data: <strong>$(date '+%Y-%m-%d %H:%M:%S')</strong>"
+WELCOME_MSG="Bem-vindo ao sistema de monitoramento. A instalacao e configuracao foram concluidas com exito. Os alertas de CPU, memoria, disco e ClamAV estao ativos. Voce recebera notificacoes neste e-mail e, se configurado, no Telegram.<br/><br/>Servidor: <strong>${SMTP_DOMAIN}</strong><br/>Data: <strong>$(date '+%Y-%m-%d %H:%M:%S')</strong>"
 EMAIL_OK=0
 while IFS=',' read -ra ADDRS; do
   for addr in "${ADDRS[@]}"; do
@@ -586,7 +595,7 @@ else
 fi
 if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
   log_info "Enviando mensagem de conexao para o Telegram..."
-  if /usr/local/bin/send_telegram_alert.sh "Conexao confirmada. Bem-vindo ao monitoramento de $(hostname). Instalacao concluida com sucesso; alertas ativos." 2>/dev/null; then
+  if /usr/local/bin/send_telegram_alert.sh "Conexao confirmada. Bem-vindo ao monitoramento de ${SMTP_DOMAIN}. Instalacao concluida com sucesso; alertas ativos." 2>/dev/null; then
     log_ok "Telegram: mensagem de boas-vindas enviada ao contato principal do bot."
   else
     log_warn "Telegram: falha no envio. Apos configurar o Chat ID, execute: echo Teste | /usr/local/bin/send_telegram_alert.sh"
