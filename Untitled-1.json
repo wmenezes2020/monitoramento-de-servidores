@@ -1,0 +1,188 @@
+{
+    "ok": true,
+    "result": [
+        {
+            "update_id": 355738101,
+            "message": {
+                "message_id": 2,
+                "from": {
+                    "id": 5239423422,
+                    "is_bot": false,
+                    "first_name": "Wesley",
+                    "last_name": "Menezes",
+                    "username": "wesleymenezesofc",
+                    "language_code": "pt-br"
+                },
+                "chat": {
+                    "id": 5239423422,
+                    "first_name": "Wesley",
+                    "last_name": "Menezes",
+                    "username": "wesleymenezesofc",
+                    "type": "private"
+                },
+                "date": 1770771337,
+                "text": "/start",
+                "entities": [
+                    {
+                        "offset": 0,
+                        "length": 6,
+                        "type": "bot_command"
+                    }
+                ]
+            }
+        },
+        {
+            "update_id": 355738102,
+            "message": {
+                "message_id": 12,
+                "from": {
+                    "id": 5239423422,
+                    "is_bot": false,
+                    "first_name": "Wesley",
+                    "last_name": "Menezes",
+                    "username": "wesleymenezesofc",
+                    "language_code": "pt-br"
+                },
+                "chat": {
+                    "id": 5239423422,
+                    "first_name": "Wesley",
+                    "last_name": "Menezes",
+                    "username": "wesleymenezesofc",
+                    "type": "private"
+                },
+                "date": 1770771954,
+                "text": "/start",
+                "entities": [
+                    {
+                        "offset": 0,
+                        "length": 6,
+                        "type": "bot_command"
+                    }
+                ]
+            }
+        },
+        {
+            "update_id": 355738103,
+            "my_chat_member": {
+                "chat": {
+                    "id": -4694123025,
+                    "title": "Ohla - Alerts",
+                    "type": "group",
+                    "all_members_are_administrators": true,
+                    "accepted_gift_types": {
+                        "unlimited_gifts": false,
+                        "limited_gifts": false,
+                        "unique_gifts": false,
+                        "premium_subscription": false,
+                        "gifts_from_channels": false
+                    }
+                },
+                "from": {
+                    "id": 5239423422,
+                    "is_bot": false,
+                    "first_name": "Wesley",
+                    "last_name": "Menezes",
+                    "username": "wesleymenezesofc",
+                    "language_code": "pt-br"
+                },
+                "date": 1770772248,
+                "old_chat_member": {
+                    "user": {
+                        "id": 8509520615,
+                        "is_bot": true,
+                        "first_name": "Alertas de Servidores",
+                        "username": "EfamaaAlerts_bot"
+                    },
+                    "status": "left"
+                },
+                "new_chat_member": {
+                    "user": {
+                        "id": 8509520615,
+                        "is_bot": true,
+                        "first_name": "Alertas de Servidores",
+                        "username": "EfamaaAlerts_bot"
+                    },
+                    "status": "member"
+                }
+            }
+        },
+        {
+            "update_id": 355738104,
+            "message": {
+                "message_id": 14,
+                "from": {
+                    "id": 5239423422,
+                    "is_bot": false,
+                    "first_name": "Wesley",
+                    "last_name": "Menezes",
+                    "username": "wesleymenezesofc",
+                    "language_code": "pt-br"
+                },
+                "chat": {
+                    "id": -4694123025,
+                    "title": "Ohla - Alerts",
+                    "type": "group",
+                    "all_members_are_administrators": true,
+                    "accepted_gift_types": {
+                        "unlimited_gifts": false,
+                        "limited_gifts": false,
+                        "unique_gifts": false,
+                        "premium_subscription": false,
+                        "gifts_from_channels": false
+                    }
+                },
+                "date": 1770772248,
+                "new_chat_participant": {
+                    "id": 8509520615,
+                    "is_bot": true,
+                    "first_name": "Alertas de Servidores",
+                    "username": "EfamaaAlerts_bot"
+                },
+                "new_chat_member": {
+                    "id": 8509520615,
+                    "is_bot": true,
+                    "first_name": "Alertas de Servidores",
+                    "username": "EfamaaAlerts_bot"
+                },
+                "new_chat_members": [
+                    {
+                        "id": 8509520615,
+                        "is_bot": true,
+                        "first_name": "Alertas de Servidores",
+                        "username": "EfamaaAlerts_bot"
+                    }
+                ]
+            }
+        },
+        {
+            "update_id": 355738105,
+            "message": {
+                "message_id": 15,
+                "from": {
+                    "id": 5239423422,
+                    "is_bot": false,
+                    "first_name": "Wesley",
+                    "last_name": "Menezes",
+                    "username": "wesleymenezesofc",
+                    "language_code": "pt-br"
+                },
+                "chat": {
+                    "id": 5239423422,
+                    "first_name": "Wesley",
+                    "last_name": "Menezes",
+                    "username": "wesleymenezesofc",
+                    "type": "private"
+                },
+                "date": 1770772501,
+                "text": "/start",
+                "entities": [
+                    {
+                        "offset": 0,
+                        "length": 6,
+                        "type": "bot_command"
+                    }
+                ]
+            }
+        }
+    ]
+}

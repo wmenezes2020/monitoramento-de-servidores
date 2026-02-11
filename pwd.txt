@@ -1,0 +1,19 @@
+-5277787520
+
+TELEGRAM_CHAT_ID=-5277787520
+
+
+curl -s https://api.telegram.org/bot8509520615:AAFAU4gFSJBYbeH4E3XTWf09DUSHbrauZts/getUpdates?limit=5
+
+
+
+curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
+
+server_monitor
+
+TWIPQEgrKoXPVFVH
+
+
+8509520615:AAFAU4gFSJBYbeH4E3XTWf09DUSHbrauZts
+
+-4694123025

@@ -495,7 +495,7 @@ set -euo pipefail
 SERVER_ID="\${SERVER_ID:-\$(hostname)}"
 TEMPLATE_PATH="/opt/alerts/templates/cpu-alert.html"
 RECIPIENTS="${RECIPIENTS}"
-CPU_THRESHOLD=80
+CPU_THRESHOLD=90
 CPU_USAGE=\$(timeout 3 mpstat 1 2 2>/dev/null | awk '/Average/ {print 100 - \$NF}')
 if [[ \$(echo "\$CPU_USAGE > \$CPU_THRESHOLD" | bc -l) == 1 ]]; then
   TOP_PROCS=\$(ps aux --sort=-%cpu | head -6 | tail -5 | awk '{printf "%-12s %4s%% %s\n", \$11, \$3, \$2}')
@@ -513,7 +513,7 @@ set -euo pipefail
 SERVER_ID="\${SERVER_ID:-\$(hostname)}"
 TEMPLATE_PATH="/opt/alerts/templates/memory-alert.html"
 RECIPIENTS="${RECIPIENTS}"
-MEM_THRESHOLD=80
+MEM_THRESHOLD=90
 MEM_INFO=\$(free | grep Mem)
 TOTAL_MEM=\$(echo \$MEM_INFO | awk '{print \$2}')
 USED_MEM=\$(echo \$MEM_INFO | awk '{print \$3 + \$6}')
@@ -536,7 +536,7 @@ set -euo pipefail
 SERVER_ID="\${SERVER_ID:-\$(hostname)}"
 TEMPLATE_PATH="/opt/alerts/templates/disk-alert.html"
 RECIPIENTS="${RECIPIENTS}"
-DISK_THRESHOLD=80
+DISK_THRESHOLD=90
 df -P -x tmpfs -x devtmpfs -x squashfs | tail -n +2 | while read -r FS SIZE USED AVAIL PCT MOUNT; do
   USAGE=\${PCT%%%}
   if [[ "\$USAGE" -gt "\$DISK_THRESHOLD" ]]; then
