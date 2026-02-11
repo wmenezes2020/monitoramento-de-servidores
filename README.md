@@ -16,6 +16,13 @@ curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servi
 
 O mesmo padrao de outros instaladores (ex.: `curl -fsSL https://molt.bot/install.sh | bash`): o script e baixado e passado direto para o `bash`; use `sudo bash` porque o instalador precisa de privilegios de root.
 
+**Se nada aparecer na tela** (comando parece travar sem mensagem), use a instalacao em dois passos — assim o terminal continua interativo e a saida aparece desde o inicio:
+
+```bash
+curl -fsSL -o install-monitoring.sh https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh
+sudo bash install-monitoring.sh
+```
+
 **Importante:** Execute a partir de um **terminal interativo** (por exemplo, sessao SSH). O instalador pede dados (SMTP, e-mails, Telegram); se rodar sem terminal (ex.: cron), o script avisa e encerra.
 
 ---

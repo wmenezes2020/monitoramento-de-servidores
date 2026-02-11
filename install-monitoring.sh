@@ -6,6 +6,8 @@
 # Uso local:  sudo ./install-monitoring.sh
 # Via curl:   curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
 #
+# Primeira linha executavel: garantir que algo apareca ao rodar "curl | bash"
+printf 'Carregando instalador...\n' >&2
 set -uo pipefail
 # Sem set -e: erros sao tratados por run_cmd e auto-correcao
 
@@ -123,11 +125,14 @@ if [[ "$OS_ID" != "ubuntu" && "$OS_ID" != "debian" ]]; then
 fi
 
 # Quando executado via "curl | sudo bash", stdin e o pipe (o script). Ler sempre do terminal.
-if [[ ! -t 0 ]] && [[ -r /dev/tty ]]; then
-  exec 0</dev/tty
-elif [[ ! -t 0 ]]; then
-  log_err "Execute a partir de um terminal interativo (ex.: sessao SSH) para poder informar os dados."
-  exit 1
+if [[ ! -t 0 ]]; then
+  if [[ -r /dev/tty ]]; then
+    exec 0</dev/tty
+    printf 'Terminal conectado. Pedindo dados...\n' >&2
+  else
+    log_err "Execute a partir de um terminal interativo (ex.: sessao SSH) para poder informar os dados."
+    exit 1
+  fi
 fi
 
 # Banner (stderr para aparecer logo com "curl | bash")
