@@ -81,19 +81,18 @@ Os destinatarios de e-mail podem ser varios, separados por **virgula** (sem espa
 
 ## Atualizar threshold dos monitores
 
-Para alterar o percentual em que os alertas sao disparados (ex.: 95% em vez do padrao), use o script `update_monitor.sh` em uma unica chamada:
+Para alterar o percentual em que os alertas sao disparados, use `update_monitor.sh`. Os valores podem ser definidos **individualmente** (CPU, memoria, disco) ou aplicados a todos:
 
 ```bash
+# Tres valores: CPU=90% RAM=85% Disco=95%
+curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash -s 90 90 80
+
+# Um valor: todos = 90%
 curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash -s 90
+
+# Via variaveis de ambiente
+CPU_THRESHOLD=90 MEM_THRESHOLD=85 DISK_THRESHOLD=95 curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash
 ```
-
-Ou via variavel de ambiente:
-
-```bash
-THRESHOLD=90 curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash
-```
-
-O script atualiza CPU, RAM e Disco com o valor informado (1-100).
 
 ---
 
