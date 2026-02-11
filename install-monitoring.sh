@@ -143,41 +143,48 @@ echo -e "${BLUE}  E-mail + Telegram + ClamAV + CPU/RAM/Disco ${NC}" >&2
 echo -e "${BLUE}============================================${NC}" >&2
 echo "" >&2
 
-# Coleta de dados
+# Coleta de dados (prompts em stderr para aparecer com "curl | bash")
 log_info "Informe os dados solicitados (Enter para usar valor padrao quando indicado)."
 echo "" >&2
-
-read -p "Porta do servidor SMTP (ex: 587 ou 2525) [587]: " SMTP_PORT </dev/tty || true
+printf '>>> Porta do servidor SMTP (ex: 587 ou 2525) [587]: ' >&2
+read -r SMTP_PORT </dev/tty || true
 SMTP_PORT="${SMTP_PORT:-587}"
 
-DEFAULT_HOST=$(hostname)
-read -p "Dominio ou nome do servidor (ex: meuservidor.com) [$DEFAULT_HOST]: " SMTP_DOMAIN </dev/tty || true
+DEFAULT_HOST=$(hostname 2>/dev/null) || DEFAULT_HOST="localhost"
+printf 'Dominio ou nome do servidor (ex: meuservidor.com) [%s]: ' "$DEFAULT_HOST" >&2
+read -r SMTP_DOMAIN </dev/tty || true
 SMTP_DOMAIN="${SMTP_DOMAIN:-$DEFAULT_HOST}"
 
-read -p "Usuario SMTP (e-mail ou usuario SMTP2Go): " SMTP_USER </dev/tty || true
+printf 'Usuario SMTP (e-mail ou usuario SMTP2Go): ' >&2
+read -r SMTP_USER </dev/tty || true
 [[ -z "$SMTP_USER" ]] && { log_err "Usuario SMTP e obrigatorio."; exit 1; }
 
-read -s -p "Senha SMTP: " SMTP_PASS </dev/tty || true
+printf 'Senha SMTP: ' >&2
+read -rs SMTP_PASS </dev/tty || true
 echo "" >&2
 [[ -z "$SMTP_PASS" ]] && { log_err "Senha SMTP e obrigatoria."; exit 1; }
 
-read -p "E-mail remetente (verificado no SMTP2Go, ex: alertas@seudominio.com): " SENDER_EMAIL </dev/tty || true
+printf 'E-mail remetente (verificado no SMTP2Go, ex: alertas@seudominio.com): ' >&2
+read -r SENDER_EMAIL </dev/tty || true
 [[ -z "$SENDER_EMAIL" ]] && { log_err "E-mail remetente e obrigatorio."; exit 1; }
 
-read -p "E-mail(s) de destino para alertas (separados por virgula): " RECIPIENTS </dev/tty || true
+printf 'E-mail(s) de destino para alertas (separados por virgula): ' >&2
+read -r RECIPIENTS </dev/tty || true
 [[ -z "$RECIPIENTS" ]] && { log_err "Pelo menos um e-mail de destino e obrigatorio."; exit 1; }
 
 # Remove espaços extras dos destinatários
 RECIPIENTS=$(echo "$RECIPIENTS" | tr -d ' ')
 
 echo "" >&2
-read -p "Token do Bot do Telegram (deixe vazio para nao usar notificacoes Telegram): " TELEGRAM_BOT_TOKEN </dev/tty || true
+printf 'Token do Bot do Telegram (vazio = nao usar Telegram): ' >&2
+read -r TELEGRAM_BOT_TOKEN </dev/tty || true
 TELEGRAM_BOT_TOKEN=$(echo "$TELEGRAM_BOT_TOKEN" | tr -d ' ')
 TELEGRAM_CHAT_ID=""
 if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
   echo "" >&2
   log_info "Para receber alertas no Telegram: abra o app Telegram, procure seu bot e envie o comando /start"
-  read -p "Pressione Enter apos ter enviado /start ao bot... " _dummy </dev/tty || true
+  printf 'Pressione Enter apos ter enviado /start ao bot... ' >&2
+  read -r _dummy </dev/tty || true
   RESP=$(curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?limit=1" 2>/dev/null || true)
   if echo "$RESP" | grep -q '"chat":'; then
     TELEGRAM_CHAT_ID=$(echo "$RESP" | grep -o '"id":[0-9]*' | tail -1 | cut -d: -f2)
