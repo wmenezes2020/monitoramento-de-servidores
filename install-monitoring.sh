@@ -6,7 +6,10 @@
 # Uso local:  sudo ./install-monitoring.sh
 # Via curl:   curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
 #
-# Primeira linha executavel: garantir que algo apareca ao rodar "curl | bash"
+# Pipe (curl|bash): stdin e o proprio script. NAO fazer exec 0</dev/tty — o bash leria
+# o resto do script do teclado e travaria. Todas as perguntas usam "read ... </dev/tty".
+# Saida do instalador vai para stderr (> &2) para aparecer imediatamente no pipe.
+#
 printf 'Carregando instalador...\n' >&2
 set -uo pipefail
 # Sem set -e: erros sao tratados por run_cmd e auto-correcao
@@ -124,15 +127,15 @@ if [[ "$OS_ID" != "ubuntu" && "$OS_ID" != "debian" ]]; then
   INSTALL_WARNINGS+=("OS pode nao ser totalmente compativel: $OS_ID")
 fi
 
-# Quando executado via "curl | sudo bash", stdin e o pipe (o script). Ler sempre do terminal.
+# IMPORTANTE: Com "curl | sudo bash", o stdin e o PIPE (conteudo do script).
+# Nao redirecionar stdin (exec 0</dev/tty) — senao o bash passa a ler o resto do script
+# do teclado e trava. Usar apenas "read ... </dev/tty" em cada pergunta.
 if [[ ! -t 0 ]]; then
-  if [[ -r /dev/tty ]]; then
-    exec 0</dev/tty
-    printf 'Terminal conectado. Pedindo dados...\n' >&2
-  else
-    log_err "Execute a partir de um terminal interativo (ex.: sessao SSH) para poder informar os dados."
+  if [[ ! -r /dev/tty ]]; then
+    log_err "Execute a partir de um terminal interativo (ex.: sessao SSH). /dev/tty indisponivel."
     exit 1
   fi
+  printf 'Instalador rodando via pipe. Quando cada pergunta aparecer, digite a resposta e Enter.\n' >&2
 fi
 
 # Banner (stderr para aparecer logo com "curl | bash")
@@ -146,7 +149,7 @@ echo "" >&2
 # Coleta de dados (prompts em stderr para aparecer com "curl | bash")
 log_info "Informe os dados solicitados (Enter para usar valor padrao quando indicado)."
 echo "" >&2
-printf '>>> Porta do servidor SMTP (ex: 587 ou 2525) [587]: ' >&2
+printf 'Porta do servidor SMTP (ex: 587 ou 2525) [587]: ' >&2
 read -r SMTP_PORT </dev/tty || true
 SMTP_PORT="${SMTP_PORT:-587}"
 
