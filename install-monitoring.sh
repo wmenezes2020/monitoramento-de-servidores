@@ -200,6 +200,35 @@ if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
   fi
 fi
 
+# --- Dashboard de Observabilidade ---
+echo "" >&2
+printf 'Deseja conectar este servidor ao Dashboard de Observabilidade? (s/N): ' >&2
+read -r USE_DASHBOARD </dev/tty || true
+USE_DASHBOARD=$(echo "${USE_DASHBOARD:-n}" | tr '[:upper:]' '[:lower:]')
+
+DASHBOARD_ENABLED=0
+DASHBOARD_SERVER_UUID=""
+DASHBOARD_API_URL="${DASHBOARD_API_URL:-https://api.dashboard-exemplo.com/v1}"
+
+if [[ "$USE_DASHBOARD" == "s" || "$USE_DASHBOARD" == "sim" || "$USE_DASHBOARD" == "y" || "$USE_DASHBOARD" == "yes" ]]; then
+  DASHBOARD_ENABLED=1
+  printf 'URL da API do Dashboard (ex: https://api.seudominio.com/v1): [%s] ' "$DASHBOARD_API_URL" >&2
+  read -r DASHBOARD_API_URL_INPUT </dev/tty || true
+  [[ -n "$DASHBOARD_API_URL_INPUT" ]] && DASHBOARD_API_URL=$(echo "$DASHBOARD_API_URL_INPUT" | tr -d ' ')
+  printf 'UUID do Servidor (gerado no painel ao cadastrar o servidor): ' >&2
+  read -r DASHBOARD_SERVER_UUID </dev/tty || true
+  DASHBOARD_SERVER_UUID=$(echo "$DASHBOARD_SERVER_UUID" | tr -d ' ')
+  if [[ -z "$DASHBOARD_SERVER_UUID" ]]; then
+    log_warn "UUID do Dashboard nao informado. Dashboard desabilitado."
+    DASHBOARD_ENABLED=0
+  elif [[ ! "$DASHBOARD_SERVER_UUID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+    log_warn "UUID invalido. Dashboard desabilitado."
+    DASHBOARD_ENABLED=0
+  else
+    log_ok "Dashboard conectado. UUID: $DASHBOARD_SERVER_UUID"
+  fi
+fi
+
 echo "" >&2
 log_info "Iniciando instalacao (ambiente: $OS_ID)..."
 # Pre-verificacao rapida
@@ -416,6 +445,91 @@ GETCHATID
 chmod +x /usr/local/bin/telegram-get-chat-id.sh
 [[ -n "$TELEGRAM_BOT_TOKEN" ]] && log_ok "Telegram configurado (send_telegram_alert.sh, telegram-get-chat-id.sh)."
 
+# --- 4d. Dashboard: config e script de envio de metricas ---
+if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
+  mkdir -p /opt/monitoring
+  cat > /opt/monitoring/dashboard.conf << DASHCONF
+# Configuracao Dashboard (gerado pelo install-monitoring.sh)
+DASHBOARD_ENABLED=1
+DASHBOARD_SERVER_UUID=${DASHBOARD_SERVER_UUID}
+DASHBOARD_API_URL=${DASHBOARD_API_URL}
+DASHCONF
+  chmod 640 /opt/monitoring/dashboard.conf
+  log_info "Dashboard config em /opt/monitoring/dashboard.conf"
+fi
+
+cat > /usr/local/bin/send_dashboard_metrics.sh << 'SENDDASH'
+#!/usr/bin/env bash
+# Envia metricas/incidentes para o Dashboard via API REST.
+# Config: /opt/monitoring/dashboard.conf
+CONF="/opt/monitoring/dashboard.conf"
+[[ ! -f "$CONF" ]] && exit 0
+source "$CONF" 2>/dev/null || true
+[[ "${DASHBOARD_ENABLED:-0}" != "1" ]] && exit 0
+[[ -z "${DASHBOARD_SERVER_UUID:-}" ]] && exit 0
+API_URL="${DASHBOARD_API_URL:-https://api.dashboard-exemplo.com/v1}"
+SERVER_ID="${SERVER_ID:-$(hostname)}"
+MODE="${1:-}"
+BODY="${2:-}"
+if [[ "$MODE" == "metrics" ]]; then
+  ENDPOINT="${API_URL}/ingest/metrics"
+elif [[ "$MODE" == "incident" ]]; then
+  ENDPOINT="${API_URL}/ingest/incident"
+else
+  exit 1
+fi
+if [[ -n "$BODY" && -f "$BODY" ]]; then
+  PAYLOAD=$(cat "$BODY")
+else
+  PAYLOAD=$(cat)
+fi
+[[ -z "$PAYLOAD" ]] && exit 1
+curl -s -X POST "$ENDPOINT" -H "Content-Type: application/json" -H "X-Server-UUID: $DASHBOARD_SERVER_UUID" -d "$PAYLOAD" --max-time 10 >/dev/null 2>&1 || true
+SENDDASH
+chmod +x /usr/local/bin/send_dashboard_metrics.sh
+
+cat > /usr/local/bin/dashboard_fetch_updates.sh << 'FETCHDASH'
+#!/usr/bin/env bash
+# Consulta a API do Dashboard por atualizacoes pendentes (thresholds, recipients, scripts).
+# Cron: */15 * * * * dashboard_fetch_updates.sh
+CONF="/opt/monitoring/dashboard.conf"
+[[ ! -f "$CONF" ]] && exit 0
+source "$CONF" 2>/dev/null || true
+[[ "${DASHBOARD_ENABLED:-0}" != "1" ]] && exit 0
+[[ -z "${DASHBOARD_SERVER_UUID:-}" ]] && exit 0
+API_URL="${DASHBOARD_API_URL:-https://api.dashboard-exemplo.com/v1}"
+RESP=$(curl -s -X GET "${API_URL}/agent/updates" -H "X-Server-UUID: ${DASHBOARD_SERVER_UUID}" --max-time 10 2>/dev/null) || exit 0
+[[ -z "$RESP" ]] && exit 0
+echo "$RESP" | grep -q '"has_updates":true' || exit 0
+# Aplicar thresholds nos scripts
+CPU=$(echo "$RESP" | grep -o '"cpu":[0-9]*' | cut -d: -f2)
+MEM=$(echo "$RESP" | grep -o '"memory":[0-9]*' | cut -d: -f2)
+DISK=$(echo "$RESP" | grep -o '"disk":[0-9]*' | cut -d: -f2)
+[[ -n "$CPU" && -f /usr/local/bin/monitor_cpu.sh ]] && sed -i "s/^CPU_THRESHOLD=.*/CPU_THRESHOLD=$CPU/" /usr/local/bin/monitor_cpu.sh 2>/dev/null || true
+[[ -n "$MEM" && -f /usr/local/bin/monitor_memory.sh ]] && sed -i "s/^MEM_THRESHOLD=.*/MEM_THRESHOLD=$MEM/" /usr/local/bin/monitor_memory.sh 2>/dev/null || true
+[[ -n "$DISK" && -f /usr/local/bin/monitor_disk.sh ]] && sed -i "s/^DISK_THRESHOLD=.*/DISK_THRESHOLD=$DISK/" /usr/local/bin/monitor_disk.sh 2>/dev/null || true
+# Aplicar recipients (emails como lista comma-separated, telegram_chat_id em telegram.conf)
+EMAILS_RAW=$(echo "$RESP" | sed -n 's/.*"emails":\[\([^]]*\)\].*/\1/p' 2>/dev/null)
+if [[ -n "$EMAILS_RAW" ]]; then
+  RECIPIENTS_NEW=$(echo "$EMAILS_RAW" | sed 's/","/,/g;s/"//g')
+  [[ -n "$RECIPIENTS_NEW" ]] && for script in /usr/local/bin/monitor_cpu.sh /usr/local/bin/monitor_memory.sh /usr/local/bin/monitor_disk.sh; do
+    [[ -f "$script" ]] && sed -i "s|^RECIPIENTS=.*|RECIPIENTS=\"$RECIPIENTS_NEW\"|" "$script" 2>/dev/null || true
+  done
+fi
+TG_ID=$(echo "$RESP" | grep -o '"telegram_chat_id":"[^"]*"' | cut -d'"' -f4)
+if [[ -n "$TG_ID" && -f /opt/monitoring/telegram.conf ]]; then
+  sed -i "s/^TELEGRAM_CHAT_ID=.*/TELEGRAM_CHAT_ID=$TG_ID/" /opt/monitoring/telegram.conf 2>/dev/null || true
+fi
+# Baixar scripts se URLs presentes (https apenas)
+for name in monitor_cpu monitor_memory monitor_disk; do
+  URL=$(echo "$RESP" | grep -o "\"${name}\":\"[^\"]*\"" | cut -d'"' -f4)
+  if [[ -n "$URL" && "$URL" == https* ]]; then
+    curl -s -o "/usr/local/bin/${name}.sh" "$URL" --max-time 15 2>/dev/null && chmod +x "/usr/local/bin/${name}.sh" 2>/dev/null || true
+  fi
+done
+FETCHDASH
+chmod +x /usr/local/bin/dashboard_fetch_updates.sh
+
 # --- 5. Templates HTML (variáveis ${TITLE}, ${MESSAGE}, ${DATE}, ${HOST} literais) ---
 log_step "Templates HTML (alert, cpu, memory, disk, clamav)"
 
@@ -507,6 +621,21 @@ if [[ $(echo "$CPU_USAGE > $CPU_THRESHOLD" | bc -l) == 1 ]]; then
   /usr/local/bin/send_html_alert.sh "$TEMPLATE_PATH" "$RECIPIENTS" "ALERTA CPU ${CPU_USAGE}% - ${SERVER_ID}" "CPU em ${CPU_USAGE}% (CRITICO)" "$MSG_HTML"
   TG_TOP=$(ps aux --sort=-%cpu | head -13 | tail -12 | awk '{printf "%-8s %4s %4s %.45s\n", $2, $3"%", $4"%", $11}')
   /usr/local/bin/send_telegram_alert.sh "ALERTA CPU ${CPU_USAGE}% - ${SERVER_ID}\n\nTop processos (PID %CPU %MEM CMD):\n${TG_TOP}" || true
+  if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
+  if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
+    SNAP_ESC=$(echo "$SYS_SNAP" | sed 's/"/\\"/g' | tr '\n' ' ')
+    printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","type":"cpu","value":%s,"threshold":%s,"subject":"ALERTA CPU %s%% - %s","snapshot_top":"%s","notifications_sent":{"email":true,"telegram":true}}\n' \
+      "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${CPU_USAGE}" "${CPU_THRESHOLD}" "${CPU_USAGE}" "${SERVER_ID}" "${SNAP_ESC}" | /usr/local/bin/send_dashboard_metrics.sh incident 2>/dev/null || true
+  fi
+fi
+if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
+if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
+  MEM_INFO=$(free | grep Mem 2>/dev/null)
+  TOTAL_MEM=$(echo "$MEM_INFO" | awk '{print $2}')
+  USED_MEM=$(echo "$MEM_INFO" | awk '{print $3+$6}')
+  MEM_PCT=$(echo "scale=1; ($USED_MEM/$TOTAL_MEM)*100" 2>/dev/null | bc -l 2>/dev/null || echo "0")
+  printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","metrics":{"cpu":%s,"memory":%s,"disk":[]}}\n' \
+    "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${CPU_USAGE}" "${MEM_PCT}" | /usr/local/bin/send_dashboard_metrics.sh metrics 2>/dev/null || true
 fi
 MONITORCPU
 # Injeta RECIPIENTS no script (placeholder)
@@ -538,6 +667,18 @@ if [[ $(echo "$MEM_USAGE > $MEM_THRESHOLD" | bc -l) == 1 ]]; then
   /usr/local/bin/send_html_alert.sh "$TEMPLATE_PATH" "$RECIPIENTS" "ALERTA RAM ${MEM_USAGE}% - ${SERVER_ID}" "Memoria em ${MEM_USAGE}% (CRITICO)" "$MSG_HTML"
   TG_TOP=$(ps aux --sort=-%mem | head -13 | tail -12 | awk '{printf "%-8s %4s %4s %.45s\n", $2, $4"%", $3"%", $11}')
   /usr/local/bin/send_telegram_alert.sh "ALERTA RAM ${MEM_USAGE}% - ${SERVER_ID}\n\nTop processos (PID %MEM %CPU CMD):\n${TG_TOP}" || true
+  if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
+  if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
+    SNAP_ESC=$(echo "$SYS_SNAP" | sed 's/"/\\"/g' | tr '\n' ' ')
+    printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","type":"memory","value":%s,"threshold":%s,"subject":"ALERTA RAM %s%% - %s","snapshot_top":"%s","notifications_sent":{"email":true,"telegram":true}}\n' \
+      "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${MEM_USAGE}" "${MEM_THRESHOLD}" "${MEM_USAGE}" "${SERVER_ID}" "${SNAP_ESC}" | /usr/local/bin/send_dashboard_metrics.sh incident 2>/dev/null || true
+  fi
+fi
+if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
+if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
+  CPU_USAGE=$(timeout 3 mpstat 1 2 2>/dev/null | awk '/Average/ {print 100-$NF}' || echo "0")
+  printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","metrics":{"cpu":%s,"memory":%s,"disk":[]}}\n' \
+    "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${CPU_USAGE}" "${MEM_USAGE}" | /usr/local/bin/send_dashboard_metrics.sh metrics 2>/dev/null || true
 fi
 MONITORMEM
 sed -i "s|RECIPIENTS_PLACEHOLDER|${RECIPIENTS}|g" /usr/local/bin/monitor_memory.sh
@@ -563,8 +704,26 @@ df -P -x tmpfs -x devtmpfs -x squashfs | tail -n +2 | while read -r FS SIZE USED
 
 Top dirs:
 ${TOP_DIRS:-N/A}" || true
+    if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
+    if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
+      SNAP_ESC=$(echo "$SYS_SNAP" | sed 's/"/\\"/g' | tr '\n' ' ')
+      printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","type":"disk","value":%s,"threshold":%s,"mount":"%s","subject":"ALERTA DISCO %s%% - %s (%s)","snapshot_top":"%s","notifications_sent":{"email":true,"telegram":true}}\n' \
+        "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${USAGE}" "${DISK_THRESHOLD}" "${MOUNT}" "${USAGE}" "${SERVER_ID}" "${MOUNT}" "${SNAP_ESC}" | /usr/local/bin/send_dashboard_metrics.sh incident 2>/dev/null || true
+    fi
   fi
 done
+if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
+if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
+  MEM_INFO=$(free | grep Mem 2>/dev/null)
+  TOTAL_MEM=$(echo "$MEM_INFO" | awk '{print $2}')
+  USED_MEM=$(echo "$MEM_INFO" | awk '{print $3+$6}')
+  MEM_PCT=$(echo "scale=1; ($USED_MEM/$TOTAL_MEM)*100" 2>/dev/null | bc -l 2>/dev/null || echo "0")
+  CPU_USAGE=$(timeout 3 mpstat 1 2 2>/dev/null | awk '/Average/ {print 100-$NF}' || echo "0")
+  DISK_JSON=$(df -P -x tmpfs -x devtmpfs -x squashfs 2>/dev/null | tail -n +2 | while read -r FS SIZE USED AVAIL PCT MNT; do
+    U="${PCT%%%}"; echo -n "{\"mount\":\"$MNT\",\"usage\":$U},"; done | sed 's/,$//')
+  printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","metrics":{"cpu":%s,"memory":%s,"disk":[%s]}}\n' \
+    "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${CPU_USAGE}" "${MEM_PCT}" "${DISK_JSON:-}" | /usr/local/bin/send_dashboard_metrics.sh metrics 2>/dev/null || true
+fi
 MONITORDISK
 sed -i "s|RECIPIENTS_PLACEHOLDER|${RECIPIENTS}|g" /usr/local/bin/monitor_disk.sh
 chmod +x /usr/local/bin/monitor_disk.sh
@@ -590,6 +749,10 @@ else
    echo "*/5 * * * * /usr/local/bin/monitor_disk.sh"
    echo "# ClamAV varredura diaria 02:00 e alerta se virus"
    echo "$CRON_LINE_CLAMAV"
+   if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
+     echo "# Consulta ao Dashboard a cada 15 min"
+     echo "*/15 * * * * /usr/local/bin/dashboard_fetch_updates.sh"
+   fi
   ) | crontab -
   log_ok "Crontab configurado."
 fi
