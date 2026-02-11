@@ -23,12 +23,12 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Controle de progresso e erros
-TOTAL_STEPS=8
+TOTAL_STEPS=9
 CURRENT_STEP=0
 INSTALL_ERRORS=()
 INSTALL_WARNINGS=()
-POSTFIX_MARKER="# --- monitoramento-de-servidores (install-monitoring.sh) ---"
-CRON_MARKER="# --- Monitoramento (install-monitoring.sh) ---"
+POSTFIX_MARKER="# --- Sistema de Monitoramento de Servidores ---"
+CRON_MARKER="# --- Monitoramento de CPU, Memoria, Disco e Antivirus ---"
 
 # Mensagens em stderr para aparecer imediatamente com "curl | bash" (stdout fica em buffer no pipe)
 log_info()  { echo -e "${BLUE}[INFO]${NC} $*" >&2; }
@@ -89,7 +89,7 @@ test_port() {
   (echo >/dev/tcp/"$host"/"$port") 2>/dev/null && return 0 || return 1
 }
 
-# Trap: ao sair, mostrar resumo de erros/avisos se houver
+# Trap: ao sair com ERRO, mostrar erros (avisos ja foram mostrados no fluxo principal)
 cleanup_on_exit() {
   local code=$?
   if [[ $code -ne 0 ]] && [[ ${#INSTALL_ERRORS[@]} -gt 0 ]]; then
@@ -97,7 +97,8 @@ cleanup_on_exit() {
     log_err "Instalacao encerrada com erros:"
     printf '  - %s\n' "${INSTALL_ERRORS[@]}" >&2
   fi
-  if [[ ${#INSTALL_WARNINGS[@]} -gt 0 ]]; then
+  # Avisos so no trap se saiu com erro (em sucesso ja foram listados acima)
+  if [[ $code -ne 0 ]] && [[ ${#INSTALL_WARNINGS[@]} -gt 0 ]]; then
     echo "" >&2
     log_warn "Avisos durante a instalacao:"
     printf '  - %s\n' "${INSTALL_WARNINGS[@]}" >&2
@@ -329,7 +330,7 @@ log_ok "ClamAV configurado."
 log_step "Estrutura de alertas (send_html_alert.sh e diretorios)"
 mkdir -p /opt/alerts/templates
 
-# send_html_alert.sh
+# send_html_alert.sh (usa From de /opt/monitoring/email.conf = remetente configurado na instalacao)
 cat > /usr/local/bin/send_html_alert.sh << 'SENDHTML'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -340,19 +341,29 @@ TITLE="${4:-Alerta do servidor}"
 MESSAGE="${5:-Mensagem nao especificada}"
 DATE="$(date '+%Y-%m-%d %H:%M:%S %Z')"
 HOST="$(hostname)"
+SENDER_EMAIL=""
+[[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf
 [[ ! -f "$TEMPLATE_PATH" ]] && { echo "Template nao encontrado: $TEMPLATE_PATH" >&2; exit 1; }
 export TITLE MESSAGE DATE HOST
 RENDERED_FILE="$(mktemp /tmp/alert-email-XXXXXX.html)"
 envsubst '${TITLE} ${MESSAGE} ${DATE} ${HOST}' < "$TEMPLATE_PATH" > "$RENDERED_FILE"
-cat "$RENDERED_FILE" | mail -a "Content-Type: text/html; charset=UTF-8" -s "$SUBJECT" "$RECIPIENT"
+if [[ -n "${SENDER_EMAIL:-}" ]]; then
+  cat "$RENDERED_FILE" | mail -r "$SENDER_EMAIL" -a "Content-Type: text/html; charset=UTF-8" -s "$SUBJECT" "$RECIPIENT"
+else
+  cat "$RENDERED_FILE" | mail -a "Content-Type: text/html; charset=UTF-8" -s "$SUBJECT" "$RECIPIENT"
+fi
 rm -f "$RENDERED_FILE"
 SENDHTML
 chmod +x /usr/local/bin/send_html_alert.sh
 log_ok "Script send_html_alert.sh criado."
 
-# --- 4b. Telegram: config e scripts de notificacao ---
-log_step "Telegram (send_telegram_alert.sh, telegram-get-chat-id.sh)"
+# --- 4b. E-mail: remetente configurado (From dos alertas) ---
 mkdir -p /opt/monitoring
+printf 'SENDER_EMAIL="%s"\n' "$SENDER_EMAIL" > /opt/monitoring/email.conf
+chmod 644 /opt/monitoring/email.conf
+
+# --- 4c. Telegram: config e scripts de notificacao ---
+log_step "Telegram (send_telegram_alert.sh, telegram-get-chat-id.sh)"
 if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
   cat > /opt/monitoring/telegram.conf << TELEGRAMCONF
 # Configuracao do Bot Telegram (gerado pelo install-monitoring.sh)
@@ -553,16 +564,35 @@ else
   log_ok "Crontab configurado."
 fi
 
-# --- 8. Teste de envio ---
-log_step "Teste de envio (e-mail e Telegram)"
-if echo "Teste de instalacao - $(date)" | mail -s "Monitoramento instalado - $(hostname)" "$RECIPIENTS" 2>/dev/null; then
-  log_ok "E-mail de teste enviado para: $RECIPIENTS"
+# --- 8. E-mail e Telegram de boas-vindas (confirmar que tudo esta ok) ---
+log_step "E-mail e Telegram de boas-vindas"
+WELCOME_SUBJECT="Monitoramento instalado com sucesso - Bem-vindo"
+WELCOME_TITLE="Instalacao concluida com sucesso"
+WELCOME_MSG="Bem-vindo ao sistema de monitoramento. A instalacao e configuracao foram concluidas com exito. Os alertas de CPU, memoria, disco e ClamAV estao ativos. Voce recebera notificacoes neste e-mail e, se configurado, no Telegram.<br/><br/>Servidor: <strong>$(hostname)</strong><br/>Data: <strong>$(date '+%Y-%m-%d %H:%M:%S')</strong>"
+EMAIL_OK=0
+while IFS=',' read -ra ADDRS; do
+  for addr in "${ADDRS[@]}"; do
+    addr=$(echo "$addr" | tr -d ' ')
+    [[ -z "$addr" ]] && continue
+    if /usr/local/bin/send_html_alert.sh /opt/alerts/templates/alert.html "$addr" "$WELCOME_SUBJECT" "$WELCOME_TITLE" "$WELCOME_MSG" 2>/dev/null; then
+      EMAIL_OK=1
+    fi
+  done
+done <<< "$RECIPIENTS"
+if [[ $EMAIL_OK -eq 1 ]]; then
+  log_ok "E-mail de boas-vindas enviado para: $RECIPIENTS"
 else
-  log_warn "Envio de teste falhou. Verifique: tail -f /var/log/mail.log"
+  log_warn "Envio do e-mail de boas-vindas falhou. Verifique: tail -f /var/log/mail.log"
 fi
 if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
-  log_info "Enviando teste para o Telegram..."
-  /usr/local/bin/send_telegram_alert.sh "Monitoramento instalado - $(hostname). Alertas ativos." && log_ok "Telegram: mensagem de teste enviada." || log_warn "Telegram: falha no envio. Execute telegram-get-chat-id.sh se ainda nao configurou o Chat ID."
+  log_info "Enviando mensagem de conexao para o Telegram..."
+  if /usr/local/bin/send_telegram_alert.sh "Conexao confirmada. Bem-vindo ao monitoramento de $(hostname). Instalacao concluida com sucesso; alertas ativos." 2>/dev/null; then
+    log_ok "Telegram: mensagem de boas-vindas enviada ao contato principal do bot."
+  else
+    log_warn "Telegram: falha no envio. Apos configurar o Chat ID, execute: echo Teste | /usr/local/bin/send_telegram_alert.sh"
+  fi
+else
+  [[ -n "$TELEGRAM_BOT_TOKEN" ]] && log_info "Telegram configurado; execute sudo /usr/local/bin/telegram-get-chat-id.sh e depois teste o envio."
 fi
 
 # --- Resumo final ---
@@ -589,18 +619,26 @@ echo "  - /usr/local/bin/monitor_cpu.sh" >&2
 echo "  - /usr/local/bin/monitor_memory.sh" >&2
 echo "  - /usr/local/bin/monitor_disk.sh" >&2
 echo "  - /opt/alerts/templates/*.html" >&2
+echo "  - /opt/monitoring/email.conf (remetente From dos e-mails)" >&2
 echo "  - /opt/monitoring/telegram.conf (Telegram)" >&2
 echo "" >&2
 echo "Crontab: sudo crontab -l" >&2
 echo "Logs: /var/log/mail.log | /var/log/clamav/" >&2
 echo "" >&2
 
+# Mostrar avisos no fluxo principal para ficarem visiveis (nao depender do trap)
+if [[ ${#INSTALL_WARNINGS[@]} -gt 0 ]]; then
+  log_warn "Avisos durante a instalacao:"
+  printf '  - %s\n' "${INSTALL_WARNINGS[@]}" >&2
+  echo "" >&2
+  log_ok "Instalacao concluida com ${#INSTALL_WARNINGS[@]} aviso(s). Tudo funcional; revise os itens acima se desejar."
+else
+  log_ok "Instalacao concluida sem avisos."
+fi
+
 # Encerrar com codigo de erro se houve falhas criticas
 if [[ ${#INSTALL_ERRORS[@]} -gt 0 ]]; then
   log_err "Instalacao concluida com ${#INSTALL_ERRORS[@]} erro(s). Revise as mensagens acima."
   exit 1
-fi
-if [[ ${#INSTALL_WARNINGS[@]} -gt 0 ]]; then
-  log_ok "Instalacao concluida com ${#INSTALL_WARNINGS[@]} aviso(s). Tudo funcional; revise se desejar."
 fi
 exit 0
