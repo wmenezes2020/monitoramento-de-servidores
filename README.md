@@ -51,9 +51,9 @@ sudo bash install-monitoring.sh
 5. **Scripts de monitoramento**
    - `send_html_alert.sh` – envia e-mail HTML a partir de template
    - `send_telegram_alert.sh` – envia mensagem para o Telegram (usa config em `/opt/monitoring/telegram.conf`)
-   - `monitor_cpu.sh` – alerta quando CPU > 80% (e-mail + Telegram)
-   - `monitor_memory.sh` – alerta quando RAM > 80% (e-mail + Telegram)
-   - `monitor_disk.sh` – alerta quando uso de disco > 80% (e-mail + Telegram)
+   - `monitor_cpu.sh` – alerta quando CPU > threshold (e-mail + Telegram), com snapshot tipo top e top 25 processos por CPU/RAM
+   - `monitor_memory.sh` – alerta quando RAM > threshold (e-mail + Telegram), com snapshot e listas completas de processos
+   - `monitor_disk.sh` – alerta quando disco > threshold (e-mail + Telegram), com top diretorios e snapshot do sistema
 
 6. **Crontab**
    - CPU, Memoria e Disco: execucao a cada 5 minutos
@@ -84,7 +84,7 @@ Os destinatarios de e-mail podem ser varios, separados por **virgula** (sem espa
 Para alterar o percentual em que os alertas sao disparados (ex.: 95% em vez do padrao), use o script `update_monitor.sh` em uma unica chamada:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash -s 95
+curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash -s 90
 ```
 
 Ou via variavel de ambiente:
@@ -94,6 +94,18 @@ THRESHOLD=90 curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoram
 ```
 
 O script atualiza CPU, RAM e Disco com o valor informado (1-100).
+
+---
+
+## Atualizar scripts de monitoramento
+
+Para atualizar os monitores para a versao mais recente (relatorios com snapshot tipo top, top 25 processos, top diretorios no disco) sem reinstalar tudo:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_scripts.sh | sudo bash
+```
+
+O script extrai e preserva RECIPIENTS e thresholds dos scripts atuais, faz backup em `/usr/local/bin/*.sh.bak.*` e substitui pelos scripts novos.
 
 ---
 
