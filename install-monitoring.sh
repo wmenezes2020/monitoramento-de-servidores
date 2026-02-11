@@ -25,14 +25,15 @@ INSTALL_WARNINGS=()
 POSTFIX_MARKER="# --- monitoramento-de-servidores (install-monitoring.sh) ---"
 CRON_MARKER="# --- Monitoramento (install-monitoring.sh) ---"
 
-log_info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
-log_ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
-log_warn()  { echo -e "${YELLOW}[AVISO]${NC} $*"; }
-log_err()   { echo -e "${RED}[ERRO]${NC} $*"; }
+# Mensagens em stderr para aparecer imediatamente com "curl | bash" (stdout fica em buffer no pipe)
+log_info()  { echo -e "${BLUE}[INFO]${NC} $*" >&2; }
+log_ok()    { echo -e "${GREEN}[OK]${NC} $*" >&2; }
+log_warn()  { echo -e "${YELLOW}[AVISO]${NC} $*" >&2; }
+log_err()   { echo -e "${RED}[ERRO]${NC} $*" >&2; }
 log_step()  {
   CURRENT_STEP=$((CURRENT_STEP + 1))
-  echo ""
-  echo -e "${CYAN}[Passo $CURRENT_STEP/$TOTAL_STEPS]${NC} $*"
+  echo "" >&2
+  echo -e "${CYAN}[Passo $CURRENT_STEP/$TOTAL_STEPS]${NC} $*" >&2
 }
 
 # Executa comando; em falha registra e opcionalmente retorna em vez de sair
@@ -87,14 +88,14 @@ test_port() {
 cleanup_on_exit() {
   local code=$?
   if [[ $code -ne 0 ]] && [[ ${#INSTALL_ERRORS[@]} -gt 0 ]]; then
-    echo ""
+    echo "" >&2
     log_err "Instalacao encerrada com erros:"
-    printf '  - %s\n' "${INSTALL_ERRORS[@]}"
+    printf '  - %s\n' "${INSTALL_ERRORS[@]}" >&2
   fi
   if [[ ${#INSTALL_WARNINGS[@]} -gt 0 ]]; then
-    echo ""
+    echo "" >&2
     log_warn "Avisos durante a instalacao:"
-    printf '  - %s\n' "${INSTALL_WARNINGS[@]}"
+    printf '  - %s\n' "${INSTALL_WARNINGS[@]}" >&2
   fi
 }
 trap cleanup_on_exit EXIT
@@ -129,17 +130,17 @@ elif [[ ! -t 0 ]]; then
   exit 1
 fi
 
-# Banner
-echo ""
-echo -e "${BLUE}============================================${NC}"
-echo -e "${BLUE}  Instalador de Monitoramento e Alertas     ${NC}"
-echo -e "${BLUE}  E-mail + Telegram + ClamAV + CPU/RAM/Disco ${NC}"
-echo -e "${BLUE}============================================${NC}"
-echo ""
+# Banner (stderr para aparecer logo com "curl | bash")
+echo "" >&2
+echo -e "${BLUE}============================================${NC}" >&2
+echo -e "${BLUE}  Instalador de Monitoramento e Alertas     ${NC}" >&2
+echo -e "${BLUE}  E-mail + Telegram + ClamAV + CPU/RAM/Disco ${NC}" >&2
+echo -e "${BLUE}============================================${NC}" >&2
+echo "" >&2
 
 # Coleta de dados
-log_info "Informe os dados solicitados (Enter para usar valor padrão quando indicado)."
-echo ""
+log_info "Informe os dados solicitados (Enter para usar valor padrao quando indicado)."
+echo "" >&2
 
 read -p "Porta do servidor SMTP (ex: 587 ou 2525) [587]: " SMTP_PORT </dev/tty || true
 SMTP_PORT="${SMTP_PORT:-587}"
@@ -152,7 +153,7 @@ read -p "Usuario SMTP (e-mail ou usuario SMTP2Go): " SMTP_USER </dev/tty || true
 [[ -z "$SMTP_USER" ]] && { log_err "Usuario SMTP e obrigatorio."; exit 1; }
 
 read -s -p "Senha SMTP: " SMTP_PASS </dev/tty || true
-echo ""
+echo "" >&2
 [[ -z "$SMTP_PASS" ]] && { log_err "Senha SMTP e obrigatoria."; exit 1; }
 
 read -p "E-mail remetente (verificado no SMTP2Go, ex: alertas@seudominio.com): " SENDER_EMAIL </dev/tty || true
@@ -164,12 +165,12 @@ read -p "E-mail(s) de destino para alertas (separados por virgula): " RECIPIENTS
 # Remove espaços extras dos destinatários
 RECIPIENTS=$(echo "$RECIPIENTS" | tr -d ' ')
 
-echo ""
+echo "" >&2
 read -p "Token do Bot do Telegram (deixe vazio para nao usar notificacoes Telegram): " TELEGRAM_BOT_TOKEN </dev/tty || true
 TELEGRAM_BOT_TOKEN=$(echo "$TELEGRAM_BOT_TOKEN" | tr -d ' ')
 TELEGRAM_CHAT_ID=""
 if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
-  echo ""
+  echo "" >&2
   log_info "Para receber alertas no Telegram: abra o app Telegram, procure seu bot e envie o comando /start"
   read -p "Pressione Enter apos ter enviado /start ao bot... " _dummy </dev/tty || true
   RESP=$(curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?limit=1" 2>/dev/null || true)
@@ -183,7 +184,7 @@ if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
   fi
 fi
 
-echo ""
+echo "" >&2
 log_info "Iniciando instalacao (ambiente: $OS_ID)..."
 # Pre-verificacao rapida
 if ! command -v apt-get &>/dev/null; then
@@ -194,7 +195,7 @@ if [[ -n "$AVAIL_KB" ]] && [[ "$AVAIL_KB" -lt 500000 ]]; then
   log_warn "Pouco espaco em disco (/ tem menos de ~500MB livre). A instalacao pode falhar."
   INSTALL_WARNINGS+=("Espaco em disco baixo. Libere espaco se encontrar erros.")
 fi
-echo ""
+echo "" >&2
 
 # --- 1. Pacotes do sistema ---
 log_step "Pacotes do sistema (postfix, mailutils, clamav, sysstat, bc, gettext-base)"
@@ -550,34 +551,34 @@ if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
 fi
 
 # --- Resumo final ---
-echo ""
-echo -e "${GREEN}============================================${NC}"
-echo -e "${GREEN}  Instalacao concluida com sucesso           ${NC}"
-echo -e "${GREEN}============================================${NC}"
-echo ""
-echo "Resumo:"
-echo "  - Postfix (SMTP2Go): porta ${SMTP_PORT}, remetente ${SENDER_EMAIL}"
-echo "  - Destinatarios e-mail: ${RECIPIENTS}"
+echo "" >&2
+echo -e "${GREEN}============================================${NC}" >&2
+echo -e "${GREEN}  Instalacao concluida com sucesso           ${NC}" >&2
+echo -e "${GREEN}============================================${NC}" >&2
+echo "" >&2
+echo "Resumo:" >&2
+echo "  - Postfix (SMTP2Go): porta ${SMTP_PORT}, remetente ${SENDER_EMAIL}" >&2
+echo "  - Destinatarios e-mail: ${RECIPIENTS}" >&2
 if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
-  echo "  - Telegram: config em /opt/monitoring/telegram.conf"
-  [[ -z "$TELEGRAM_CHAT_ID" ]] && echo "    (Execute: sudo /usr/local/bin/telegram-get-chat-id.sh para obter o Chat ID)"
+  echo "  - Telegram: config em /opt/monitoring/telegram.conf" >&2
+  [[ -z "$TELEGRAM_CHAT_ID" ]] && echo "    (Execute: sudo /usr/local/bin/telegram-get-chat-id.sh para obter o Chat ID)" >&2
 fi
-echo "  - ClamAV: varredura diaria 02:00, quarentena em /var/virus-quarantine"
-echo "  - Monitoramento: CPU, RAM e Disco a cada 5 min (alerta acima de 80%)"
-echo ""
-echo "Arquivos principais:"
-echo "  - /usr/local/bin/send_html_alert.sh"
-echo "  - /usr/local/bin/send_telegram_alert.sh"
-[[ -n "$TELEGRAM_BOT_TOKEN" ]] && echo "  - /usr/local/bin/telegram-get-chat-id.sh"
-echo "  - /usr/local/bin/monitor_cpu.sh"
-echo "  - /usr/local/bin/monitor_memory.sh"
-echo "  - /usr/local/bin/monitor_disk.sh"
-echo "  - /opt/alerts/templates/*.html"
-echo "  - /opt/monitoring/telegram.conf (Telegram)"
-echo ""
-echo "Crontab: sudo crontab -l"
-echo "Logs: /var/log/mail.log | /var/log/clamav/"
-echo ""
+echo "  - ClamAV: varredura diaria 02:00, quarentena em /var/virus-quarantine" >&2
+echo "  - Monitoramento: CPU, RAM e Disco a cada 5 min (alerta acima de 80%)" >&2
+echo "" >&2
+echo "Arquivos principais:" >&2
+echo "  - /usr/local/bin/send_html_alert.sh" >&2
+echo "  - /usr/local/bin/send_telegram_alert.sh" >&2
+[[ -n "$TELEGRAM_BOT_TOKEN" ]] && echo "  - /usr/local/bin/telegram-get-chat-id.sh" >&2
+echo "  - /usr/local/bin/monitor_cpu.sh" >&2
+echo "  - /usr/local/bin/monitor_memory.sh" >&2
+echo "  - /usr/local/bin/monitor_disk.sh" >&2
+echo "  - /opt/alerts/templates/*.html" >&2
+echo "  - /opt/monitoring/telegram.conf (Telegram)" >&2
+echo "" >&2
+echo "Crontab: sudo crontab -l" >&2
+echo "Logs: /var/log/mail.log | /var/log/clamav/" >&2
+echo "" >&2
 
 # Encerrar com codigo de erro se houve falhas criticas
 if [[ ${#INSTALL_ERRORS[@]} -gt 0 ]]; then
