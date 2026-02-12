@@ -89,6 +89,44 @@ test_port() {
   (echo >/dev/tcp/"$host"/"$port") 2>/dev/null && return 0 || return 1
 }
 
+# Detecta servico de e-mail ja instalado (Postfix, Exim, cPanel, Sendmail).
+# Retorno: 0 = conflito detectado (nao instalar), 1 = nenhum conflito
+detect_mail_conflict() {
+  if dpkg -l postfix 2>/dev/null | grep -q '^ii'; then
+    echo "Postfix"
+    return 0
+  fi
+  if dpkg -l exim4 2>/dev/null | grep -q '^ii'; then
+    echo "Exim4"
+    return 0
+  fi
+  if dpkg -l exim 2>/dev/null | grep -q '^ii'; then
+    echo "Exim"
+    return 0
+  fi
+  if dpkg -l sendmail 2>/dev/null | grep -q '^ii'; then
+    echo "Sendmail"
+    return 0
+  fi
+  if [[ -d /usr/local/cpanel ]]; then
+    echo "cPanel (gerenciador de e-mail)"
+    return 0
+  fi
+  if systemctl is-active exim 2>/dev/null | grep -q 'active'; then
+    echo "Exim (servico ativo)"
+    return 0
+  fi
+  if systemctl is-active exim4 2>/dev/null | grep -q 'active'; then
+    echo "Exim4 (servico ativo)"
+    return 0
+  fi
+  if [[ -x /usr/sbin/exim ]] && [[ -f /etc/exim/exim.conf || -f /etc/exim4/exim4.conf ]]; then
+    echo "Exim (binario e config presentes)"
+    return 0
+  fi
+  return 1
+}
+
 # Trap: ao sair com ERRO, mostrar erros (avisos ja foram mostrados no fluxo principal)
 cleanup_on_exit() {
   local code=$?
@@ -147,9 +185,40 @@ echo -e "${BLUE}  E-mail + Telegram + ClamAV + CPU/RAM/Disco ${NC}" >&2
 echo -e "${BLUE}============================================${NC}" >&2
 echo "" >&2
 
+# --- Ativacao de notificacoes por e-mail ---
+EMAIL_ENABLED=0
+printf 'Deseja ativar notificacoes por e-mail? (s/N): ' >&2
+read -r r </dev/tty || true
+r="${r:-n}"
+if [[ "${r,,}" == "s" || "${r,,}" == "sim" ]]; then
+  conflict=$(detect_mail_conflict) || true
+  if [[ -n "$conflict" ]]; then
+    echo "" >&2
+    log_warn "Foi detectado um servico de e-mail ja instalado neste servidor:"
+    printf '   -> %s\n' "$conflict" >&2
+    echo "" >&2
+    echo "   Instalar o Postfix junto poderia gerar conflitos e afetar o envio e" >&2
+    echo "   recebimento de e-mails. Por seguranca, o servico de notificacoes por" >&2
+    echo "   e-mail NAO sera instalado/ativado." >&2
+    echo "" >&2
+    echo "   A instalacao seguira normalmente para os demais itens (Telegram," >&2
+    echo "   ClamAV, monitoramento e Dashboard)." >&2
+    echo "" >&2
+    printf 'Pressione Enter para continuar...' >&2
+    read -r </dev/tty || true
+    EMAIL_ENABLED=0
+  else
+    EMAIL_ENABLED=1
+  fi
+fi
+echo "" >&2
+
 # Coleta de dados (prompts em stderr para aparecer com "curl | bash")
 log_info "Informe os dados solicitados (Enter para usar valor padrao quando indicado)."
 echo "" >&2
+
+# --- Dados SMTP (somente se e-mail ativado) ---
+if [[ $EMAIL_ENABLED -eq 1 ]]; then
 printf 'Porta do servidor SMTP (ex: 587 ou 2525) [587]: ' >&2
 read -r SMTP_PORT </dev/tty || true
 SMTP_PORT="${SMTP_PORT:-587}"
@@ -178,6 +247,14 @@ read -r RECIPIENTS </dev/tty || true
 
 # Remove espaços extras dos destinatários
 RECIPIENTS=$(echo "$RECIPIENTS" | tr -d ' ')
+else
+  SMTP_PORT="587"
+  SMTP_DOMAIN=""
+  SMTP_USER=""
+  SMTP_PASS=""
+  SENDER_EMAIL=""
+  RECIPIENTS=""
+fi
 
 echo "" >&2
 printf 'Token do Bot do Telegram (vazio = nao usar Telegram): ' >&2
@@ -243,17 +320,22 @@ fi
 echo "" >&2
 
 # --- 1. Pacotes do sistema ---
-log_step "Pacotes do sistema (postfix, mailutils, clamav, sysstat, bc, gettext-base)"
+PACKS="gettext-base clamav clamav-daemon sysstat bc"
+[[ $EMAIL_ENABLED -eq 1 ]] && PACKS="postfix libsasl2-modules mailutils $PACKS"
+log_step "Pacotes do sistema ($PACKS)"
 export DEBIAN_FRONTEND=noninteractive
-debconf-set-selections <<< "postfix postfix/mailname string $SMTP_DOMAIN" 2>/dev/null || true
-debconf-set-selections <<< "postfix postfix/main_mailer_type select Internet Site" 2>/dev/null || true
-if run_apt postfix libsasl2-modules mailutils gettext-base clamav clamav-daemon sysstat bc; then
+if [[ $EMAIL_ENABLED -eq 1 ]]; then
+  debconf-set-selections <<< "postfix postfix/mailname string $SMTP_DOMAIN" 2>/dev/null || true
+  debconf-set-selections <<< "postfix postfix/main_mailer_type select Internet Site" 2>/dev/null || true
+fi
+if run_apt $PACKS; then
   log_ok "Pacotes instalados ou ja presentes."
 else
-  INSTALL_ERRORS+=("Falha ao instalar pacotes. Execute: sudo apt-get update && sudo apt-get install -y postfix libsasl2-modules mailutils gettext-base clamav clamav-daemon sysstat bc")
+  INSTALL_ERRORS+=("Falha ao instalar pacotes. Execute: sudo apt-get update && sudo apt-get install -y $PACKS")
 fi
 
-# --- 2. Configuração Postfix ---
+# --- 2. Configuração Postfix (somente se e-mail ativado) ---
+if [[ $EMAIL_ENABLED -eq 1 ]]; then
 log_step "Postfix (SMTP2Go)"
 SMTP_HOST="mail.smtp2go.com"
 # Auto-correcao: se porta 587 falhar, tentar 2525
@@ -328,6 +410,9 @@ fi
 systemctl restart postfix 2>/dev/null || INSTALL_WARNINGS+=("Nao foi possivel reiniciar postfix. Tente: sudo systemctl restart postfix")
 systemctl enable postfix 2>/dev/null || true
 log_ok "Postfix configurado."
+else
+  log_ok "E-mail desabilitado. Postfix nao instalado."
+fi
 
 # --- 3. ClamAV ---
 log_step "ClamAV (antivirus e quarentena)"
@@ -364,7 +449,8 @@ cat > /usr/local/bin/send_html_alert.sh << 'SENDHTML'
 #!/usr/bin/env bash
 set -euo pipefail
 TEMPLATE_PATH="${1:-/opt/alerts/templates/alert.html}"
-RECIPIENT="${2:?Informe o e-mail de destino}"
+RECIPIENT="${2:-}"
+[[ -z "$RECIPIENT" ]] && exit 0
 SUBJECT="${3:-Alerta do servidor}"
 TITLE="${4:-Alerta do servidor}"
 MESSAGE="${5:-Mensagem nao especificada}"
@@ -391,7 +477,11 @@ log_ok "Script send_html_alert.sh criado."
 
 # --- 4b. E-mail: remetente e identificador do servidor (From + nome em todos os alertas) ---
 mkdir -p /opt/monitoring
-printf 'SENDER_EMAIL="%s"\nSERVER_ID="%s"\n' "$SENDER_EMAIL" "$SMTP_DOMAIN" > /opt/monitoring/email.conf
+if [[ $EMAIL_ENABLED -eq 1 ]]; then
+  printf 'SENDER_EMAIL="%s"\nSERVER_ID="%s"\n' "$SENDER_EMAIL" "$SMTP_DOMAIN" > /opt/monitoring/email.conf
+else
+  printf 'SENDER_EMAIL=""\nSERVER_ID="%s"\n' "$(hostname 2>/dev/null || echo 'localhost')" > /opt/monitoring/email.conf
+fi
 chmod 644 /opt/monitoring/email.conf
 
 # --- 4c. Telegram: config e scripts de notificacao ---
@@ -759,27 +849,31 @@ fi
 
 # --- 8. E-mail e Telegram de boas-vindas (confirmar que tudo esta ok) ---
 log_step "E-mail e Telegram de boas-vindas"
-WELCOME_SUBJECT="Monitoramento instalado com sucesso - Bem-vindo"
-WELCOME_TITLE="Instalacao concluida com sucesso"
-WELCOME_MSG="Bem-vindo ao sistema de monitoramento. A instalacao e configuracao foram concluidas com exito. Os alertas de CPU, memoria, disco e ClamAV estao ativos. Voce recebera notificacoes neste e-mail e, se configurado, no Telegram.<br/><br/>Servidor: <strong>${SMTP_DOMAIN}</strong><br/>Data: <strong>$(date '+%Y-%m-%d %H:%M:%S')</strong>"
-EMAIL_OK=0
-while IFS=',' read -ra ADDRS; do
-  for addr in "${ADDRS[@]}"; do
-    addr=$(echo "$addr" | tr -d ' ')
-    [[ -z "$addr" ]] && continue
-    if /usr/local/bin/send_html_alert.sh /opt/alerts/templates/alert.html "$addr" "$WELCOME_SUBJECT" "$WELCOME_TITLE" "$WELCOME_MSG" 2>/dev/null; then
-      EMAIL_OK=1
-    fi
-  done
-done <<< "$RECIPIENTS"
-if [[ $EMAIL_OK -eq 1 ]]; then
-  log_ok "E-mail de boas-vindas enviado para: $RECIPIENTS"
+if [[ $EMAIL_ENABLED -eq 1 ]] && [[ -n "$RECIPIENTS" ]]; then
+  WELCOME_SUBJECT="Monitoramento instalado com sucesso - Bem-vindo"
+  WELCOME_TITLE="Instalacao concluida com sucesso"
+  WELCOME_MSG="Bem-vindo ao sistema de monitoramento. A instalacao e configuracao foram concluidas com exito. Os alertas de CPU, memoria, disco e ClamAV estao ativos. Voce recebera notificacoes neste e-mail e, se configurado, no Telegram.<br/><br/>Servidor: <strong>${SMTP_DOMAIN}</strong><br/>Data: <strong>$(date '+%Y-%m-%d %H:%M:%S')</strong>"
+  EMAIL_OK=0
+  while IFS=',' read -ra ADDRS; do
+    for addr in "${ADDRS[@]}"; do
+      addr=$(echo "$addr" | tr -d ' ')
+      [[ -z "$addr" ]] && continue
+      if /usr/local/bin/send_html_alert.sh /opt/alerts/templates/alert.html "$addr" "$WELCOME_SUBJECT" "$WELCOME_TITLE" "$WELCOME_MSG" 2>/dev/null; then
+        EMAIL_OK=1
+      fi
+    done
+  done <<< "$RECIPIENTS"
+  if [[ $EMAIL_OK -eq 1 ]]; then
+    log_ok "E-mail de boas-vindas enviado para: $RECIPIENTS"
+  else
+    log_warn "Envio do e-mail de boas-vindas falhou. Verifique: tail -f /var/log/mail.log"
+  fi
 else
-  log_warn "Envio do e-mail de boas-vindas falhou. Verifique: tail -f /var/log/mail.log"
+  [[ $EMAIL_ENABLED -eq 0 ]] && log_ok "E-mail desabilitado. Nenhum e-mail de boas-vindas enviado."
 fi
 if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
   log_info "Enviando mensagem de conexao para o Telegram..."
-  if /usr/local/bin/send_telegram_alert.sh "Conexao confirmada. Bem-vindo ao monitoramento de ${SMTP_DOMAIN}. Instalacao concluida com sucesso; alertas ativos." 2>/dev/null; then
+  if /usr/local/bin/send_telegram_alert.sh "Conexao confirmada. Bem-vindo ao monitoramento de ${SMTP_DOMAIN:-$(hostname)}. Instalacao concluida com sucesso; alertas ativos." 2>/dev/null; then
     log_ok "Telegram: mensagem de boas-vindas enviada ao contato principal do bot."
   else
     log_warn "Telegram: falha no envio. Apos configurar o Chat ID, execute: echo Teste | /usr/local/bin/send_telegram_alert.sh"
@@ -795,8 +889,12 @@ echo -e "${GREEN}  Instalacao concluida com sucesso           ${NC}" >&2
 echo -e "${GREEN}============================================${NC}" >&2
 echo "" >&2
 echo "Resumo:" >&2
-echo "  - Postfix (SMTP2Go): porta ${SMTP_PORT}, remetente ${SENDER_EMAIL}" >&2
-echo "  - Destinatarios e-mail: ${RECIPIENTS}" >&2
+if [[ $EMAIL_ENABLED -eq 1 ]]; then
+  echo "  - Postfix (SMTP2Go): porta ${SMTP_PORT}, remetente ${SENDER_EMAIL}" >&2
+  echo "  - Destinatarios e-mail: ${RECIPIENTS}" >&2
+else
+  echo "  - E-mail: desabilitado (não instalado)" >&2
+fi
 if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
   echo "  - Telegram: config em /opt/monitoring/telegram.conf" >&2
   [[ -z "$TELEGRAM_CHAT_ID" ]] && echo "    (Execute: sudo /usr/local/bin/telegram-get-chat-id.sh para obter o Chat ID)" >&2
