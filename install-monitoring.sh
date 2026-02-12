@@ -285,11 +285,11 @@ USE_DASHBOARD=$(echo "${USE_DASHBOARD:-n}" | tr '[:upper:]' '[:lower:]')
 
 DASHBOARD_ENABLED=0
 DASHBOARD_SERVER_UUID=""
-DASHBOARD_API_URL="${DASHBOARD_API_URL:-https://api.dashboard-exemplo.com/v1}"
+DASHBOARD_API_URL="${DASHBOARD_API_URL:-https://api-observabilidade.edeniva.com.br/v1}"
 
 if [[ "$USE_DASHBOARD" == "s" || "$USE_DASHBOARD" == "sim" || "$USE_DASHBOARD" == "y" || "$USE_DASHBOARD" == "yes" ]]; then
   DASHBOARD_ENABLED=1
-  printf 'URL da API do Dashboard (ex: https://api.seudominio.com/v1): [%s] ' "$DASHBOARD_API_URL" >&2
+  printf 'URL da API do Dashboard (ex: https://api-observabilidade.edeniva.com.br/v1): [%s] ' "$DASHBOARD_API_URL" >&2
   read -r DASHBOARD_API_URL_INPUT </dev/tty || true
   [[ -n "$DASHBOARD_API_URL_INPUT" ]] && DASHBOARD_API_URL=$(echo "$DASHBOARD_API_URL_INPUT" | tr -d ' ')
   printf 'UUID do Servidor (gerado no painel ao cadastrar o servidor): ' >&2
