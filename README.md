@@ -54,6 +54,7 @@ sudo bash install-monitoring.sh
    - `monitor_cpu.sh` – alerta quando CPU > threshold (e-mail + Telegram), com snapshot tipo top e top 25 processos por CPU/RAM
    - `monitor_memory.sh` – alerta quando RAM > threshold (e-mail + Telegram), com snapshot e listas completas de processos
    - `monitor_disk.sh` – alerta quando disco > threshold (e-mail + Telegram), com top diretorios e snapshot do sistema
+   - Os arquivos `monitor_cpu.sh`, `monitor_memory.sh` e `monitor_disk.sh` existem como standalone neste repo para que o Dashboard (via `dashboard_fetch_updates.sh`) possa baixa-los e atualizar servidores remotos.
 
 6. **Crontab**
    - CPU, Memoria e Disco: execucao a cada 5 minutos

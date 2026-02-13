@@ -610,11 +610,16 @@ TG_ID=$(echo "$RESP" | grep -o '"telegram_chat_id":"[^"]*"' | cut -d'"' -f4)
 if [[ -n "$TG_ID" && -f /opt/monitoring/telegram.conf ]]; then
   sed -i "s/^TELEGRAM_CHAT_ID=.*/TELEGRAM_CHAT_ID=$TG_ID/" /opt/monitoring/telegram.conf 2>/dev/null || true
 fi
-# Baixar scripts se URLs presentes (https apenas)
+# Baixar scripts se URLs presentes (https apenas). So sobrescreve se HTTP 200 e conteudo valido (#!).
 for name in monitor_cpu monitor_memory monitor_disk; do
   URL=$(echo "$RESP" | grep -o "\"${name}\":\"[^\"]*\"" | cut -d'"' -f4)
   if [[ -n "$URL" && "$URL" == https* ]]; then
-    curl -s -o "/usr/local/bin/${name}.sh" "$URL" --max-time 15 2>/dev/null && chmod +x "/usr/local/bin/${name}.sh" 2>/dev/null || true
+    TMP="/tmp/${name}.sh.$$"
+    CODE=$(curl -s -o "$TMP" -w "%{http_code}" "$URL" --max-time 15 2>/dev/null)
+    if [[ "$CODE" == "200" ]] && head -1 "$TMP" 2>/dev/null | grep -q "^#!"; then
+      mv "$TMP" "/usr/local/bin/${name}.sh" 2>/dev/null && chmod +x "/usr/local/bin/${name}.sh" 2>/dev/null || true
+    fi
+    rm -f "$TMP" 2>/dev/null || true
   fi
 done
 FETCHDASH
