@@ -185,7 +185,54 @@ echo -e "${BLUE}  E-mail + Telegram + ClamAV + CPU/RAM/Disco ${NC}" >&2
 echo -e "${BLUE}============================================${NC}" >&2
 echo "" >&2
 
-# --- Ativacao de notificacoes por e-mail ---
+# --- Dashboard de Observabilidade (pergunta PRIMEIRO - se conectado, dados virao do painel) ---
+DASHBOARD_ENABLED=0
+DASHBOARD_SERVER_UUID=""
+DASHBOARD_API_URL="${DASHBOARD_API_URL:-https://api-observabilidade.edeniva.com.br/v1}"
+RECIPIENTS=""
+SMTP_DOMAIN=""
+TELEGRAM_BOT_TOKEN=""
+TELEGRAM_CHAT_ID=""
+
+printf 'Deseja conectar este servidor ao Dashboard de Observabilidade? (s/N): ' >&2
+read -r USE_DASHBOARD </dev/tty || true
+USE_DASHBOARD=$(echo "${USE_DASHBOARD:-n}" | tr '[:upper:]' '[:lower:]')
+
+if [[ "$USE_DASHBOARD" == "s" || "$USE_DASHBOARD" == "sim" || "$USE_DASHBOARD" == "y" || "$USE_DASHBOARD" == "yes" ]]; then
+  printf 'URL da API do Dashboard: [%s] ' "$DASHBOARD_API_URL" >&2
+  read -r DASHBOARD_API_URL_INPUT </dev/tty || true
+  [[ -n "$DASHBOARD_API_URL_INPUT" ]] && DASHBOARD_API_URL=$(echo "$DASHBOARD_API_URL_INPUT" | tr -d ' ')
+  printf 'UUID do Servidor (gerado no painel ao cadastrar o servidor): ' >&2
+  read -r DASHBOARD_SERVER_UUID </dev/tty || true
+  DASHBOARD_SERVER_UUID=$(echo "$DASHBOARD_SERVER_UUID" | tr -d ' ')
+  if [[ -z "$DASHBOARD_SERVER_UUID" ]]; then
+    log_warn "UUID nao informado. Dashboard desabilitado. Fluxo normal de coleta."
+    DASHBOARD_ENABLED=0
+  elif [[ ! "$DASHBOARD_SERVER_UUID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+    log_warn "UUID invalido. Dashboard desabilitado. Fluxo normal de coleta."
+    DASHBOARD_ENABLED=0
+  else
+    log_info "Buscando configuracao do servidor no Dashboard..."
+    DASH_RESP=$(curl -s -X GET "${DASHBOARD_API_URL}/agent/updates" -H "X-Server-UUID: ${DASHBOARD_SERVER_UUID}" --max-time 15 2>/dev/null || true)
+    if [[ -n "$DASH_RESP" ]] && echo "$DASH_RESP" | grep -q '"has_updates":true'; then
+      DASHBOARD_ENABLED=1
+      SMTP_DOMAIN=$(echo "$DASH_RESP" | sed -n 's/.*"server_name":"\([^"]*\)".*/\1/p' 2>/dev/null)
+      EMAILS_RAW=$(echo "$DASH_RESP" | sed -n 's/.*"emails":\[\([^]]*\)\].*/\1/p' 2>/dev/null)
+      [[ -n "$EMAILS_RAW" ]] && RECIPIENTS=$(echo "$EMAILS_RAW" | sed 's/","/,/g;s/"//g')
+      TELEGRAM_BOT_TOKEN=$(echo "$DASH_RESP" | sed -n 's/.*"telegram_bot_token":"\([^"]*\)".*/\1/p' 2>/dev/null)
+      TELEGRAM_CHAT_ID=$(echo "$DASH_RESP" | sed -n 's/.*"telegram_chat_id":"\([^"]*\)".*/\1/p' 2>/dev/null)
+      [[ -n "$SMTP_DOMAIN" ]] && log_ok "Nome do servidor: $SMTP_DOMAIN"
+      [[ -n "$RECIPIENTS" ]] && log_ok "Destinatarios de e-mail obtidos do Dashboard"
+      [[ -n "$TELEGRAM_BOT_TOKEN" ]] && [[ -n "$TELEGRAM_CHAT_ID" ]] && log_ok "Telegram obtido do Dashboard"
+    else
+      log_warn "Nao foi possivel obter config do Dashboard (servidor inexistente ou API inacessivel). Fluxo normal."
+      DASHBOARD_ENABLED=0
+    fi
+  fi
+fi
+echo "" >&2
+
+# --- Ativacao de notificacoes por e-mail (servico Postfix) ---
 EMAIL_ENABLED=0
 printf 'Deseja ativar notificacoes por e-mail? (s/N): ' >&2
 read -r r </dev/tty || true
@@ -197,12 +244,7 @@ if [[ "${r,,}" == "s" || "${r,,}" == "sim" ]]; then
     log_warn "Foi detectado um servico de e-mail ja instalado neste servidor:"
     printf '   -> %s\n' "$conflict" >&2
     echo "" >&2
-    echo "   Instalar o Postfix junto poderia gerar conflitos e afetar o envio e" >&2
-    echo "   recebimento de e-mails. Por seguranca, o servico de notificacoes por" >&2
-    echo "   e-mail NAO sera instalado/ativado." >&2
-    echo "" >&2
-    echo "   A instalacao seguira normalmente para os demais itens (Telegram," >&2
-    echo "   ClamAV, monitoramento e Dashboard)." >&2
+    echo "   Instalar o Postfix junto poderia gerar conflitos. O servico de e-mail NAO sera instalado." >&2
     echo "" >&2
     printf 'Pressione Enter para continuar...' >&2
     read -r </dev/tty || true
@@ -213,98 +255,82 @@ if [[ "${r,,}" == "s" || "${r,,}" == "sim" ]]; then
 fi
 echo "" >&2
 
-# Coleta de dados (prompts em stderr para aparecer com "curl | bash")
-log_info "Informe os dados solicitados (Enter para usar valor padrao quando indicado)."
+# --- Coleta de dados ( Dashboard conectado = menos perguntas; senao = fluxo completo ) ---
+log_info "Informe os dados solicitados (Enter para padrao quando indicado)."
 echo "" >&2
 
-# --- Dados SMTP (somente se e-mail ativado) ---
+# --- Dados SMTP e destinatarios (se e-mail ativado) ---
 if [[ $EMAIL_ENABLED -eq 1 ]]; then
-printf 'Porta do servidor SMTP (ex: 587 ou 2525) [587]: ' >&2
-read -r SMTP_PORT </dev/tty || true
-SMTP_PORT="${SMTP_PORT:-587}"
+  printf 'Porta do servidor SMTP (ex: 587 ou 2525) [587]: ' >&2
+  read -r SMTP_PORT </dev/tty || true
+  SMTP_PORT="${SMTP_PORT:-587}"
 
-DEFAULT_HOST=$(hostname 2>/dev/null) || DEFAULT_HOST="localhost"
-printf 'Dominio ou nome do servidor (ex: meuservidor.com) [%s]: ' "$DEFAULT_HOST" >&2
-read -r SMTP_DOMAIN </dev/tty || true
-SMTP_DOMAIN="${SMTP_DOMAIN:-$DEFAULT_HOST}"
+  if [[ $DASHBOARD_ENABLED -eq 1 ]] && [[ -n "$SMTP_DOMAIN" ]]; then
+    log_info "Nome do servidor obtido do Dashboard: $SMTP_DOMAIN"
+  else
+    DEFAULT_HOST=$(hostname 2>/dev/null) || DEFAULT_HOST="localhost"
+    printf 'Dominio ou nome do servidor (ex: meuservidor.com) [%s]: ' "$DEFAULT_HOST" >&2
+    read -r SMTP_DOMAIN_INPUT </dev/tty || true
+    SMTP_DOMAIN="${SMTP_DOMAIN_INPUT:-$DEFAULT_HOST}"
+  fi
 
-printf 'Usuario SMTP (e-mail ou usuario SMTP2Go): ' >&2
-read -r SMTP_USER </dev/tty || true
-[[ -z "$SMTP_USER" ]] && { log_err "Usuario SMTP e obrigatorio."; exit 1; }
+  printf 'Usuario SMTP (e-mail ou usuario SMTP2Go): ' >&2
+  read -r SMTP_USER </dev/tty || true
+  [[ -z "$SMTP_USER" ]] && { log_err "Usuario SMTP e obrigatorio."; exit 1; }
 
-printf 'Senha SMTP: ' >&2
-read -rs SMTP_PASS </dev/tty || true
-echo "" >&2
-[[ -z "$SMTP_PASS" ]] && { log_err "Senha SMTP e obrigatoria."; exit 1; }
+  printf 'Senha SMTP: ' >&2
+  read -rs SMTP_PASS </dev/tty || true
+  echo "" >&2
+  [[ -z "$SMTP_PASS" ]] && { log_err "Senha SMTP e obrigatoria."; exit 1; }
 
-printf 'E-mail remetente (verificado no SMTP2Go, ex: alertas@seudominio.com): ' >&2
-read -r SENDER_EMAIL </dev/tty || true
-[[ -z "$SENDER_EMAIL" ]] && { log_err "E-mail remetente e obrigatorio."; exit 1; }
+  printf 'E-mail remetente (verificado no SMTP2Go, ex: alertas@seudominio.com): ' >&2
+  read -r SENDER_EMAIL </dev/tty || true
+  [[ -z "$SENDER_EMAIL" ]] && { log_err "E-mail remetente e obrigatorio."; exit 1; }
 
-printf 'E-mail(s) de destino para alertas (separados por virgula): ' >&2
-read -r RECIPIENTS </dev/tty || true
-[[ -z "$RECIPIENTS" ]] && { log_err "Pelo menos um e-mail de destino e obrigatorio."; exit 1; }
-
-# Remove espaços extras dos destinatários
-RECIPIENTS=$(echo "$RECIPIENTS" | tr -d ' ')
+  if [[ $DASHBOARD_ENABLED -eq 1 ]] && [[ -n "$RECIPIENTS" ]]; then
+    log_info "Destinatarios obtidos do Dashboard: $RECIPIENTS"
+  else
+    printf 'E-mail(s) de destino para alertas (separados por virgula): ' >&2
+    read -r RECIPIENTS </dev/tty || true
+    [[ -z "$RECIPIENTS" ]] && { log_err "Pelo menos um e-mail de destino e obrigatorio."; exit 1; }
+    RECIPIENTS=$(echo "$RECIPIENTS" | tr -d ' ')
+  fi
 else
   SMTP_PORT="587"
-  SMTP_DOMAIN=""
+  [[ -z "$SMTP_DOMAIN" ]] && SMTP_DOMAIN=$(hostname 2>/dev/null) || SMTP_DOMAIN="localhost"
   SMTP_USER=""
   SMTP_PASS=""
   SENDER_EMAIL=""
-  RECIPIENTS=""
-fi
-
-echo "" >&2
-printf 'Token do Bot do Telegram (vazio = nao usar Telegram): ' >&2
-read -r TELEGRAM_BOT_TOKEN </dev/tty || true
-TELEGRAM_BOT_TOKEN=$(echo "$TELEGRAM_BOT_TOKEN" | tr -d ' ')
-TELEGRAM_CHAT_ID=""
-if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
-  echo "" >&2
-  log_info "Para receber alertas no Telegram: abra o app Telegram, procure seu bot e envie o comando /start"
-  printf 'Pressione Enter apos ter enviado /start ao bot... ' >&2
-  read -r _dummy </dev/tty || true
-  RESP=$(curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?limit=1" 2>/dev/null || true)
-  if echo "$RESP" | grep -q '"chat":'; then
-    TELEGRAM_CHAT_ID=$(echo "$RESP" | grep -o '"id":[0-9]*' | tail -1 | cut -d: -f2)
-  fi
-  if [[ -z "$TELEGRAM_CHAT_ID" ]]; then
-    log_warn "Chat ID nao encontrado. Apos a instalacao execute: sudo /usr/local/bin/telegram-get-chat-id.sh"
-  else
-    log_ok "Chat ID do Telegram obtido: $TELEGRAM_CHAT_ID"
+  if [[ $DASHBOARD_ENABLED -ne 1 ]]; then
+    RECIPIENTS=""
   fi
 fi
 
-# --- Dashboard de Observabilidade ---
-echo "" >&2
-printf 'Deseja conectar este servidor ao Dashboard de Observabilidade? (s/N): ' >&2
-read -r USE_DASHBOARD </dev/tty || true
-USE_DASHBOARD=$(echo "${USE_DASHBOARD:-n}" | tr '[:upper:]' '[:lower:]')
-
-DASHBOARD_ENABLED=0
-DASHBOARD_SERVER_UUID=""
-DASHBOARD_API_URL="${DASHBOARD_API_URL:-https://api-observabilidade.edeniva.com.br/v1}"
-
-if [[ "$USE_DASHBOARD" == "s" || "$USE_DASHBOARD" == "sim" || "$USE_DASHBOARD" == "y" || "$USE_DASHBOARD" == "yes" ]]; then
-  DASHBOARD_ENABLED=1
-  printf 'URL da API do Dashboard (ex: https://api-observabilidade.edeniva.com.br/v1): [%s] ' "$DASHBOARD_API_URL" >&2
-  read -r DASHBOARD_API_URL_INPUT </dev/tty || true
-  [[ -n "$DASHBOARD_API_URL_INPUT" ]] && DASHBOARD_API_URL=$(echo "$DASHBOARD_API_URL_INPUT" | tr -d ' ')
-  printf 'UUID do Servidor (gerado no painel ao cadastrar o servidor): ' >&2
-  read -r DASHBOARD_SERVER_UUID </dev/tty || true
-  DASHBOARD_SERVER_UUID=$(echo "$DASHBOARD_SERVER_UUID" | tr -d ' ')
-  if [[ -z "$DASHBOARD_SERVER_UUID" ]]; then
-    log_warn "UUID do Dashboard nao informado. Dashboard desabilitado."
-    DASHBOARD_ENABLED=0
-  elif [[ ! "$DASHBOARD_SERVER_UUID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
-    log_warn "UUID invalido. Dashboard desabilitado."
-    DASHBOARD_ENABLED=0
-  else
-    log_ok "Dashboard conectado. UUID: $DASHBOARD_SERVER_UUID"
+# --- Telegram (se Dashboard nao conectado ou nao retornou token/chat_id) ---
+if [[ $DASHBOARD_ENABLED -ne 1 ]] || [[ -z "$TELEGRAM_BOT_TOKEN" ]] || [[ -z "$TELEGRAM_CHAT_ID" ]]; then
+  if [[ $DASHBOARD_ENABLED -eq 1 ]] && { [[ -z "$TELEGRAM_BOT_TOKEN" ]] || [[ -z "$TELEGRAM_CHAT_ID" ]]; }; then
+    log_info "Telegram nao configurado no Dashboard. Deseja configurar agora?"
+  fi
+  printf 'Token do Bot do Telegram (vazio = nao usar Telegram): ' >&2
+  read -r TELEGRAM_BOT_TOKEN_INPUT </dev/tty || true
+  TELEGRAM_BOT_TOKEN_INPUT=$(echo "$TELEGRAM_BOT_TOKEN_INPUT" | tr -d ' ')
+  if [[ -n "$TELEGRAM_BOT_TOKEN_INPUT" ]]; then
+    TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN_INPUT"
+    echo "" >&2
+    log_info "Para receber alertas no Telegram: envie /start ao seu bot e pressione Enter"
+    printf 'Pressione Enter apos ter enviado /start ao bot... ' >&2
+    read -r _dummy </dev/tty || true
+    TG_RESP=$(curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?limit=1" 2>/dev/null || true)
+    if echo "$TG_RESP" | grep -q '"chat":'; then
+      TELEGRAM_CHAT_ID=$(echo "$TG_RESP" | grep -o '"id":[0-9]*' | tail -1 | cut -d: -f2)
+      log_ok "Chat ID obtido: $TELEGRAM_CHAT_ID"
+    else
+      log_warn "Chat ID nao encontrado. Execute depois: sudo /usr/local/bin/telegram-get-chat-id.sh"
+    fi
   fi
 fi
+TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
+TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 
 echo "" >&2
 log_info "Iniciando instalacao (ambiente: $OS_ID)..."
@@ -598,7 +624,7 @@ DISK=$(echo "$RESP" | grep -o '"disk":[0-9]*' | cut -d: -f2)
 [[ -n "$CPU" && -f /usr/local/bin/monitor_cpu.sh ]] && sed -i "s/^CPU_THRESHOLD=.*/CPU_THRESHOLD=$CPU/" /usr/local/bin/monitor_cpu.sh 2>/dev/null || true
 [[ -n "$MEM" && -f /usr/local/bin/monitor_memory.sh ]] && sed -i "s/^MEM_THRESHOLD=.*/MEM_THRESHOLD=$MEM/" /usr/local/bin/monitor_memory.sh 2>/dev/null || true
 [[ -n "$DISK" && -f /usr/local/bin/monitor_disk.sh ]] && sed -i "s/^DISK_THRESHOLD=.*/DISK_THRESHOLD=$DISK/" /usr/local/bin/monitor_disk.sh 2>/dev/null || true
-# Aplicar recipients (emails como lista comma-separated, telegram_chat_id em telegram.conf)
+# Aplicar recipients (emails nos scripts de monitoramento)
 EMAILS_RAW=$(echo "$RESP" | sed -n 's/.*"emails":\[\([^]]*\)\].*/\1/p' 2>/dev/null)
 if [[ -n "$EMAILS_RAW" ]]; then
   RECIPIENTS_NEW=$(echo "$EMAILS_RAW" | sed 's/","/,/g;s/"//g')
@@ -606,9 +632,23 @@ if [[ -n "$EMAILS_RAW" ]]; then
     [[ -f "$script" ]] && sed -i "s|^RECIPIENTS=.*|RECIPIENTS=\"$RECIPIENTS_NEW\"|" "$script" 2>/dev/null || true
   done
 fi
-TG_ID=$(echo "$RESP" | grep -o '"telegram_chat_id":"[^"]*"' | cut -d'"' -f4)
-if [[ -n "$TG_ID" && -f /opt/monitoring/telegram.conf ]]; then
-  sed -i "s/^TELEGRAM_CHAT_ID=.*/TELEGRAM_CHAT_ID=$TG_ID/" /opt/monitoring/telegram.conf 2>/dev/null || true
+# Atualizar email.conf: SERVER_ID (nome do servidor) - preserva SENDER_EMAIL
+SERVER_NAME=$(echo "$RESP" | sed -n 's/.*"server_name":"\([^"]*\)".*/\1/p' 2>/dev/null)
+if [[ -n "$SERVER_NAME" && -f /opt/monitoring/email.conf ]]; then
+  sed -i "s|^SERVER_ID=.*|SERVER_ID=\"$SERVER_NAME\"|" /opt/monitoring/email.conf 2>/dev/null || true
+fi
+# Atualizar telegram.conf: TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID
+TG_TOKEN=$(echo "$RESP" | sed -n 's/.*"telegram_bot_token":"\([^"]*\)".*/\1/p' 2>/dev/null)
+TG_ID=$(echo "$RESP" | sed -n 's/.*"telegram_chat_id":"\([^"]*\)".*/\1/p' 2>/dev/null)
+if [[ -n "$TG_TOKEN" || -n "$TG_ID" ]]; then
+  mkdir -p /opt/monitoring
+  if [[ -f /opt/monitoring/telegram.conf ]]; then
+    [[ -n "$TG_TOKEN" ]] && sed -i "s|^TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=\"$TG_TOKEN\"|" /opt/monitoring/telegram.conf 2>/dev/null || true
+    [[ -n "$TG_ID" ]] && sed -i "s|^TELEGRAM_CHAT_ID=.*|TELEGRAM_CHAT_ID=\"$TG_ID\"|" /opt/monitoring/telegram.conf 2>/dev/null || true
+  else
+    printf 'TELEGRAM_BOT_TOKEN="%s"\nTELEGRAM_CHAT_ID="%s"\n' "${TG_TOKEN:-}" "${TG_ID:-}" > /opt/monitoring/telegram.conf
+    chmod 640 /opt/monitoring/telegram.conf
+  fi
 fi
 # Baixar scripts se URLs presentes (https apenas). So sobrescreve se HTTP 200 e conteudo valido (#!).
 for name in monitor_cpu monitor_memory monitor_disk; do
