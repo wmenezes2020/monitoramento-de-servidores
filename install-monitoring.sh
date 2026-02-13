@@ -617,40 +617,19 @@ API_URL="${DASHBOARD_API_URL:-https://api.dashboard-exemplo.com/v1}"
 RESP=$(curl -s -X GET "${API_URL}/agent/updates" -H "X-Server-UUID: ${DASHBOARD_SERVER_UUID}" --max-time 10 2>/dev/null) || exit 0
 [[ -z "$RESP" ]] && exit 0
 echo "$RESP" | grep -q '"has_updates":true' || exit 0
-# Aplicar thresholds nos scripts
+# Extrair valores da resposta JSON
 CPU=$(echo "$RESP" | grep -o '"cpu":[0-9]*' | cut -d: -f2)
 MEM=$(echo "$RESP" | grep -o '"memory":[0-9]*' | cut -d: -f2)
 DISK=$(echo "$RESP" | grep -o '"disk":[0-9]*' | cut -d: -f2)
-[[ -n "$CPU" && -f /usr/local/bin/monitor_cpu.sh ]] && sed -i "s/^CPU_THRESHOLD=.*/CPU_THRESHOLD=$CPU/" /usr/local/bin/monitor_cpu.sh 2>/dev/null || true
-[[ -n "$MEM" && -f /usr/local/bin/monitor_memory.sh ]] && sed -i "s/^MEM_THRESHOLD=.*/MEM_THRESHOLD=$MEM/" /usr/local/bin/monitor_memory.sh 2>/dev/null || true
-[[ -n "$DISK" && -f /usr/local/bin/monitor_disk.sh ]] && sed -i "s/^DISK_THRESHOLD=.*/DISK_THRESHOLD=$DISK/" /usr/local/bin/monitor_disk.sh 2>/dev/null || true
-# Aplicar recipients (emails nos scripts de monitoramento)
-EMAILS_RAW=$(echo "$RESP" | sed -n 's/.*"emails":\[\([^]]*\)\].*/\1/p' 2>/dev/null)
+EMAILS_RAW=$(echo "$RESP" | grep -o '"emails":\[[^]]*\]' | head -1 | sed 's/"emails":\[//;s/\]$//')
+RECIPIENTS_NEW=""
 if [[ -n "$EMAILS_RAW" ]]; then
-  RECIPIENTS_NEW=$(echo "$EMAILS_RAW" | sed 's/","/,/g;s/"//g')
-  [[ -n "$RECIPIENTS_NEW" ]] && for script in /usr/local/bin/monitor_cpu.sh /usr/local/bin/monitor_memory.sh /usr/local/bin/monitor_disk.sh; do
-    [[ -f "$script" ]] && sed -i "s|^RECIPIENTS=.*|RECIPIENTS=\"$RECIPIENTS_NEW\"|" "$script" 2>/dev/null || true
-  done
+  RECIPIENTS_NEW=$(echo "$EMAILS_RAW" | sed 's/","/,/g;s/"//g' | tr -d '\n')
 fi
-# Atualizar email.conf: SERVER_ID (nome do servidor) - preserva SENDER_EMAIL
 SERVER_NAME=$(echo "$RESP" | sed -n 's/.*"server_name":"\([^"]*\)".*/\1/p' 2>/dev/null)
-if [[ -n "$SERVER_NAME" && -f /opt/monitoring/email.conf ]]; then
-  sed -i "s|^SERVER_ID=.*|SERVER_ID=\"$SERVER_NAME\"|" /opt/monitoring/email.conf 2>/dev/null || true
-fi
-# Atualizar telegram.conf: TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID
 TG_TOKEN=$(echo "$RESP" | sed -n 's/.*"telegram_bot_token":"\([^"]*\)".*/\1/p' 2>/dev/null)
 TG_ID=$(echo "$RESP" | sed -n 's/.*"telegram_chat_id":"\([^"]*\)".*/\1/p' 2>/dev/null)
-if [[ -n "$TG_TOKEN" || -n "$TG_ID" ]]; then
-  mkdir -p /opt/monitoring
-  if [[ -f /opt/monitoring/telegram.conf ]]; then
-    [[ -n "$TG_TOKEN" ]] && sed -i "s|^TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=\"$TG_TOKEN\"|" /opt/monitoring/telegram.conf 2>/dev/null || true
-    [[ -n "$TG_ID" ]] && sed -i "s|^TELEGRAM_CHAT_ID=.*|TELEGRAM_CHAT_ID=\"$TG_ID\"|" /opt/monitoring/telegram.conf 2>/dev/null || true
-  else
-    printf 'TELEGRAM_BOT_TOKEN="%s"\nTELEGRAM_CHAT_ID="%s"\n' "${TG_TOKEN:-}" "${TG_ID:-}" > /opt/monitoring/telegram.conf
-    chmod 640 /opt/monitoring/telegram.conf
-  fi
-fi
-# Baixar scripts se URLs presentes (https apenas). So sobrescreve se HTTP 200 e conteudo valido (#!).
+# 1. Baixar scripts PRIMEIRO (se URLs presentes), para depois aplicar configs
 for name in monitor_cpu monitor_memory monitor_disk; do
   URL=$(echo "$RESP" | grep -o "\"${name}\":\"[^\"]*\"" | cut -d'"' -f4)
   if [[ -n "$URL" && "$URL" == https* ]]; then
@@ -662,6 +641,29 @@ for name in monitor_cpu monitor_memory monitor_disk; do
     rm -f "$TMP" 2>/dev/null || true
   fi
 done
+# 2. Aplicar thresholds e recipients APOS eventual download
+[[ -n "$CPU" && -f /usr/local/bin/monitor_cpu.sh ]] && sed -i "s/^CPU_THRESHOLD=.*/CPU_THRESHOLD=$CPU/" /usr/local/bin/monitor_cpu.sh 2>/dev/null || true
+[[ -n "$MEM" && -f /usr/local/bin/monitor_memory.sh ]] && sed -i "s/^MEM_THRESHOLD=.*/MEM_THRESHOLD=$MEM/" /usr/local/bin/monitor_memory.sh 2>/dev/null || true
+[[ -n "$DISK" && -f /usr/local/bin/monitor_disk.sh ]] && sed -i "s/^DISK_THRESHOLD=.*/DISK_THRESHOLD=$DISK/" /usr/local/bin/monitor_disk.sh 2>/dev/null || true
+if [[ -n "$RECIPIENTS_NEW" ]]; then
+  for script in /usr/local/bin/monitor_cpu.sh /usr/local/bin/monitor_memory.sh /usr/local/bin/monitor_disk.sh; do
+    [[ -f "$script" ]] && sed -i "s|^RECIPIENTS=.*|RECIPIENTS=\"$RECIPIENTS_NEW\"|" "$script" 2>/dev/null || true
+  done
+fi
+# 3. Atualizar email.conf e telegram.conf
+if [[ -n "$SERVER_NAME" && -f /opt/monitoring/email.conf ]]; then
+  sed -i "s|^SERVER_ID=.*|SERVER_ID=\"$SERVER_NAME\"|" /opt/monitoring/email.conf 2>/dev/null || true
+fi
+if [[ -n "$TG_TOKEN" || -n "$TG_ID" ]]; then
+  mkdir -p /opt/monitoring
+  if [[ -f /opt/monitoring/telegram.conf ]]; then
+    [[ -n "$TG_TOKEN" ]] && sed -i "s|^TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=\"$TG_TOKEN\"|" /opt/monitoring/telegram.conf 2>/dev/null || true
+    [[ -n "$TG_ID" ]] && sed -i "s|^TELEGRAM_CHAT_ID=.*|TELEGRAM_CHAT_ID=\"$TG_ID\"|" /opt/monitoring/telegram.conf 2>/dev/null || true
+  else
+    printf 'TELEGRAM_BOT_TOKEN="%s"\nTELEGRAM_CHAT_ID="%s"\n' "${TG_TOKEN:-}" "${TG_ID:-}" > /opt/monitoring/telegram.conf
+    chmod 640 /opt/monitoring/telegram.conf
+  fi
+fi
 FETCHDASH
 chmod +x /usr/local/bin/dashboard_fetch_updates.sh
 
