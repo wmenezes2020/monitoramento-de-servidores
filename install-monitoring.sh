@@ -583,7 +583,7 @@ CONF="/opt/monitoring/dashboard.conf"
 source "$CONF" 2>/dev/null || true
 [[ "${DASHBOARD_ENABLED:-0}" != "1" ]] && exit 0
 [[ -z "${DASHBOARD_SERVER_UUID:-}" ]] && exit 0
-API_URL="${DASHBOARD_API_URL:-https://api.dashboard-exemplo.com/v1}"
+API_URL="${DASHBOARD_API_URL:-https://api-observabilidade.edeniva.com.br/v1}"
 SERVER_ID="${SERVER_ID:-$(hostname)}"
 MODE="${1:-}"
 BODY="${2:-}"
@@ -607,13 +607,13 @@ chmod +x /usr/local/bin/send_dashboard_metrics.sh
 cat > /usr/local/bin/dashboard_fetch_updates.sh << 'FETCHDASH'
 #!/usr/bin/env bash
 # Consulta a API do Dashboard por atualizacoes pendentes (thresholds, recipients, scripts).
-# Cron: */2 * * * * dashboard_fetch_updates.sh
+# Cron: * * * * * dashboard_fetch_updates.sh
 CONF="/opt/monitoring/dashboard.conf"
 [[ ! -f "$CONF" ]] && exit 0
 source "$CONF" 2>/dev/null || true
 [[ "${DASHBOARD_ENABLED:-0}" != "1" ]] && exit 0
 [[ -z "${DASHBOARD_SERVER_UUID:-}" ]] && exit 0
-API_URL="${DASHBOARD_API_URL:-https://api.dashboard-exemplo.com/v1}"
+API_URL="${DASHBOARD_API_URL:-https://api-observabilidade.edeniva.com.br/v1}"
 RESP=$(curl -s -X GET "${API_URL}/agent/updates" -H "X-Server-UUID: ${DASHBOARD_SERVER_UUID}" --max-time 10 2>/dev/null) || exit 0
 [[ -z "$RESP" ]] && exit 0
 echo "$RESP" | grep -q '"has_updates":true' || exit 0
@@ -881,16 +881,16 @@ else
   (crontab -l 2>/dev/null
    echo "$CRON_MARKER"
    echo "# Monitoramento CPU a cada 5 min"
-   echo "*/5 * * * * /usr/local/bin/monitor_cpu.sh"
+   echo "* * * * * /usr/local/bin/monitor_cpu.sh"
    echo "# Monitoramento Memoria a cada 5 min"
-   echo "*/5 * * * * /usr/local/bin/monitor_memory.sh"
+   echo "* * * * * /usr/local/bin/monitor_memory.sh"
    echo "# Monitoramento Disco a cada 5 min"
-   echo "*/5 * * * * /usr/local/bin/monitor_disk.sh"
+   echo "* * * * * /usr/local/bin/monitor_disk.sh"
    echo "# ClamAV varredura diaria 02:00 e alerta se virus"
    echo "$CRON_LINE_CLAMAV"
    if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
      echo "# Consulta ao Dashboard a cada 2 min"
-     echo "*/2 * * * * /usr/local/bin/dashboard_fetch_updates.sh"
+     echo "* * * * * /usr/local/bin/dashboard_fetch_updates.sh"
    fi
   ) | crontab -
   log_ok "Crontab configurado."
