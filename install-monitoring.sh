@@ -581,7 +581,7 @@ chmod +x /usr/local/bin/send_dashboard_metrics.sh
 cat > /usr/local/bin/dashboard_fetch_updates.sh << 'FETCHDASH'
 #!/usr/bin/env bash
 # Consulta a API do Dashboard por atualizacoes pendentes (thresholds, recipients, scripts).
-# Cron: */15 * * * * dashboard_fetch_updates.sh
+# Cron: */2 * * * * dashboard_fetch_updates.sh
 CONF="/opt/monitoring/dashboard.conf"
 [[ ! -f "$CONF" ]] && exit 0
 source "$CONF" 2>/dev/null || true
@@ -847,8 +847,8 @@ else
    echo "# ClamAV varredura diaria 02:00 e alerta se virus"
    echo "$CRON_LINE_CLAMAV"
    if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
-     echo "# Consulta ao Dashboard a cada 15 min"
-     echo "*/15 * * * * /usr/local/bin/dashboard_fetch_updates.sh"
+     echo "# Consulta ao Dashboard a cada 2 min"
+     echo "*/2 * * * * /usr/local/bin/dashboard_fetch_updates.sh"
    fi
   ) | crontab -
   log_ok "Crontab configurado."
