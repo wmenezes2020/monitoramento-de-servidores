@@ -40,15 +40,19 @@ sudo bash install-monitoring.sh
    - Config em `/opt/monitoring/telegram.conf`
    - Todos os alertas (CPU, RAM, Disco, ClamAV) sao enviados tambem para o Telegram quando configurado
 
-3. **Antivirus (ClamAV)**
+3. **Integracao com Dashboard de Observabilidade**
+   - Se o usuario optar por conectar ao Dashboard, o instalador envia imediatamente a primeira notificacao completa de metricas (CPU, Memoria e Disco) para ativar o registro no painel (status Online)
+   - Config em `/opt/monitoring/dashboard.conf`
+
+4. **Antivirus (ClamAV)**
    - Instala clamav e clamav-daemon
    - Cria diretorio de quarentena e logs
    - Agenda varredura diaria (02:00) e envia alerta HTML e Telegram se encontrar virus
 
-4. **Templates de E-mail HTML**
+5. **Templates de E-mail HTML**
    - Cria `/opt/alerts/templates/`: `alert.html`, `cpu-alert.html`, `memory-alert.html`, `disk-alert.html`, `clamav-alert.html`
 
-5. **Scripts de monitoramento**
+6. **Scripts de monitoramento**
    - `send_html_alert.sh` – envia e-mail HTML a partir de template
    - `send_telegram_alert.sh` – envia mensagem para o Telegram (usa config em `/opt/monitoring/telegram.conf`)
    - `monitor_cpu.sh` – alerta quando CPU > threshold (e-mail + Telegram), com snapshot tipo top e top 25 processos por CPU/RAM
@@ -56,7 +60,7 @@ sudo bash install-monitoring.sh
    - `monitor_disk.sh` – alerta quando disco > threshold (e-mail + Telegram), com top diretorios e snapshot do sistema
    - Os arquivos `monitor_cpu.sh`, `monitor_memory.sh` e `monitor_disk.sh` existem como standalone neste repo para que o Dashboard (via `dashboard_fetch_updates.sh`) possa baixa-los e atualizar servidores remotos.
 
-6. **Crontab**
+7. **Crontab**
    - CPU, Memoria e Disco: execucao a cada 5 minutos
    - ClamAV: varredura diaria às 02:00 e envio de alerta (e-mail + Telegram) apenas se houver infectados
 

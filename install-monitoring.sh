@@ -888,6 +888,14 @@ if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
 else
   [[ -n "$TELEGRAM_BOT_TOKEN" ]] && log_info "Telegram configurado; execute sudo /usr/local/bin/telegram-get-chat-id.sh e depois teste o envio."
 fi
+if [[ $DASHBOARD_ENABLED -eq 1 ]] && [[ -n "$DASHBOARD_SERVER_UUID" ]]; then
+  log_info "Enviando primeira notificacao completa (CPU, Memoria, Disco) ao Dashboard..."
+  if /usr/local/bin/monitor_cpu.sh 2>/dev/null; then
+    log_ok "Dashboard: primeira notificacao enviada. Servidor ativado (status Online)."
+  else
+    log_warn "Falha ao enviar metricas ao Dashboard. O cron enviara na proxima execucao (5 min)."
+  fi
+fi
 
 # --- Resumo final ---
 echo "" >&2
@@ -906,6 +914,9 @@ if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
   echo "  - Telegram: config em /opt/monitoring/telegram.conf" >&2
   [[ -z "$TELEGRAM_CHAT_ID" ]] && echo "    (Execute: sudo /usr/local/bin/telegram-get-chat-id.sh para obter o Chat ID)" >&2
 fi
+if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
+  echo "  - Dashboard: config em /opt/monitoring/dashboard.conf, primeira notificacao enviada" >&2
+fi
 echo "  - ClamAV: varredura diaria 02:00, quarentena em /var/virus-quarantine" >&2
 echo "  - Monitoramento: CPU, RAM e Disco a cada 5 min (alerta acima de 80%)" >&2
 echo "" >&2
@@ -919,6 +930,7 @@ echo "  - /usr/local/bin/monitor_disk.sh" >&2
 echo "  - /opt/alerts/templates/*.html" >&2
 echo "  - /opt/monitoring/email.conf (remetente From dos e-mails)" >&2
 echo "  - /opt/monitoring/telegram.conf (Telegram)" >&2
+[[ $DASHBOARD_ENABLED -eq 1 ]] && echo "  - /opt/monitoring/dashboard.conf (Dashboard)" >&2
 echo "" >&2
 echo "Crontab: sudo crontab -l" >&2
 echo "Logs: /var/log/mail.log | /var/log/clamav/" >&2
