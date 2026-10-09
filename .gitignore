@@ -1,0 +1,30 @@
+# Saida intermediaria do build. Os artefatos finais ficam versionados na raiz,
+# porque e de la que o canal de atualizacao baixa.
+dist/
+
+# Rascunho de execucao local
+*.log
+*.bak
+*.bak.*
+.DS_Store
+
+# Nunca versionar: dump de API, despejo de configuracao, credencial.
+# Um getUpdates do Telegram ja foi commitado aqui por acidente, com o chat id
+# do grupo de alertas dentro, num repositorio publico.
+*.env
+.env.*
+*.pem
+*.key
+id_rsa*
+Untitled-*.json
+getUpdates*.json
+
+# Grafo: os tres artefatos do mapa sao versionados (regra de ouro).
+# Fora ficam o cache de AST, carimbado com a versao do graphify, e os quatro
+# arquivos que guardam CAMINHO ABSOLUTO: versiona-los da conflito em toda PR e
+# fica errado em qualquer outro computador.
+graphify-out/cache/
+graphify-out/.graphify_detect.json
+graphify-out/.graphify_extract.json
+graphify-out/.graphify_root
+graphify-out/.graphify_python

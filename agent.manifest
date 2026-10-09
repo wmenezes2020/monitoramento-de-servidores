@@ -1,0 +1,7 @@
+# Manifesto do agente de monitoramento. Gerado por scripts/build.sh.
+# O agente so instala arquivo cujo sha256 bate com o desta lista.
+VERSAO=2.0.0
+ARQUIVO=monitoring-agent.sh 7146fc73039b88b6e873b61a1fa8f0b50cfcabc41a13908d1ae3c8f2c75f2e12
+ARQUIVO=monitor_cpu.sh 7146fc73039b88b6e873b61a1fa8f0b50cfcabc41a13908d1ae3c8f2c75f2e12
+ARQUIVO=monitor_memory.sh 7146fc73039b88b6e873b61a1fa8f0b50cfcabc41a13908d1ae3c8f2c75f2e12
+ARQUIVO=monitor_disk.sh 7146fc73039b88b6e873b61a1fa8f0b50cfcabc41a13908d1ae3c8f2c75f2e12

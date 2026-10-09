@@ -1,0 +1,268 @@
+{
+  "communities": {
+    "0": [
+      "tests_roda_testes",
+      "tests_roda_testes_agente_bin",
+      "tests_roda_testes_agente_estado",
+      "tests_roda_testes_agente_log",
+      "tests_roda_testes_agente_raiz",
+      "tests_roda_testes_agente_so_carregar",
+      "tests_roda_testes_campo_disco",
+      "tests_roda_testes_falha",
+      "tests_roda_testes_fixture_df",
+      "tests_roda_testes_fixture_df_inodes",
+      "tests_roda_testes_grupo",
+      "tests_roda_testes_igual",
+      "tests_roda_testes_limpa",
+      "tests_roda_testes_mentira",
+      "tests_roda_testes_nucleos",
+      "tests_roda_testes_ok",
+      "tests_roda_testes_prepara_amostra",
+      "tests_roda_testes_proc_loadavg",
+      "tests_roda_testes_proc_meminfo",
+      "tests_roda_testes_proc_stat",
+      "tests_roda_testes_sh__entry",
+      "tests_roda_testes_sha_de",
+      "tests_roda_testes_verdade",
+      "tests_roda_testes_zera_estado"
+    ],
+    "1": [
+      "src_agent_10_util",
+      "src_agent_10_util_agora",
+      "src_agent_10_util_delta",
+      "src_agent_10_util_duracao_humana",
+      "src_agent_10_util_escapa_html",
+      "src_agent_10_util_escapa_json",
+      "src_agent_10_util_escreve_atomico",
+      "src_agent_10_util_log",
+      "src_agent_10_util_log_erro",
+      "src_agent_10_util_log_info",
+      "src_agent_10_util_maior",
+      "src_agent_10_util_menor",
+      "src_agent_10_util_nucleos",
+      "src_agent_10_util_num",
+      "src_agent_10_util_para_segundos",
+      "src_agent_10_util_pct",
+      "src_agent_10_util_pega_trava",
+      "src_agent_10_util_sh__entry",
+      "src_agent_10_util_solta_trava"
+    ],
+    "2": [
+      "src_agent_30_medir",
+      "src_agent_30_medir_campo_meminfo",
+      "src_agent_30_medir_ignorar_montagem",
+      "src_agent_30_medir_le_cpu_bruto",
+      "src_agent_30_medir_maiores_diretorios",
+      "src_agent_30_medir_mede_cpu",
+      "src_agent_30_medir_mede_disco",
+      "src_agent_30_medir_mede_load",
+      "src_agent_30_medir_mede_memoria",
+      "src_agent_30_medir_saida_df",
+      "src_agent_30_medir_saida_df_inodes",
+      "src_agent_30_medir_sh__entry",
+      "src_agent_30_medir_top_processos"
+    ],
+    "3": [
+      "src_agent_90_main",
+      "src_agent_90_main_autoteste",
+      "src_agent_90_main_avalia_e_notifica",
+      "src_agent_90_main_fail",
+      "src_agent_90_main_grava_conf",
+      "src_agent_90_main_ok",
+      "src_agent_90_main_principal",
+      "src_agent_90_main_registra_heartbeat",
+      "src_agent_90_main_rodada",
+      "src_agent_90_main_sh__entry",
+      "src_agent_90_main_sincroniza_config",
+      "src_agent_90_main_status",
+      "src_agent_90_main_uso"
+    ],
+    "4": [
+      "tests_testa_migracao",
+      "tests_testa_migracao_agente_bin",
+      "tests_testa_migracao_agente_estado",
+      "tests_testa_migracao_agente_log",
+      "tests_testa_migracao_agente_raiz",
+      "tests_testa_migracao_falha",
+      "tests_testa_migracao_igual",
+      "tests_testa_migracao_naotem",
+      "tests_testa_migracao_ok",
+      "tests_testa_migracao_path",
+      "tests_testa_migracao_sh__entry",
+      "tests_testa_migracao_tem"
+    ],
+    "5": [
+      "src_agent_40_estado",
+      "src_agent_40_estado_caminho_estado",
+      "src_agent_40_estado_consome_orcamento",
+      "src_agent_40_estado_encerra_silencio",
+      "src_agent_40_estado_grava_estado",
+      "src_agent_40_estado_inicia_silencio",
+      "src_agent_40_estado_le_estado",
+      "src_agent_40_estado_nome_seguro",
+      "src_agent_40_estado_orcamento_estourado",
+      "src_agent_40_estado_sh__entry",
+      "src_agent_40_estado_silencio_ativo"
+    ],
+    "6": [
+      "src_agent_80_bootstrap",
+      "src_agent_80_bootstrap_escreve_config_inicial",
+      "src_agent_80_bootstrap_instala_binarios",
+      "src_agent_80_bootstrap_instala_cron",
+      "src_agent_80_bootstrap_le_legado",
+      "src_agent_80_bootstrap_meu_caminho",
+      "src_agent_80_bootstrap_precisa_bootstrap",
+      "src_agent_80_bootstrap_preserva_destinatarios",
+      "src_agent_80_bootstrap_roda_bootstrap",
+      "src_agent_80_bootstrap_sh__entry",
+      "src_agent_80_bootstrap_sou_root"
+    ],
+    "7": [
+      "json",
+      "path",
+      "pathlib",
+      "scripts_gerar_grafo",
+      "scripts_gerar_grafo_alvos",
+      "scripts_gerar_grafo_arquivos_do_corpus",
+      "scripts_gerar_grafo_limpa_midia",
+      "scripts_gerar_grafo_main",
+      "scripts_gerar_grafo_rationale_2",
+      "sys"
+    ],
+    "8": [
+      "src_agent_60_notificar",
+      "src_agent_60_notificar_despacha_agregado",
+      "src_agent_60_notificar_envia_alerta",
+      "src_agent_60_notificar_envia_incidente_dashboard",
+      "src_agent_60_notificar_envia_metricas_dashboard",
+      "src_agent_60_notificar_monta_corpo",
+      "src_agent_60_notificar_prefixo_assunto",
+      "src_agent_60_notificar_registra_agregado",
+      "src_agent_60_notificar_sh__entry",
+      "src_agent_60_notificar_template_de"
+    ],
+    "9": [
+      "src_agent_70_autoupdate",
+      "src_agent_70_autoupdate_atualiza_agente",
+      "src_agent_70_autoupdate_baixa",
+      "src_agent_70_autoupdate_limpa_update",
+      "src_agent_70_autoupdate_reporta_falha_update",
+      "src_agent_70_autoupdate_restaura_rollback",
+      "src_agent_70_autoupdate_sh__entry",
+      "src_agent_70_autoupdate_sha256_de",
+      "src_agent_70_autoupdate_versao_instalada",
+      "src_agent_70_autoupdate_versao_maior"
+    ],
+    "10": [
+      "src_agent_20_config",
+      "src_agent_20_config_carrega_config",
+      "src_agent_20_config_limiar_de",
+      "src_agent_20_config_mapeia_vigiar",
+      "src_agent_20_config_sh__entry",
+      "src_agent_20_config_valida_config"
+    ],
+    "11": [
+      "src_agent_50_avaliar",
+      "src_agent_50_avaliar_avalia",
+      "src_agent_50_avaliar_diagnostico",
+      "src_agent_50_avaliar_rotulo_metrica",
+      "src_agent_50_avaliar_sh__entry",
+      "src_agent_50_avaliar_unidade_metrica"
+    ],
+    "12": [
+      "scripts_build",
+      "scripts_build_sh__entry",
+      "scripts_build_sha"
+    ],
+    "13": [
+      "src_agent_00_cabecalho",
+      "src_agent_00_cabecalho_sh__entry"
+    ]
+  },
+  "cohesion": {
+    "0": 0.12681159420289856,
+    "1": 0.13450292397660818,
+    "2": 0.21794871794871795,
+    "3": 0.2564102564102564,
+    "4": 0.3333333333333333,
+    "5": 0.2,
+    "6": 0.3090909090909091,
+    "7": 0.26666666666666666,
+    "8": 0.28888888888888886,
+    "9": 0.3333333333333333,
+    "10": 0.4,
+    "11": 0.3333333333333333,
+    "12": 0.6666666666666666,
+    "13": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_agent_70_autoupdate_atualiza_agente",
+      "label": "atualiza_agente()",
+      "degree": 8
+    },
+    {
+      "id": "tests_roda_testes_sh__entry",
+      "label": "roda-testes.sh script",
+      "degree": 7
+    },
+    {
+      "id": "src_agent_80_bootstrap_roda_bootstrap",
+      "label": "roda_bootstrap()",
+      "degree": 6
+    },
+    {
+      "id": "src_agent_90_main_principal",
+      "label": "principal()",
+      "degree": 6
+    },
+    {
+      "id": "tests_testa_migracao_sh__entry",
+      "label": "testa-migracao.sh script",
+      "degree": 6
+    },
+    {
+      "id": "src_agent_60_notificar_envia_alerta",
+      "label": "envia_alerta()",
+      "degree": 5
+    },
+    {
+      "id": "src_agent_90_main_rodada",
+      "label": "rodada()",
+      "degree": 5
+    },
+    {
+      "id": "tests_testa_migracao_ok",
+      "label": "ok()",
+      "degree": 5
+    },
+    {
+      "id": "tests_testa_migracao_falha",
+      "label": "falha()",
+      "degree": 5
+    },
+    {
+      "id": "scripts_gerar_grafo_main",
+      "label": "main()",
+      "degree": 4
+    }
+  ],
+  "surprises": [],
+  "questions": [
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script` to the rest of the system?",
+      "why": "25 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `roda-testes` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.12681159420289856 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `10-util` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.13450292397660818 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

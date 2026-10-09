@@ -1,0 +1,4 @@
+Filesystem           Inodes  IUsed   IFree IUse% Mounted on
+/dev/nvme0n1p1      2560000 310000 2250000   13% /
+//nas servidor/backups    -      -       -     - /mnt/backup
+/dev/nvme0n1p15            0      0       0     - /boot/efi

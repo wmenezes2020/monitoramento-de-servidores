@@ -1,0 +1,9 @@
+# Este repositorio entrega script de shell que roda em Linux. Sem esta regra,
+# um clone no Windows com autocrlf devolve o script em CRLF, o shebang fica
+# com um retorno de carro no fim, e o Linux responde
+# "bad interpreter: no such file or directory", que ninguem liga a fim de linha.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gz  binary

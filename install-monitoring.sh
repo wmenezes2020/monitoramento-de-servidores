@@ -735,166 +735,178 @@ write_alert_template "/opt/alerts/templates/disk-alert.html" "#0ea5e9" "DISCO" "
 write_alert_template "/opt/alerts/templates/clamav-alert.html" "#dc2626" "ClamAV" "Malware detectado" "ClamAV"
 log_ok "Templates HTML criados."
 
-# --- 6. Scripts de monitoramento (com RECIPIENTS injetado) ---
-log_step "Scripts de monitoramento (CPU, RAM, Disco)"
+# --- 6. Agente de monitoramento ---
+log_step "Agente de monitoramento (CPU, RAM, disco, swap, load, inodes)"
 
-# monitor_cpu.sh (SERVER_ID = dominio/nome configurado na instalacao)
-cat > /usr/local/bin/monitor_cpu.sh << 'MONITORCPU'
-#!/usr/bin/env bash
-set -euo pipefail
-[[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf
-SERVER_ID="${SERVER_ID:-$(hostname)}"
-TEMPLATE_PATH="/opt/alerts/templates/cpu-alert.html"
-RECIPIENTS="RECIPIENTS_PLACEHOLDER"
-CPU_THRESHOLD=90
-CPU_USAGE=$(timeout 3 mpstat 1 2 2>/dev/null | awk '/Average/ {print 100 - $NF}')
-if [[ $(echo "$CPU_USAGE > $CPU_THRESHOLD" | bc -l) == 1 ]]; then
-  SYS_SNAP=$(top -b -n 1 2>/dev/null | head -35 | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' || echo "top indisponivel")
-  TOP_CPU=$(ps aux --sort=-%cpu | head -26 | tail -25 | awk '{cmd=""; for(i=11;i<=NF;i++) cmd=cmd $i " "; printf "%-8s %-12s %5s %5s %.70s\n", $2, $1, $3, $4, substr(cmd,1,70)}')
-  TOP_CPU_ESC=$(echo "$TOP_CPU" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-  TOP_MEM=$(ps aux --sort=-%mem | head -26 | tail -25 | awk '{cmd=""; for(i=11;i<=NF;i++) cmd=cmd $i " "; printf "%-8s %-12s %5s %5s %.70s\n", $2, $1, $4, $3, substr(cmd,1,70)}')
-  TOP_MEM_ESC=$(echo "$TOP_MEM" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-  MSG_HTML="Uso medio CPU: <strong>${CPU_USAGE}%</strong> (threshold: ${CPU_THRESHOLD}%)<br/><br/>Data/Hora: <strong>$(date)</strong><br/><br/><strong>Snapshot do sistema (top):</strong><br/><pre>${SYS_SNAP}</pre><br/><strong>Top 25 processos por CPU (PID USER %CPU %MEM COMANDO):</strong><br/><pre>${TOP_CPU_ESC}</pre><br/><strong>Top 25 processos por RAM:</strong><br/><pre>${TOP_MEM_ESC}</pre>"
-  /usr/local/bin/send_html_alert.sh "$TEMPLATE_PATH" "$RECIPIENTS" "ALERTA CPU ${CPU_USAGE}% - ${SERVER_ID}" "CPU em ${CPU_USAGE}% (CRITICO)" "$MSG_HTML"
-  TG_TOP=$(ps aux --sort=-%cpu | head -13 | tail -12 | awk '{printf "%-8s %4s %4s %.45s\n", $2, $3"%", $4"%", $11}')
-  /usr/local/bin/send_telegram_alert.sh "ALERTA CPU ${CPU_USAGE}% - ${SERVER_ID}\n\nTop processos (PID %CPU %MEM CMD):\n${TG_TOP}" || true
-  if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
-  if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
-    SNAP_ESC=$(echo "$SYS_SNAP" | sed 's/"/\\"/g' | tr '\n' ' ')
-    printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","type":"cpu","value":%s,"threshold":%s,"subject":"ALERTA CPU %s%% - %s","snapshot_top":"%s","notifications_sent":{"email":true,"telegram":true}}\n' \
-      "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${CPU_USAGE}" "${CPU_THRESHOLD}" "${CPU_USAGE}" "${SERVER_ID}" "${SNAP_ESC}" | /usr/local/bin/send_dashboard_metrics.sh incident 2>/dev/null || true
+# O agente e um arquivo unico, montado por scripts/build.sh a partir de
+# src/agent/. Ele mede, aplica histerese, decide se alguem precisa ser
+# avisado, conversa com o painel e se atualiza sozinho.
+#
+# Antes aqui havia tres scripts escritos em heredoc dentro deste instalador,
+# com a mesma logica repetida em update_scripts.sh. As copias divergiram e uma
+# delas tinha perdido o envio de metricas ao painel. Agora o instalador baixa
+# o artefato publicado e confere o checksum.
+
+AGENTE_BASE="${UPDATE_BASE_URL:-https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores}/${UPDATE_CANAL:-main}"
+AGENTE_TMP="$(mktemp -d)"
+
+instala_agente() {
+  local esperado obtido versao
+
+  if ! curl -fsSL --max-time 30 --retry 2 -o "${AGENTE_TMP}/manifest" "${AGENTE_BASE}/agent.manifest" 2>/dev/null; then
+    log_err "Nao consegui baixar o manifesto do agente em ${AGENTE_BASE}"
+    return 1
+  fi
+  versao="$(awk -F= '/^VERSAO=/{print $2; exit}' "${AGENTE_TMP}/manifest" | tr -d '[:space:]')"
+  esperado="$(awk '/^ARQUIVO=monitoring-agent.sh/{print $2; exit}' "${AGENTE_TMP}/manifest")"
+  if [[ -z "$versao" || -z "$esperado" ]]; then
+    log_err "Manifesto do agente incompleto"
+    return 1
+  fi
+
+  if ! curl -fsSL --max-time 30 --retry 2 -o "${AGENTE_TMP}/monitoring-agent.sh" "${AGENTE_BASE}/monitoring-agent.sh" 2>/dev/null; then
+    log_err "Nao consegui baixar o agente"
+    return 1
+  fi
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    obtido="$(sha256sum "${AGENTE_TMP}/monitoring-agent.sh" | awk '{print $1}')"
+  elif command -v shasum >/dev/null 2>&1; then
+    obtido="$(shasum -a 256 "${AGENTE_TMP}/monitoring-agent.sh" | awk '{print $1}')"
+  else
+    log_err "Sem sha256sum nem shasum: nao da para conferir o que foi baixado"
+    return 1
+  fi
+  if [[ "$obtido" != "$esperado" ]]; then
+    log_err "Checksum do agente nao confere. Nada foi instalado."
+    return 1
+  fi
+  if ! bash -n "${AGENTE_TMP}/monitoring-agent.sh" 2>/dev/null; then
+    log_err "O agente baixado nao passa em bash -n. Nada foi instalado."
+    return 1
+  fi
+
+  install -m 755 "${AGENTE_TMP}/monitoring-agent.sh" /usr/local/bin/monitoring-agent.sh
+  # Os tres nomes antigos apontam para o mesmo arquivo: runbook, script e
+  # documentacao que chamem monitor_cpu.sh continuam funcionando.
+  local nome
+  for nome in monitor_cpu.sh monitor_memory.sh monitor_disk.sh; do
+    install -m 755 "${AGENTE_TMP}/monitoring-agent.sh" "/usr/local/bin/${nome}"
+  done
+  mkdir -p /opt/monitoring /var/lib/monitoring/state
+  printf '%s' "$versao" > /opt/monitoring/VERSION
+  log_ok "Agente ${versao} instalado."
+  return 0
+}
+
+if instala_agente; then
+  AGENTE_OK=1
+else
+  AGENTE_OK=0
+  INSTALL_ERRORS+=("Agente de monitoramento nao instalado")
+fi
+rm -rf "$AGENTE_TMP" 2>/dev/null || true
+
+# Configuracao do agente. Os limiares de atencao ficam abaixo dos criticos,
+# para o aviso chegar antes do problema, e a histerese evita que um pico de
+# poucos segundos vire mensagem.
+if [[ ! -f /opt/monitoring/agent.conf ]]; then
+  cat > /opt/monitoring/agent.conf << AGENTCONF
+# Configuracao do agente de monitoramento.
+# Gerada pelo instalador em $(date '+%Y-%m-%d %H:%M:%S').
+# Os limiares tambem chegam do painel; editar aqui vale ate a proxima sincronia.
+
+# Limiares. "atencao" avisa, "critico" escala.
+CPU_ATENCAO=85
+CPU_CRITICO=95
+MEM_ATENCAO=85
+MEM_CRITICO=95
+DISCO_ATENCAO=85
+DISCO_CRITICO=93
+SWAP_ATENCAO=50
+SWAP_CRITICO=80
+INODE_ATENCAO=85
+INODE_CRITICO=93
+LOAD_ATENCAO=1.5
+LOAD_CRITICO=3.0
+STEAL_ATENCAO=10
+STEAL_CRITICO=25
+
+# Histerese: quantas leituras seguidas confirmam o problema antes de avisar,
+# e quantas confirmam que ele passou. E o que separa um pico de um incidente.
+CICLOS_CONFIRMACAO=3
+CICLOS_RECUPERACAO=3
+BANDA_SAIDA=8
+RENOTIFICAR_MIN=60
+MAX_ALERTAS_HORA=12
+ALERTA_RECUPERACAO=1
+
+# Canais
+CANAL_EMAIL=1
+CANAL_TELEGRAM=1
+CANAL_DASHBOARD=1
+RECUPERACAO_TELEGRAM=0
+
+# Auto-atualizacao
+AUTO_UPDATE=1
+UPDATE_CANAL=main
+AGENTCONF
+  chmod 644 /opt/monitoring/agent.conf
+  log_ok "Configuracao em /opt/monitoring/agent.conf"
+else
+  log_info "agent.conf ja existe; preservado."
+fi
+
+# Destinatarios de e-mail no lugar de configuracao, nao dentro do script.
+if [[ -n "${RECIPIENTS}" ]]; then
+  if [[ -f /opt/monitoring/email.conf ]] && grep -q '^RECIPIENTS=' /opt/monitoring/email.conf 2>/dev/null; then
+    sed -i "s|^RECIPIENTS=.*|RECIPIENTS=\"${RECIPIENTS}\"|" /opt/monitoring/email.conf
+  else
+    mkdir -p /opt/monitoring
+    printf 'RECIPIENTS="%s"\n' "${RECIPIENTS}" >> /opt/monitoring/email.conf
+    chmod 640 /opt/monitoring/email.conf
   fi
 fi
-if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
-if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
-  MEM_INFO=$(free | grep Mem 2>/dev/null)
-  TOTAL_MEM=$(echo "$MEM_INFO" | awk '{print $2}')
-  USED_MEM=$(echo "$MEM_INFO" | awk '{print $3+$6}')
-  MEM_PCT=$(echo "scale=1; ($USED_MEM/$TOTAL_MEM)*100" 2>/dev/null | bc -l 2>/dev/null || echo "0")
-  DISK_JSON=$(df -P -x tmpfs -x devtmpfs -x squashfs 2>/dev/null | tail -n +2 | while read -r FS SIZE USED AVAIL PCT MNT; do U="${PCT%%%}"; echo -n "{\"mount\":\"$MNT\",\"usage\":$U},"; done | sed 's/,$//')
-  printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","metrics":{"cpu":%s,"memory":%s,"disk":[%s]}}\n' \
-    "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${CPU_USAGE}" "${MEM_PCT}" "${DISK_JSON:-}" | /usr/local/bin/send_dashboard_metrics.sh metrics 2>/dev/null || true
-fi
-MONITORCPU
-# Injeta RECIPIENTS no script (placeholder)
-sed -i "s|RECIPIENTS_PLACEHOLDER|${RECIPIENTS}|g" /usr/local/bin/monitor_cpu.sh
-chmod +x /usr/local/bin/monitor_cpu.sh
-
-# monitor_memory.sh (SERVER_ID = dominio/nome configurado na instalacao)
-cat > /usr/local/bin/monitor_memory.sh << 'MONITORMEM'
-#!/usr/bin/env bash
-set -euo pipefail
-[[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf
-SERVER_ID="${SERVER_ID:-$(hostname)}"
-TEMPLATE_PATH="/opt/alerts/templates/memory-alert.html"
-RECIPIENTS="RECIPIENTS_PLACEHOLDER"
-MEM_THRESHOLD=90
-MEM_INFO=$(free | grep Mem)
-TOTAL_MEM=$(echo $MEM_INFO | awk '{print $2}')
-USED_MEM=$(echo $MEM_INFO | awk '{print $3 + $6}')
-MEM_USAGE=$(echo "scale=1; ($USED_MEM / $TOTAL_MEM) * 100" | bc -l)
-if [[ $(echo "$MEM_USAGE > $MEM_THRESHOLD" | bc -l) == 1 ]]; then
-  TOTAL_MB=$(echo "scale=0; $TOTAL_MEM / 1024" | bc)
-  USED_MB=$(echo "scale=0; $USED_MEM / 1024" | bc)
-  SYS_SNAP=$(top -b -n 1 2>/dev/null | head -35 | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' || echo "top indisponivel")
-  TOP_MEM=$(ps aux --sort=-%mem | head -26 | tail -25 | awk '{cmd=""; for(i=11;i<=NF;i++) cmd=cmd $i " "; printf "%-8s %-12s %5s %5s %.70s\n", $2, $1, $4, $3, substr(cmd,1,70)}')
-  TOP_MEM_ESC=$(echo "$TOP_MEM" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-  TOP_CPU=$(ps aux --sort=-%cpu | head -26 | tail -25 | awk '{cmd=""; for(i=11;i<=NF;i++) cmd=cmd $i " "; printf "%-8s %-12s %5s %5s %.70s\n", $2, $1, $3, $4, substr(cmd,1,70)}')
-  TOP_CPU_ESC=$(echo "$TOP_CPU" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-  MSG_HTML="Uso RAM: <strong>${MEM_USAGE}%</strong> (threshold: ${MEM_THRESHOLD}%)<br/>Total: ${TOTAL_MB}MB | Usado: ${USED_MB}MB<br/><br/>Data/Hora: <strong>$(date)</strong><br/><br/><strong>Snapshot do sistema (top):</strong><br/><pre>${SYS_SNAP}</pre><br/><strong>Top 25 processos por RAM (PID USER %MEM %CPU COMANDO):</strong><br/><pre>${TOP_MEM_ESC}</pre><br/><strong>Top 25 processos por CPU:</strong><br/><pre>${TOP_CPU_ESC}</pre>"
-  /usr/local/bin/send_html_alert.sh "$TEMPLATE_PATH" "$RECIPIENTS" "ALERTA RAM ${MEM_USAGE}% - ${SERVER_ID}" "Memoria em ${MEM_USAGE}% (CRITICO)" "$MSG_HTML"
-  TG_TOP=$(ps aux --sort=-%mem | head -13 | tail -12 | awk '{printf "%-8s %4s %4s %.45s\n", $2, $4"%", $3"%", $11}')
-  /usr/local/bin/send_telegram_alert.sh "ALERTA RAM ${MEM_USAGE}% - ${SERVER_ID}\n\nTop processos (PID %MEM %CPU CMD):\n${TG_TOP}" || true
-  if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
-  if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
-    SNAP_ESC=$(echo "$SYS_SNAP" | sed 's/"/\\"/g' | tr '\n' ' ')
-    printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","type":"memory","value":%s,"threshold":%s,"subject":"ALERTA RAM %s%% - %s","snapshot_top":"%s","notifications_sent":{"email":true,"telegram":true}}\n' \
-      "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${MEM_USAGE}" "${MEM_THRESHOLD}" "${MEM_USAGE}" "${SERVER_ID}" "${SNAP_ESC}" | /usr/local/bin/send_dashboard_metrics.sh incident 2>/dev/null || true
-  fi
-fi
-if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
-if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
-  CPU_USAGE=$(timeout 3 mpstat 1 2 2>/dev/null | awk '/Average/ {print 100-$NF}' || echo "0")
-  DISK_JSON=$(df -P -x tmpfs -x devtmpfs -x squashfs 2>/dev/null | tail -n +2 | while read -r FS SIZE USED AVAIL PCT MNT; do U="${PCT%%%}"; echo -n "{\"mount\":\"$MNT\",\"usage\":$U},"; done | sed 's/,$//')
-  printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","metrics":{"cpu":%s,"memory":%s,"disk":[%s]}}\n' \
-    "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${CPU_USAGE}" "${MEM_USAGE}" "${DISK_JSON:-}" | /usr/local/bin/send_dashboard_metrics.sh metrics 2>/dev/null || true
-fi
-MONITORMEM
-sed -i "s|RECIPIENTS_PLACEHOLDER|${RECIPIENTS}|g" /usr/local/bin/monitor_memory.sh
-chmod +x /usr/local/bin/monitor_memory.sh
-
-# monitor_disk.sh (SERVER_ID = dominio/nome configurado na instalacao)
-cat > /usr/local/bin/monitor_disk.sh << 'MONITORDISK'
-#!/usr/bin/env bash
-set -euo pipefail
-[[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf
-SERVER_ID="${SERVER_ID:-$(hostname)}"
-TEMPLATE_PATH="/opt/alerts/templates/disk-alert.html"
-RECIPIENTS="RECIPIENTS_PLACEHOLDER"
-DISK_THRESHOLD=90
-df -P -x tmpfs -x devtmpfs -x squashfs | tail -n +2 | while read -r FS SIZE USED AVAIL PCT MOUNT; do
-  USAGE=${PCT%%%}
-  if [[ "$USAGE" -gt "$DISK_THRESHOLD" ]]; then
-    TOP_DIRS=$(timeout 15 du -h --max-depth=1 "$MOUNT" 2>/dev/null | sort -hr | head -21 | tail -20 | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-    SYS_SNAP=$(top -b -n 1 2>/dev/null | head -35 | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' || echo "top indisponivel")
-    MSG_HTML="Particao: <strong>${MOUNT}</strong><br/>Dispositivo: <strong>${FS}</strong><br/>Uso: <strong>${USAGE}%</strong> (threshold: ${DISK_THRESHOLD}%)<br/>Total: ${SIZE}K | Usado: ${USED}K | Livre: ${AVAIL}K<br/><br/>Data/Hora: <strong>$(date)</strong><br/><br/><strong>Top diretorios em ${MOUNT}:</strong><br/><pre>${TOP_DIRS:-N/A}</pre><br/><strong>Snapshot do sistema (top):</strong><br/><pre>${SYS_SNAP}</pre>"
-    /usr/local/bin/send_html_alert.sh "$TEMPLATE_PATH" "$RECIPIENTS" "ALERTA DISCO ${USAGE}% - ${SERVER_ID} (${MOUNT})" "Disco em ${USAGE}% (CRITICO) em ${MOUNT}" "$MSG_HTML"
-    /usr/local/bin/send_telegram_alert.sh "ALERTA DISCO ${USAGE}% - ${SERVER_ID} ${MOUNT}
-
-Top dirs:
-${TOP_DIRS:-N/A}" || true
-    if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
-    if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
-      SNAP_ESC=$(echo "$SYS_SNAP" | sed 's/"/\\"/g' | tr '\n' ' ')
-      printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","type":"disk","value":%s,"threshold":%s,"mount":"%s","subject":"ALERTA DISCO %s%% - %s (%s)","snapshot_top":"%s","notifications_sent":{"email":true,"telegram":true}}\n' \
-        "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${USAGE}" "${DISK_THRESHOLD}" "${MOUNT}" "${USAGE}" "${SERVER_ID}" "${MOUNT}" "${SNAP_ESC}" | /usr/local/bin/send_dashboard_metrics.sh incident 2>/dev/null || true
-    fi
-  fi
-done
-if [[ -f /opt/monitoring/dashboard.conf ]]; then source /opt/monitoring/dashboard.conf 2>/dev/null; fi
-if [[ "${DASHBOARD_ENABLED:-0}" == "1" && -n "${DASHBOARD_SERVER_UUID:-}" ]]; then
-  MEM_INFO=$(free | grep Mem 2>/dev/null)
-  TOTAL_MEM=$(echo "$MEM_INFO" | awk '{print $2}')
-  USED_MEM=$(echo "$MEM_INFO" | awk '{print $3+$6}')
-  MEM_PCT=$(echo "scale=1; ($USED_MEM/$TOTAL_MEM)*100" 2>/dev/null | bc -l 2>/dev/null || echo "0")
-  CPU_USAGE=$(timeout 3 mpstat 1 2 2>/dev/null | awk '/Average/ {print 100-$NF}' || echo "0")
-  DISK_JSON=$(df -P -x tmpfs -x devtmpfs -x squashfs 2>/dev/null | tail -n +2 | while read -r FS SIZE USED AVAIL PCT MNT; do
-    U="${PCT%%%}"; echo -n "{\"mount\":\"$MNT\",\"usage\":$U},"; done | sed 's/,$//')
-  printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","metrics":{"cpu":%s,"memory":%s,"disk":[%s]}}\n' \
-    "${DASHBOARD_SERVER_UUID}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${SERVER_ID}" "${CPU_USAGE}" "${MEM_PCT}" "${DISK_JSON:-}" | /usr/local/bin/send_dashboard_metrics.sh metrics 2>/dev/null || true
-fi
-MONITORDISK
-sed -i "s|RECIPIENTS_PLACEHOLDER|${RECIPIENTS}|g" /usr/local/bin/monitor_disk.sh
-chmod +x /usr/local/bin/monitor_disk.sh
-
-log_ok "Scripts de monitoramento criados."
 
 # --- 7. Crontab ---
-log_step "Crontab (CPU/RAM/Disco a cada 5 min, ClamAV diario 02:00)"
+log_step "Crontab (uma linha por minuto para o agente, ClamAV diario 02:00)"
 # Nota: % no crontab deve ser escapado como \%
-CRON_LINE_CLAMAV="0 2 * * * . /opt/monitoring/email.conf 2>/dev/null; SERVER_ID=\${SERVER_ID:-\$(hostname)}; /usr/bin/clamscan --infected --move=/var/virus-quarantine --exclude-dir=\"^/sys|^/proc|^/dev|^/run|^/var/lib/docker|^/boot|^/tmp\" / >/var/log/clamav/daily-scan-\$(date +\\\\%Y\\\\%m\\\\%d).log 2>&1 && grep -q \"Infected files: [1-9]\" /var/log/clamav/daily-scan-\$(date +\\\\%Y\\\\%m\\\\%d).log && /usr/local/bin/send_html_alert.sh /opt/alerts/templates/clamav-alert.html \"${RECIPIENTS}\" \"ClamAV ALERTA - \${SERVER_ID}\" \"Malware Detectado\" \"Arquivos infectados movidos para /var/virus-quarantine. Verifique /var/log/clamav/\" && /usr/local/bin/send_telegram_alert.sh \"ClamAV: Malware detectado - \${SERVER_ID}\" || true"
+CRON_LINE_CLAMAV="0 2 * * * . /opt/monitoring/email.conf 2>/dev/null; SERVER_ID=\${SERVER_ID:-\$(hostname)}; /usr/bin/clamscan --infected --move=/var/virus-quarantine --exclude-dir=\"^/sys|^/proc|^/dev|^/run|^/var/lib/docker|^/boot|^/tmp\" / >/var/log/clamav/daily-scan-\$(date +\\%Y\\%m\\%d).log 2>&1 && grep -q \"Infected files: [1-9]\" /var/log/clamav/daily-scan-\$(date +\\%Y\\%m\\%d).log && /usr/local/bin/send_html_alert.sh /opt/alerts/templates/clamav-alert.html \"${RECIPIENTS}\" \"ClamAV ALERTA - \${SERVER_ID}\" \"Malware Detectado\" \"Arquivos infectados movidos para /var/virus-quarantine. Verifique /var/log/clamav/\" && /usr/local/bin/send_telegram_alert.sh \"ClamAV: Malware detectado - \${SERVER_ID}\" || true"
 
-if crontab -l 2>/dev/null | grep -qF "$CRON_MARKER"; then
-  log_info "Cron do monitoramento ja existe. Nao duplicando."
-  INSTALL_WARNINGS+=("Crontab ja configurado. Para reaplicar, remova as linhas com '$CRON_MARKER' e execute o instalador novamente.")
+# O agente tem um comando que ja sabe migrar qualquer cron anterior,
+# preservando o que nao e dele. Usa-lo evita duas implementacoes da mesma
+# coisa divergindo com o tempo.
+if [[ "${AGENTE_OK}" -eq 1 ]] && /usr/local/bin/monitoring-agent.sh instalar >/dev/null 2>&1; then
+  log_ok "Crontab configurado pelo agente (uma execucao por minuto)."
 else
-  (crontab -l 2>/dev/null
-   echo "$CRON_MARKER"
-   echo "# Monitoramento CPU a cada 5 min"
-   echo "* * * * * /usr/local/bin/monitor_cpu.sh"
-   echo "# Monitoramento Memoria a cada 5 min"
-   echo "* * * * * /usr/local/bin/monitor_memory.sh"
-   echo "# Monitoramento Disco a cada 5 min"
-   echo "* * * * * /usr/local/bin/monitor_disk.sh"
-   echo "# ClamAV varredura diaria 02:00 e alerta se virus"
-   echo "$CRON_LINE_CLAMAV"
-   if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
-     echo "# Consulta ao Dashboard a cada 2 min"
-     echo "* * * * * /usr/local/bin/dashboard_fetch_updates.sh"
-   fi
-  ) | crontab -
-  log_ok "Crontab configurado."
+  if crontab -l 2>/dev/null | grep -qF "$CRON_MARKER"; then
+    log_info "Cron do monitoramento ja existe. Nao duplicando."
+  else
+    (crontab -l 2>/dev/null
+     echo "$CRON_MARKER"
+     echo "* * * * * /usr/local/bin/monitoring-agent.sh rodada >/dev/null 2>&1"
+    ) | crontab -
+    log_ok "Crontab configurado."
+  fi
 fi
+
+# ClamAV entra em linha propria, fora do bloco do agente.
+if ! crontab -l 2>/dev/null | grep -q 'clamscan'; then
+  (crontab -l 2>/dev/null; echo "$CRON_LINE_CLAMAV") | crontab -
+  log_ok "Varredura diaria do ClamAV agendada."
+fi
+
+# Autoteste: instalacao que nao passa no proprio teste precisa ser dita em voz
+# alta agora, nao descoberta no dia do incidente.
+if [[ "${AGENTE_OK}" -eq 1 ]]; then
+  if /usr/local/bin/monitoring-agent.sh autoteste >&2; then
+    log_ok "Autoteste do agente verde."
+  else
+    log_warn "O autoteste do agente apontou problemas. Veja /var/log/monitoring-agent.log"
+    INSTALL_WARNINGS+=("Autoteste do agente com falhas")
+  fi
+fi
+
 
 # --- 8. E-mail e Telegram de boas-vindas (confirmar que tudo esta ok) ---
 log_step "E-mail e Telegram de boas-vindas"
