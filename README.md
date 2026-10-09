@@ -1,220 +1,161 @@
-# Monitoramento de Servidores
+# Monitoramento de servidores
 
-Repositorio: **[github.com/wmenezes2020/monitoramento-de-servidores](https://github.com/wmenezes2020/monitoramento-de-servidores)**
+Agente de um arquivo que vigia CPU, memória, disco, swap, load e inodes de um
+servidor Linux, avisa por e-mail e Telegram quando há problema de verdade, e
+manda as métricas para o painel de observabilidade.
 
-Script de instalacao completa (`install-monitoring.sh`) que configura em um unico fluxo: servico de e-mail (SMTP2Go), **notificacoes por Telegram**, antivirus (ClamAV), templates de alerta em HTML e monitoramento de CPU, Memoria, Disco e existencia de virus, com alertas por e-mail e Telegram.
-
----
-
-## Instalacao rapida (via curl)
-
-Execute no servidor (Linux Ubuntu/Debian com sudo):
+Instala com um comando, não precisa de banco, agente externo nem porta aberta.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
 ```
 
-O mesmo padrao de outros instaladores (ex.: `curl -fsSL https://molt.bot/install.sh | bash`): o script e baixado e passado direto para o `bash`; use `sudo bash` porque o instalador precisa de privilegios de root.
+## O que ele faz de diferente
 
-**Se nada aparecer na tela** (comando parece travar sem mensagem), use a instalacao em dois passos — assim o terminal continua interativo e a saida aparece desde o inicio:
+**Só avisa quando há problema.** Um pico de dois segundos durante um deploy não
+vira mensagem. O agente exige três leituras seguidas acima do limiar antes de
+abrir um alerta, e três abaixo da banda de saída antes de dar por resolvido.
 
-```bash
-curl -fsSL -o install-monitoring.sh https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh
-sudo bash install-monitoring.sh
-```
+**Avisa quando passou.** Todo incidente aberto recebe o aviso de recuperação,
+com quanto tempo durou e qual foi o pico.
 
-**Importante:** Execute a partir de um **terminal interativo** (por exemplo, sessao SSH). O instalador pede dados (SMTP, e-mails, Telegram); se rodar sem terminal (ex.: cron), o script avisa e encerra.
+**Diz por onde começar.** Em vez de repetir o número, o alerta aponta o
+provável caminho: steal alto indica limite do provedor, iowait alto indica
+disco, servidor sem swap indica risco de OOM kill.
 
----
+**Separa atenção de crítico.** 86% e 99% deixam de gerar a mesma mensagem.
 
-## O que o instalador faz
+**Não vira a carga do servidor.** Uma execução por minuto, lendo `/proc`. Sem
+`mpstat`, sem `bc`, e o `du` do disco só roda quando a partição já passou do
+limiar de atenção.
 
-1. **Servico de E-mail (Postfix + SMTP2Go)**
-   - Instala Postfix, libsasl2-modules, mailutils, gettext-base
-   - Configura relay SMTP (porta informada), credenciais e masquerade (remetente)
-
-2. **Notificacoes por Telegram**
-   - Pede apenas o **Token do Bot** (obtido em @BotFather no Telegram)
-   - Obtem o Chat ID automaticamente apos o usuario enviar `/start` ao bot
-   - Cria `send_telegram_alert.sh` e `telegram-get-chat-id.sh` (para obter/atualizar Chat ID depois)
-   - Config em `/opt/monitoring/telegram.conf`
-   - Todos os alertas (CPU, RAM, Disco, ClamAV) sao enviados tambem para o Telegram quando configurado
-
-3. **Integracao com Dashboard de Observabilidade**
-   - Se o usuario optar por conectar ao Dashboard, o instalador envia imediatamente a primeira notificacao completa de metricas (CPU, Memoria e Disco) para ativar o registro no painel (status Online)
-   - Config em `/opt/monitoring/dashboard.conf`
-
-4. **Antivirus (ClamAV)**
-   - Instala clamav e clamav-daemon
-   - Cria diretorio de quarentena e logs
-   - Agenda varredura diaria (02:00) e envia alerta HTML e Telegram se encontrar virus
-
-5. **Templates de E-mail HTML**
-   - Cria `/opt/alerts/templates/`: `alert.html`, `cpu-alert.html`, `memory-alert.html`, `disk-alert.html`, `clamav-alert.html`
-
-6. **Scripts de monitoramento**
-   - `send_html_alert.sh` – envia e-mail HTML a partir de template
-   - `send_telegram_alert.sh` – envia mensagem para o Telegram (usa config em `/opt/monitoring/telegram.conf`)
-   - `monitor_cpu.sh` – alerta quando CPU > threshold (e-mail + Telegram), com snapshot tipo top e top 25 processos por CPU/RAM
-   - `monitor_memory.sh` – alerta quando RAM > threshold (e-mail + Telegram), com snapshot e listas completas de processos
-   - `monitor_disk.sh` – alerta quando disco > threshold (e-mail + Telegram), com top diretorios e snapshot do sistema
-   - Os arquivos `monitor_cpu.sh`, `monitor_memory.sh` e `monitor_disk.sh` existem como standalone neste repo para que o Dashboard (via `dashboard_fetch_updates.sh`) possa baixa-los e atualizar servidores remotos.
-
-7. **Crontab**
-   - CPU, Memoria e Disco: execucao a cada 5 minutos
-   - ClamAV: varredura diaria às 02:00 e envio de alerta (e-mail + Telegram) apenas se houver infectados
-
----
-
-## Dados solicitados durante a instalacao
-
-| Pergunta | Exemplo | Obrigatorio |
-|----------|---------|-------------|
-| Porta do servidor SMTP | 587 ou 2525 | Nao (padrao 587) |
-| Dominio ou nome do servidor | meuservidor.com | Nao (padrao hostname) |
-| Usuario SMTP | usuario SMTP2Go | Sim |
-| Senha SMTP | *** | Sim |
-| E-mail remetente (verificado no SMTP2Go) | alertas@seudominio.com | Sim |
-| E-mail(s) de destino para alertas | email1@gmail.com,email2@gmail.com | Sim |
-| **Token do Bot do Telegram** | (deixe vazio para nao usar) | Nao |
-
-Os destinatarios de e-mail podem ser varios, separados por **virgula** (sem espacos).
-
-**Telegram:** Se informar o token, o instalador pedira para voce enviar o comando **/start** ao seu bot no app Telegram; em seguida o Chat ID e obtido automaticamente. Se nao aparecer nenhuma mensagem do bot, apos a instalacao execute: `sudo /usr/local/bin/telegram-get-chat-id.sh`.
-
----
-
-## Atualizar threshold dos monitores
-
-Para alterar o percentual em que os alertas sao disparados, use `update_monitor.sh`. Os valores podem ser definidos **individualmente** (CPU, memoria, disco) ou aplicados a todos:
+## Comandos
 
 ```bash
-# Tres valores: CPU=90% RAM=85% Disco=95%
-curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash -s 90 90 80
-
-# Um valor: todos = 90%
-curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash -s 90
-
-# Via variaveis de ambiente
-CPU_THRESHOLD=90 MEM_THRESHOLD=85 DISK_THRESHOLD=95 curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_monitor.sh | sudo bash
+monitoring-agent.sh status
 ```
 
----
-
-## Atualizar scripts de monitoramento
-
-Para atualizar os monitores para a versao mais recente (relatorios com snapshot tipo top, top 25 processos, top diretorios no disco) sem reinstalar tudo:
+Mostra CPU, iowait, steal, memória, swap, load, disco, os limiares em vigor e
+quais incidentes estão abertos.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/update_scripts.sh | sudo bash
+monitoring-agent.sh silenciar 20m "deploy da api"
 ```
 
-O script extrai e preserva RECIPIENTS e thresholds dos scripts atuais, faz backup em `/usr/local/bin/*.sh.bak.*` e substitui pelos scripts novos.
-
----
-
-## Pre-requisitos
-
-- Sistema Linux (Ubuntu/Debian)
-- Acesso root (sudo)
-- Credenciais SMTP2Go (ou outro SMTP compativel na mesma configuracao)
-- E-mail remetente verificado no SMTP2Go
-- Conectividade com a internet para instalar pacotes e enviar e-mail
-- **Telegram (opcional):** criar um bot em [@BotFather](https://t.me/BotFather) e copiar o token fornecido
-
----
-
-## Como executar o instalador
-
-### Atualizar o sistema e instalar o curl
-```bash
-apt update -y && apt upgrade -y
-apt install -y curl
-```
-
-### Recomendado: via curl (um comando)
-
-Mesmo padrao de muitos instaladores (ex.: `curl -fsSL https://molt.bot/install.sh | bash`):
+Suprime os alertas pelo tempo indicado sem parar a coleta. É o que deve ser
+chamado antes de um deploy, em vez de baixar o limiar e perder o alerta para
+o resto do tempo. O teto é 24 horas, para um silêncio esquecido ligado não
+deixar o servidor sem vigilância.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
+monitoring-agent.sh falar          # encerra o silêncio agora
+monitoring-agent.sh autoteste      # valida a instalação
+monitoring-agent.sh atualizar      # força a busca por atualização
+monitoring-agent.sh versao
 ```
 
-- `-f` = falha silenciosa em erros HTTP (ex.: 404)
-- `-s` = modo silencioso
-- `-S` = mostra erro quando -s esta ativo e ha falha
-- `-L` = segue redirecionamentos
-- `| sudo bash` = executa o script como root (necessario para instalar pacotes e configurar o sistema)
+## Configuração
 
-### Opcao 2: Arquivo local
+Tudo em `/opt/monitoring/agent.conf`. Os valores também chegam do painel de
+observabilidade, que sobrescreve o arquivo na sincronia a cada cinco minutos.
 
-Se voce clonou o repo ou baixou o script:
+| Chave | Padrão | O que faz |
+| --- | --- | --- |
+| `CPU_ATENCAO` / `CPU_CRITICO` | 85 / 95 | limiares de CPU |
+| `MEM_ATENCAO` / `MEM_CRITICO` | 85 / 95 | limiares de memória |
+| `DISCO_ATENCAO` / `DISCO_CRITICO` | 85 / 93 | por ponto de montagem |
+| `SWAP_ATENCAO` / `SWAP_CRITICO` | 50 / 80 | ignorado onde não há swap |
+| `INODE_ATENCAO` / `INODE_CRITICO` | 85 / 93 | disco cheio de inode aceita bytes e recusa arquivo |
+| `LOAD_ATENCAO` / `LOAD_CRITICO` | 1.5 / 3.0 | normalizado por núcleo |
+| `STEAL_ATENCAO` / `STEAL_CRITICO` | 10 / 25 | CPU tirada pelo provedor |
+| `CICLOS_CONFIRMACAO` | 3 | leituras seguidas acima do limiar antes de avisar |
+| `CICLOS_RECUPERACAO` | 3 | leituras seguidas abaixo antes de dar por resolvido |
+| `BANDA_SAIDA` | 8 | pontos abaixo do limiar para considerar normalizado |
+| `RENOTIFICAR_MIN` | 60 | minutos até lembrar de um incidente ainda aberto; 0 desliga |
+| `MAX_ALERTAS_HORA` | 12 | acima disso as mensagens viram um resumo |
+| `RECUPERACAO_TELEGRAM` | 0 | recuperação por e-mail e painel, sem acordar ninguém |
+| `AUTO_UPDATE` | 1 | busca atualização a cada cinco minutos |
+
+Para desligar uma métrica: `VIGIAR_SWAP=0`, `VIGIAR_INODE=0`, e assim por diante.
+
+Para ignorar pontos de montagem: `DISCO_IGNORAR="/var/lib/docker/* /mnt/backup"`.
+
+## Como a atualização chega
+
+O agente confere `agent.manifest` no repositório a cada cinco minutos. Se há
+versão nova, ele:
+
+1. baixa cada arquivo para um temporário no mesmo filesystem do destino;
+2. confere o SHA-256 contra o manifesto, e aborta sem tocar em nada se diferir;
+3. valida a sintaxe com `bash -n`;
+4. guarda a versão atual em `/opt/monitoring/rollback/`;
+5. instala com `mv` atômico;
+6. roda o autoteste;
+7. se o autoteste falhar, restaura a versão anterior e reporta ao painel.
+
+Para forçar na hora:
 
 ```bash
-git clone https://github.com/wmenezes2020/monitoramento-de-servidores.git
-cd monitoramento-de-servidores
-chmod +x install-monitoring.sh
-sudo ./install-monitoring.sh
+sudo /usr/local/bin/monitoring-agent.sh atualizar
 ```
 
-Ou apenas baixando o script:
+## Desenvolvimento
+
+O agente é montado a partir de módulos. Não edite os arquivos da raiz: eles
+são gerados.
+
+```
+src/agent/        fonte, um módulo por responsabilidade
+scripts/build.sh  monta a raiz e o manifesto
+tests/            bateria de unidade e teste de migração
+```
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh -o install-monitoring.sh
-chmod +x install-monitoring.sh
-sudo ./install-monitoring.sh
+./scripts/build.sh          # monta os artefatos e o manifesto
+./scripts/build.sh --check  # confere se a raiz está em dia, para CI
+./tests/roda-testes.sh      # 136 verificações de unidade
+./tests/testa-migracao.sh   # 31 verificações de migração ponta a ponta
 ```
 
----
+As fontes de dados são injetáveis (`PROC_STAT`, `PROC_MEMINFO`, `PROC_LOADAVG`,
+`FIXTURE_DF`), então a bateria roda em qualquer máquina com bash e awk,
+inclusive Windows com Git Bash, sem tocar em `/proc` de verdade e sem enviar
+nada.
 
-## Exemplo pratico de uso
+Depois de qualquer mudança em `src/`, rode o build antes de commitar. O
+`agent.manifest` precisa estar coerente com os arquivos publicados, ou os
+agentes da frota recusam a atualização por checksum e ficam na versão anterior.
 
-1. Conectar no servidor:
-   ```bash
-   ssh usuario@ip-do-servidor
-   ```
+## Arquivos no servidor
 
-2. Executar o instalador:
-   ```bash
-   curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
-   ```
+```
+/usr/local/bin/monitoring-agent.sh    o agente
+/usr/local/bin/monitor_cpu.sh         mesmo arquivo, nome antigo preservado
+/opt/monitoring/agent.conf            configuração
+/opt/monitoring/VERSION               versão instalada
+/opt/monitoring/silencio              janela de silêncio, quando ativa
+/var/lib/monitoring/state/            estado da histerese entre execuções
+/var/log/monitoring-agent.log         registro, rotacionado em 2 MB
+```
 
-3. Responder as perguntas:
-   - Porta SMTP: `587` ou `2525`
-   - Dominio: Enter para usar o hostname ou informar o dominio
-   - Usuario SMTP: o usuario do SMTP2Go
-   - Senha SMTP: a senha
-   - E-mail remetente: ex. `alertas@seudominio.com`
-   - E-mails de destino: `admin@empresa.com,ti@empresa.com`
-   - Token do Bot Telegram: cole o token do @BotFather ou Enter para pular
-   - Se informou token: enviar **/start** ao bot no Telegram e pressionar Enter no terminal
+## Migração a partir da versão 1
 
-4. Aguardar o fim da instalacao e conferir o e-mail de teste e, se configurou Telegram, a mensagem de teste no app.
+Automática, em até um minuto, sem ninguém entrar no servidor. Ao receber o
+bundle novo pelo canal de atualização, o agente instala a si mesmo, converte
+os limiares antigos para o par atenção/crítico, move os destinatários de
+e-mail de dentro do script para `email.conf`, e troca as quatro linhas por
+minuto do cron por uma só, preservando o ClamAV e tudo que o dono do servidor
+tiver agendado.
 
----
+Se qualquer passo falhar, os três scripts antigos continuam funcionando,
+porque cada um deles é o agente inteiro.
 
-## Apos a instalacao
+## Documentação
 
-- **Crontab:** `sudo crontab -l` – lista os agendamentos.
-- **Logs de e-mail:** `sudo tail -f /var/log/mail.log`
-- **Logs ClamAV:** `ls /var/log/clamav/`
-- **Quarentena:** `ls /var/virus-quarantine/`
-- **Testar envio manual (e-mail):**  
-  `echo "Teste" | mail -s "Assunto" seu@email.com`  
-  ou  
-  `/usr/local/bin/send_html_alert.sh /opt/alerts/templates/alert.html seu@email.com "Assunto" "Titulo" "Mensagem"`
+- [SDD do agente v2](docs/SDD_AGENTE_V2.md): o problema, as causas encontradas
+  no código e as decisões de projeto.
+- [PRD](PRD.md): o que o produto faz.
 
-- **Telegram:** Config em `/opt/monitoring/telegram.conf`. Se o Chat ID nao foi obtido na instalacao: `sudo /usr/local/bin/telegram-get-chat-id.sh`. Testar envio: `sudo /usr/local/bin/send_telegram_alert.sh "Mensagem de teste"`
+## Licença
 
----
-
-## Relacao com a documentacao
-
-O instalador segue as orientacoes dos documentos:
-
-- **Instalar Servico de E-Mail no Servidor.md** – Postfix, SMTP2Go, masquerade, templates e envio HTML.
-- **Instalar o ClamV + Monitoramento.md** – ClamAV, quarentena, clamscan, alerta por e-mail.
-- **Configurar Monitoramento de CPU e Memoria.md** – CPU/RAM com threshold 80%, templates e cron.
-- **Configurar Monitoramento de CPU, Memoria e Disco.md** – inclusao do monitor de disco (80%) e template de disco.
-
-Assim, um unico script reproduz o que seria feito manualmente conforme essa documentacao.
+MIT. Copyright (c) 2026 Wesley Menezes. Veja [LICENSE](LICENSE).

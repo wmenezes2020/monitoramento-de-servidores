@@ -1,0 +1,6 @@
+Filesystem           1024-blocks      Used Available Capacity Mounted on
+/dev/nvme0n1p1          40593612  12345678  26000000      33% /
+//nas servidor/backups 200000000 190000000  10000000      95% /mnt/backup
+/dev/nvme0n1p15           109422      6150    103272       6% /boot/efi
+overlay 2                 40593612  38000000   2593612      94% /var/lib/docker/overlay2/abc
+tmpfs                    8112380         0   8112380       0% /dev/shm
