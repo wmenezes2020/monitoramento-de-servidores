@@ -59,6 +59,17 @@ sincroniza_config() {
     done
   fi
 
+  # O idioma e da empresa, nao do servidor: muda no painel e vale para todos
+  # os servidores daquela conta. Valor que nao reconhecemos e ignorado, em vez
+  # de deixar o agente mudo ou cair num catalogo vazio.
+  local idioma_novo
+  idioma_novo="$(printf '%s' "$resp" | sed -n 's/.*"locale":"\([^"]*\)".*/\1/p' | head -1)"
+  case "$idioma_novo" in
+    pt-BR|en-US|es-CO) _grava_conf IDIOMA "$idioma_novo" ;;
+    "") : ;;
+    *) log_erro "painel mandou idioma desconhecido (${idioma_novo}); mantido ${IDIOMA}" ;;
+  esac
+
   local nome
   nome="$(printf '%s' "$resp" | sed -n 's/.*"server_name":"\([^"]*\)".*/\1/p' | head -1)"
   if [[ -n "$nome" && -f "${AGENTE_RAIZ}/email.conf" ]]; then
@@ -98,7 +109,13 @@ sincroniza_config() {
     inicia_silencio "${manut}s" "manutencao programada no painel"
   fi
 
-  [[ "$mudou" -eq 1 ]] && log_info "configuracao sincronizada com o painel"
+  if [[ "$mudou" -eq 1 ]]; then
+    log_info "configuracao sincronizada com o painel"
+    # Rele o arquivo para o valor novo valer ainda nesta rodada: num servidor
+    # que acabou de trocar de idioma, o alerta seguinte ja sai traduzido.
+    carrega_config
+  fi
+  sincroniza_templates
   return 0
 }
 
@@ -139,6 +156,10 @@ rodada() {
     return 0
   fi
 
+  # Barato: sai na primeira comparacao quando o idioma nao mudou. Sem isto, o
+  # primeiro alerta depois de instalar sairia no template antigo em portugues.
+  sincroniza_templates
+
   mede_cpu     || log_info "CPU sem medida nesta rodada"
   mede_memoria || log_erro "memoria sem medida nesta rodada"
   mede_load    || true
@@ -153,8 +174,20 @@ rodada() {
   [[ "${VIGIAR_CPU:-1}" == "1" ]] && \
     avalia_e_notifica cpu cpu "${MEDIDA_CPU:-}" "${html_cpu}${html_mem}" "$proc_cpu"
 
-  [[ "${VIGIAR_STEAL:-1}" == "1" ]] && \
+  # Steal so e avaliado quando a CPU tambem esta acima do limiar de atencao.
+  # Sem essa condicao, qualquer burst normal de instancia t3/t3a gera alerta
+  # com o servidor ocioso: medicao real de 09/10/2026 num t3a.xlarge deu steal
+  # de 16,6% com a CPU em 29,5% e load de 0,41 por nucleo, e virou e-mail.
+  # Quando a CPU esta baixa, o steal continua aparecendo no corpo do alerta e
+  # no diagnostico, que e onde ele serve.
+  if [[ "${VIGIAR_STEAL:-1}" == "1" ]] && [[ -n "${MEDIDA_CPU:-}" ]]      && maior "${MEDIDA_CPU:-0}" "${CPU_ATENCAO:-85}"; then
     avalia_e_notifica steal steal "${MEDIDA_STEAL:-}" "$html_cpu" "$proc_cpu"
+  elif [[ -f "$(caminho_estado steal)" ]]; then
+    # Incidente de steal aberto nao pode ficar pendurado quando a CPU
+    # normaliza antes dele: alimenta a maquina de estado com um valor em
+    # ordem para que ela feche pelo caminho normal, com aviso de recuperacao.
+    avalia_e_notifica steal steal "0"
+  fi
 
   [[ "${VIGIAR_MEMORIA:-1}" == "1" ]] && \
     avalia_e_notifica memoria memoria "${MEDIDA_MEM:-}" "${html_mem}${html_cpu}" "$proc_mem"
@@ -330,6 +363,9 @@ Agente de monitoramento de servidores.
   monitoring-agent.sh atualizar         busca e aplica atualizacao, com rollback se o autoteste falhar
   monitoring-agent.sh instalar          (re)instala o agente e migra o cron
   monitoring-agent.sh versao
+
+Idioma: pt-BR, en-US ou es-CO, em IDIOMA no agent.conf. Chega do painel, e
+vale para e-mail, Telegram e os templates em /opt/alerts/templates.
 
 Configuracao: /opt/monitoring/agent.conf
 Registro:     /var/log/monitoring-agent.log

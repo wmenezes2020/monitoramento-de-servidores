@@ -145,13 +145,4 @@ para_segundos() {
   esac
 }
 
-# Formata duracao em segundos para texto curto em portugues
-duracao_humana() {
-  awk -v s="${1:-0}" 'BEGIN{
-    s = int(s)
-    if (s < 60) { printf "%ds", s; exit }
-    if (s < 3600) { printf "%dmin", int(s/60); exit }
-    if (s < 86400) { printf "%dh%02dmin", int(s/3600), int((s%3600)/60); exit }
-    printf "%dd%dh", int(s/86400), int((s%86400)/3600)
-  }'
-}
+# duracao_humana vive em 25-idioma.sh: a unidade muda com o idioma.

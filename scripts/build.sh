@@ -55,6 +55,20 @@ sha() {
   else shasum -a 256 "$1" | awk '{print $1}'; fi
 }
 
+# Auxiliares de envio. Eles vivem em /usr/local/bin, que e exatamente onde o
+# atualizador instala, entao entram no manifesto e chegam na frota pelo mesmo
+# canal. Antes existiam so dentro do instalador, e um servidor ja instalado
+# nunca os recebia de volta: data em UTC e cabecalho em portugues ficavam
+# cravados para sempre.
+for f in "$RAIZ"/src/envio/*.sh; do
+  [[ -e "$f" ]] || continue
+  nome="$(basename "$f")"
+  cp "$f" "${SAIDA}/${nome}"
+  chmod 755 "${SAIDA}/${nome}"
+  bash -n "${SAIDA}/${nome}" || { echo "${nome} nao passa em bash -n" >&2; exit 1; }
+done
+
+
 MANIFESTO="${SAIDA}/agent.manifest"
 {
   printf '# Manifesto do agente de monitoramento. Gerado por scripts/build.sh.\n'
@@ -65,13 +79,20 @@ MANIFESTO="${SAIDA}/agent.manifest"
   for nome in monitoring-agent.sh monitor_cpu.sh monitor_memory.sh monitor_disk.sh; do
     printf 'ARQUIVO=%s %s\n' "$nome" "$(sha "${SAIDA}/${nome}")"
   done
+  # Os auxiliares de envio tambem entram: sem eles no manifesto, o atualizador
+  # nao os baixa, e a frota fica presa na versao que o instalador gravou.
+  for f in "$SAIDA"/send_*.sh; do
+    [[ -e "$f" ]] || continue
+    printf 'ARQUIVO=%s %s\n' "$(basename "$f")" "$(sha "$f")"
+  done
 } >"$MANIFESTO"
 
 # Os artefatos vao para a raiz porque e de la que o canal de distribuicao
 # baixa: https://raw.githubusercontent.com/<repo>/main/<arquivo>
 if [[ "$SO_CHECAR" -eq 1 ]]; then
   falhou=0
-  for nome in monitoring-agent.sh monitor_cpu.sh monitor_memory.sh monitor_disk.sh agent.manifest; do
+  for nome in monitoring-agent.sh monitor_cpu.sh monitor_memory.sh monitor_disk.sh agent.manifest send_html_alert.sh send_telegram_alert.sh; do
+    [[ -e "${SAIDA}/${nome}" ]] || continue
     if ! diff -q "${SAIDA}/${nome}" "${RAIZ}/${nome}" >/dev/null 2>&1; then
       echo "desatualizado: ${nome} (rode ./scripts/build.sh)" >&2
       falhou=1
@@ -81,7 +102,8 @@ if [[ "$SO_CHECAR" -eq 1 ]]; then
   exit "$falhou"
 fi
 
-for nome in monitoring-agent.sh monitor_cpu.sh monitor_memory.sh monitor_disk.sh agent.manifest; do
+for nome in monitoring-agent.sh monitor_cpu.sh monitor_memory.sh monitor_disk.sh agent.manifest send_html_alert.sh send_telegram_alert.sh; do
+  [[ -e "${SAIDA}/${nome}" ]] || continue
   cp "${SAIDA}/${nome}" "${RAIZ}/${nome}"
 done
 chmod 755 "${RAIZ}/monitoring-agent.sh" "${RAIZ}/monitor_cpu.sh" "${RAIZ}/monitor_memory.sh" "${RAIZ}/monitor_disk.sh"
