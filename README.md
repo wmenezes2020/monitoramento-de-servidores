@@ -54,6 +54,23 @@ monitoring-agent.sh atualizar      # força a busca por atualização
 monitoring-agent.sh versao
 ```
 
+## Idiomas
+
+Português do Brasil, inglês americano e espanhol da Colômbia. O idioma chega
+do painel, junto com os limiares, e vale para o e-mail, para o Telegram e para
+os templates HTML em disco.
+
+`es-CO` é o padrão: servidor instalado sem conectar ao painel não tem de quem
+herdar idioma.
+
+Para mudar à mão, `IDIOMA` em `/opt/monitoring/agent.conf`. O valor vale até a
+próxima sincronia com o painel.
+
+Nome de métrica não traduz. CPU, Swap, Inodes, Load average e contenção de CPU
+são iguais nos três idiomas, porque é assim que aparecem no `top`, no `vmstat`
+e no painel do provedor: é por esse nome que a pessoa pesquisa quando recebe o
+alerta.
+
 ## Configuração
 
 Tudo em `/opt/monitoring/agent.conf`. Os valores também chegam do painel de
@@ -67,13 +84,14 @@ observabilidade, que sobrescreve o arquivo na sincronia a cada cinco minutos.
 | `SWAP_ATENCAO` / `SWAP_CRITICO` | 50 / 80 | ignorado onde não há swap |
 | `INODE_ATENCAO` / `INODE_CRITICO` | 85 / 93 | disco cheio de inode aceita bytes e recusa arquivo |
 | `LOAD_ATENCAO` / `LOAD_CRITICO` | 1.5 / 3.0 | normalizado por núcleo |
-| `STEAL_ATENCAO` / `STEAL_CRITICO` | 10 / 25 | CPU tirada pelo provedor |
+| `STEAL_ATENCAO` / `STEAL_CRITICO` | 25 / 40 | contenção de CPU; só alerta com a CPU alta junto |
 | `CICLOS_CONFIRMACAO` | 3 | leituras seguidas acima do limiar antes de avisar |
 | `CICLOS_RECUPERACAO` | 3 | leituras seguidas abaixo antes de dar por resolvido |
 | `BANDA_SAIDA` | 8 | pontos abaixo do limiar para considerar normalizado |
 | `RENOTIFICAR_MIN` | 60 | minutos até lembrar de um incidente ainda aberto; 0 desliga |
 | `MAX_ALERTAS_HORA` | 12 | acima disso as mensagens viram um resumo |
 | `RECUPERACAO_TELEGRAM` | 0 | recuperação por e-mail e painel, sem acordar ninguém |
+| `IDIOMA` | `es-CO` | `pt-BR`, `en-US` ou `es-CO`; chega do painel |
 | `AUTO_UPDATE` | 1 | busca atualização a cada cinco minutos |
 
 Para desligar uma métrica: `VIGIAR_SWAP=0`, `VIGIAR_INODE=0`, e assim por diante.
@@ -113,7 +131,8 @@ tests/            bateria de unidade e teste de migração
 ```bash
 ./scripts/build.sh          # monta os artefatos e o manifesto
 ./scripts/build.sh --check  # confere se a raiz está em dia, para CI
-./tests/roda-testes.sh      # 136 verificações de unidade
+./tests/roda-testes.sh      # 134 verificações de unidade
+./tests/testa-idioma.sh     # 112 verificações dos três idiomas
 ./tests/testa-migracao.sh   # 31 verificações de migração ponta a ponta
 ```
 

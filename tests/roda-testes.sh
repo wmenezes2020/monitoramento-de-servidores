@@ -377,14 +377,14 @@ grupo "Diagnostico: a frase que diz por onde comecar"
 # =========================================================================
 
 MEDIDA_STEAL=40; MEDIDA_IOWAIT=1; MEDIDA_LOAD=0.5
-verdade "steal alto aponta o provedor" bash -c "[[ '$(diagnostico cpu 90)' == *provedor* ]]"
+contem "steal alto aponta o provedor" "$(diagnostico cpu 90)" "provedor"
 MEDIDA_STEAL=1; MEDIDA_IOWAIT=40
-verdade "iowait alto aponta disco"     bash -c "[[ '$(diagnostico cpu 90)' == *disco* ]]"
+contem "iowait alto aponta disco" "$(diagnostico cpu 90)" "disco"
 MEDIDA_STEAL=1; MEDIDA_IOWAIT=1; MEDIDA_LOAD=0.3
-verdade "sem sinal especifico, aponta os processos" bash -c "[[ '$(diagnostico cpu 90)' == *processos* ]]"
+contem "sem sinal especifico, aponta os processos" "$(diagnostico cpu 90)" "processos"
 
 MEDIDA_SWAP_TOTAL_KB=0; MEDIDA_MEM_DISP_KB=204800
-verdade "memoria sem swap avisa do OOM kill" bash -c "[[ '$(diagnostico memoria 95)' == *OOM* ]]"
+contem "memoria sem swap avisa do OOM kill" "$(diagnostico memoria 95)" "OOM"
 
 # =========================================================================
 grupo "Escape de texto"
@@ -436,7 +436,7 @@ done
 
 verdade "manifesto existe"          test -f "${RAIZ}/agent.manifest"
 verdade "manifesto declara versao"  grep -q '^VERSAO=[0-9]' "${RAIZ}/agent.manifest"
-igual   "manifesto lista 4 arquivos" "4" "$(grep -c '^ARQUIVO=' "${RAIZ}/agent.manifest")"
+igual   "manifesto lista os 6 arquivos" "6" "$(grep -c "^ARQUIVO=" "${RAIZ}/agent.manifest")"
 
 # O canal de atualizacao antigo edita estas linhas com sed. Se o formato
 # mudar, a frota instalada para de receber limiar e destinatario do painel.

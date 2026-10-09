@@ -120,61 +120,29 @@ diagnostico() {
   case "$metrica" in
     cpu)
       if maior "${MEDIDA_STEAL:-0}" "${STEAL_ATENCAO:-10}"; then
-        printf 'Steal em %s%%: o limite esta no provedor, nao no servidor. Em instancia burstable (EC2 t2/t3/t3a) isso e credito de CPU esgotado. Conferir CPUCreditBalance no painel do provedor.' "$MEDIDA_STEAL"
+        t diag_steal "$MEDIDA_STEAL"
       elif maior "${MEDIDA_IOWAIT:-0}" "25"; then
-        printf 'iowait em %s%%: a CPU esta esperando disco, nao calculando. O gargalo e de I/O. Conferir com: iostat -x 1 5' "$MEDIDA_IOWAIT"
+        t diag_iowait "$MEDIDA_IOWAIT"
       elif maior "${MEDIDA_LOAD:-0}" "1.5"; then
-        printf 'Load normalizado em %s por nucleo: ha processo na fila esperando CPU, nao so usando. Conferir os processos abaixo.' "$MEDIDA_LOAD"
+        t diag_load "$MEDIDA_LOAD"
       else
-        printf 'Uso sustentado de CPU. Conferir os processos abaixo e se ha build, cron ou importacao rodando.'
+        t diag_cpu
       fi
       ;;
     memoria)
       local disp_mb
       disp_mb="$(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.0f", k/1024}')"
       if [[ "${MEDIDA_SWAP_TOTAL_KB:-0}" -eq 0 ]]; then
-        printf 'Restam %s MB disponiveis e este servidor nao tem swap: estourar significa OOM kill, processo morto sem erro no log da aplicacao. Conferir os processos abaixo.' "$disp_mb"
+        t diag_mem_sem_swap "$disp_mb"
       else
-        printf 'Restam %s MB disponiveis. Conferir os processos abaixo e, se for aplicacao Node, se ha limite de heap configurado.' "$disp_mb"
+        t diag_mem "$disp_mb"
       fi
       ;;
-    disco)
-      printf 'Conferir os maiores diretorios abaixo. Suspeitos frequentes: /var/log, /var/lib/docker e dump de banco esquecido.'
-      ;;
-    inode)
-      printf 'Inodes esgotados: o disco aceita bytes mas nao aceita arquivo novo, e o df comum nao mostra isso. Procurar diretorio com muitos arquivos pequenos (cache de sessao, fila de e-mail).'
-      ;;
-    swap)
-      printf 'Swap em uso alto deixa a aplicacao lenta sem derrubar nada, entao chega como reclamacao de lentidao. Paginas em swap nao voltam sozinhas.'
-      ;;
-    load)
-      printf 'Load por nucleo em %s: ha processo esperando a vez. Load alto com CPU baixa costuma ser espera de disco ou de rede.' "$valor"
-      ;;
-    steal)
-      printf 'O hypervisor esta tirando CPU desta instancia. Em EC2 burstable, credito esgotado. Trocar de familia ou ligar o modo unlimited resolve; ajuste dentro do servidor nao.'
-      ;;
-    *)
-      printf 'Conferir os processos abaixo.'
-      ;;
-  esac
-}
-
-rotulo_metrica() {
-  case "$1" in
-    cpu) printf 'CPU' ;;
-    memoria) printf 'Memoria' ;;
-    disco) printf 'Disco' ;;
-    inode) printf 'Inodes' ;;
-    swap) printf 'Swap' ;;
-    load) printf 'Load' ;;
-    steal) printf 'CPU roubada' ;;
-    *) printf '%s' "$1" ;;
-  esac
-}
-
-unidade_metrica() {
-  case "$1" in
-    load) printf '' ;;
-    *) printf '%%' ;;
+    disco) t diag_disco ;;
+    inode) t diag_inode ;;
+    swap)  t diag_swap ;;
+    load)  t diag_load_m "$valor" ;;
+    steal) t diag_steal_m ;;
+    *)     t diag_padrao ;;
   esac
 }

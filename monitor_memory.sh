@@ -15,7 +15,7 @@ set -uo pipefail
 # A versao e o unico carimbo. Carimbar o commit tornaria o bundle diferente a
 # cada commit mesmo sem mudanca em src/, o checksum do manifesto mudaria
 # sozinho, e o "build --check" do CI reprovaria sempre.
-AGENTE_VERSAO="2.0.0"
+AGENTE_VERSAO="2.1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -164,16 +164,7 @@ para_segundos() {
   esac
 }
 
-# Formata duracao em segundos para texto curto em portugues
-duracao_humana() {
-  awk -v s="${1:-0}" 'BEGIN{
-    s = int(s)
-    if (s < 60) { printf "%ds", s; exit }
-    if (s < 3600) { printf "%dmin", int(s/60); exit }
-    if (s < 86400) { printf "%dh%02dmin", int(s/3600), int((s%3600)/60); exit }
-    printf "%dd%dh", int(s/86400), int((s%86400)/3600)
-  }'
-}
+# duracao_humana vive em 25-idioma.sh: a unidade muda com o idioma.
 
 
 # ---------------------------------------------------------------------------
@@ -202,10 +193,18 @@ carrega_config() {
   # Load normalizado por nucleo. 1.0 = todos os nucleos ocupados sem fila.
   LOAD_ATENCAO="${LOAD_ATENCAO:-1.5}"
   LOAD_CRITICO="${LOAD_CRITICO:-3.0}"
-  # Steal alto em instancia burstable (EC2 t2/t3/t3a) significa credito de CPU
-  # esgotado: o limite e do provedor, nao do servidor.
-  STEAL_ATENCAO="${STEAL_ATENCAO:-10}"
-  STEAL_CRITICO="${STEAL_CRITICO:-25}"
+  # Steal sozinho NAO e incidente. Em instancia burstable (EC2 t2/t3/t3a) ele
+  # aparece toda vez que a maquina usa burst acima do baseline: e o mecanismo
+  # funcionando. Medicao real de 09/10/2026 num t3a.xlarge: steal de 16,6% com
+  # a CPU em 29,5% e load de 0,41 por nucleo, ou seja, servidor tranquilo. Com
+  # o limiar antigo de 10 isso virou e-mail, que e exatamente o alerta que
+  # ensina a pessoa a ignorar os outros.
+  #
+  # Steal so vira problema quando o servidor QUER CPU e o provedor nao da.
+  # Por isso o limiar subiu e a avaliacao passou a exigir CPU alta junto
+  # (ver VIGIAR_STEAL em 90-main.sh).
+  STEAL_ATENCAO="${STEAL_ATENCAO:-25}"
+  STEAL_CRITICO="${STEAL_CRITICO:-40}"
 
   # --- Histerese: o coracao do "parar de alertar a toa" ---
   CICLOS_CONFIRMACAO="${CICLOS_CONFIRMACAO:-3}"
@@ -230,6 +229,12 @@ carrega_config() {
   # O df ja filtra por tipo com -x, mas a lista vale como segunda linha para
   # versao antiga de df que ignore o -x.
   DISCO_IGNORAR="${DISCO_IGNORAR:-/var/lib/docker/* /snap/* /run/* /dev/shm /dev/* }"
+
+  # --- Idioma ---
+  # pt-BR, en-US ou es-CO. Chega do painel junto com os limiares. O padrao e
+  # es-CO porque servidor instalado sem conectar ao painel nao tem de quem
+  # herdar idioma, e essa foi a decisao do dono do produto.
+  IDIOMA="${IDIOMA:-es-CO}"
 
   # --- Canais ---
   CANAL_EMAIL="${CANAL_EMAIL:-1}"
@@ -325,6 +330,430 @@ limiar_de() {
     steal)  printf '%s %s' "$STEAL_ATENCAO" "$STEAL_CRITICO" ;;
     *)      printf '90 95' ;;
   esac
+}
+
+
+# ---------------------------------------------------------------------------
+# Idioma
+# ---------------------------------------------------------------------------
+#
+# Tres idiomas: pt-BR, en-US e es-CO. O idioma chega do painel, junto com os
+# limiares, e vale para e-mail, Telegram e para os templates HTML em disco.
+#
+# O padrao e es-CO de proposito: servidor instalado sem conectar ao painel nao
+# tem de quem herdar idioma, e a decisao do dono foi essa.
+#
+# Nome de metrica: Swap, Inodes e Load average ficam como estao, porque e
+# assim que aparecem no top, no vmstat, no CloudWatch e no Grafana.
+#
+# "steal" e o caso que precisou de cuidado. "CPU roubada" era traducao literal,
+# nao existe em ferramenta nenhuma e assusta quem le: roubo sugere invasao,
+# quando o fenomeno e o provedor limitando a fatia contratada. O rotulo passou
+# a ser "Contencao de CPU" (CPU contention, termo usado em VMware, Nutanix e
+# Kubernetes), e a palavra "steal" continua na linha tecnica da tabela de
+# contexto, que e onde ela serve: para a pessoa pesquisar.
+
+idioma_normalizado() {
+  case "$(printf '%s' "${IDIOMA:-es-CO}" | tr '[:upper:]' '[:lower:]')" in
+    pt*) printf 'pt' ;;
+    en*) printf 'en' ;;
+    *)   printf 'es' ;;
+  esac
+}
+
+# t CHAVE [args...] -> texto no idioma vigente, com printf aplicado.
+# Chave sem traducao no idioma cai no espanhol, que e o padrao do produto, em
+# vez de sumir e deixar um alerta com buraco no meio.
+t() {
+  local chave="$1"; shift
+  local modelo
+  case "$(idioma_normalizado)" in
+    pt) modelo="$(msg_pt "$chave")" ;;
+    en) modelo="$(msg_en "$chave")" ;;
+    *)  modelo="$(msg_es "$chave")" ;;
+  esac
+  [[ -z "$modelo" ]] && modelo="$(msg_es "$chave")"
+  [[ -z "$modelo" ]] && modelo="$chave"
+  # shellcheck disable=SC2059
+  printf "$modelo" "$@"
+}
+
+# Nomes que NAO se traduzem, em nenhum idioma.
+rotulo_metrica() {
+  case "$1" in
+    cpu)          printf 'CPU' ;;
+    memoria)      printf '%s' "$(t rotulo_memoria)" ;;
+    disco)        printf '%s' "$(t rotulo_disco)" ;;
+    inode)        printf 'Inodes' ;;
+    swap)         printf 'Swap' ;;
+    load)         printf '%s' "$(t rotulo_load)" ;;
+    steal)        printf '%s' "$(t rotulo_steal)" ;;
+    agent_update) printf '%s' "$(t rotulo_agente)" ;;
+    *)            printf '%s' "$1" ;;
+  esac
+}
+
+unidade_metrica() {
+  case "$1" in
+    load) printf '' ;;
+    *) printf '%%' ;;
+  esac
+}
+
+prefixo_assunto() {
+  case "$1" in
+    abrir)    printf '[%s]' "$(t sev_atencao)" ;;
+    escalar)  printf '[%s]' "$(t sev_critico)" ;;
+    repetir)  printf '[%s]' "$(t sev_segue)" ;;
+    resolver) printf '[%s]' "$(t sev_ok)" ;;
+    *)        printf '[%s]' "$(t sev_aviso)" ;;
+  esac
+}
+
+# Data no formato que cada lugar le sem precisar pensar.
+data_local() {
+  case "$(idioma_normalizado)" in
+    en) date '+%Y-%m-%d %H:%M:%S %Z' ;;
+    *)  date '+%d/%m/%Y %H:%M:%S %Z' ;;
+  esac
+}
+
+duracao_humana() {
+  local s="${1:-0}"
+  awk -v s="$s" -v u_s="$(t dur_segundos)" -v u_m="$(t dur_minutos)" \
+      -v u_h="$(t dur_horas)" -v u_d="$(t dur_dias)" 'BEGIN{
+    s = int(s)
+    if (s < 60)    { printf "%d%s", s, u_s; exit }
+    if (s < 3600)  { printf "%d%s", int(s/60), u_m; exit }
+    if (s < 86400) { printf "%d%s%02d%s", int(s/3600), u_h, int((s%3600)/60), u_m; exit }
+    printf "%dd%d%s", int(s/86400), int((s%86400)/3600), u_h
+  }'
+}
+
+# --- Catalogos ------------------------------------------------------------
+#
+# Um "case" por idioma. Bash associativo com "set -u" explode em chave que nao
+# existe, e aqui chave faltando precisa cair no padrao, nao derrubar a rodada.
+#
+# As strings passam por printf: "%" literal precisa vir como "%%".
+
+msg_pt() {
+  case "$1" in
+    rotulo_memoria) printf 'Memória' ;;
+    rotulo_steal)   printf 'Contenção de CPU' ;;
+    rotulo_load)    printf 'Load average' ;;
+    tabela_steal)   printf 'Contenção (steal)' ;;
+    rotulo_disco)   printf 'Disco' ;;
+    rotulo_agente)  printf 'Agente' ;;
+
+    sev_atencao) printf 'ATENÇÃO' ;;
+    sev_critico) printf 'CRÍTICO' ;;
+    sev_segue)   printf 'SEGUE' ;;
+    sev_ok)      printf 'OK' ;;
+    sev_aviso)   printf 'AVISO' ;;
+    nivel_atencao) printf 'atenção' ;;
+    nivel_critico) printf 'crítico' ;;
+
+    dur_segundos) printf 's' ;;
+    dur_minutos)  printf 'min' ;;
+    dur_horas)    printf 'h' ;;
+    dur_dias)     printf 'd' ;;
+
+    titulo_normalizou) printf '%%s normalizou em %%s' ;;
+    titulo_alerta)     printf '%%s em %%s%%s no %%s' ;;
+    corpo_normalizou)  printf '<strong>%%s normalizou.</strong> Valor atual: %%s%%s. O problema durou %%s e chegou a %%s%%s.' ;;
+    corpo_valor)       printf '<strong>%%s: %%s%%s</strong> (limiar %%s%%s)' ;;
+    corpo_desde)       printf 'Assim há %%s, pico de %%s%%s. Confirmado em %%s leituras seguidas.' ;;
+    corpo_estado)      printf 'Estado do servidor agora' ;;
+    corpo_comecar)     printf 'Por onde começar' ;;
+    corpo_proc_cpu)    printf 'Processos por CPU' ;;
+    corpo_proc_mem)    printf 'Processos por memória' ;;
+    corpo_dirs)        printf 'Maiores diretórios em %%s' ;;
+    corpo_media_de)    printf 'média de %%s' ;;
+    corpo_sem_swap)    printf 'sem swap configurado' ;;
+    corpo_disponiveis) printf '%%s GB disponíveis' ;;
+    corpo_por_nucleo)  printf '%%s por núcleo, %%s núcleos' ;;
+
+    tg_normalizou) printf '%%s %%s normalizou em %%s\n\nAtual: %%s%%s | durou %%s | pico %%s%%s' ;;
+    tg_alerta)     printf '%%s %%s em %%s%%s - %%s\n\nAssim há %%s (pico %%s%%s, limiar %%s%%s)\n\n%%s' ;;
+
+    resumo_assunto) printf '%%s alertas na última hora' ;;
+    resumo_titulo)  printf 'Várias métricas fora do normal' ;;
+    resumo_corpo)   printf 'O servidor passou do limite de %%s alertas por hora. Em vez de uma mensagem por ocorrência, segue o agrupamento:' ;;
+    resumo_tg)      printf '[RESUMO] %%s - %%s alertas na última hora\n\nO limite de %%s por hora foi atingido e as mensagens individuais foram agrupadas.\n\n%%s' ;;
+
+    diag_steal)   printf 'Contenção de CPU em %%s%%%% (steal): o limite está no provedor, não no servidor. Em instância burstable (EC2 t2/t3/t3a) isso é crédito de CPU esgotado. Conferir CPUCreditBalance no painel do provedor.' ;;
+    diag_iowait)  printf 'iowait em %%s%%%%: a CPU está esperando disco, não calculando. O gargalo é de I/O. Conferir com: iostat -x 1 5' ;;
+    diag_load)    printf 'Load average em %%s por núcleo: há processo na fila esperando CPU, não só usando. Conferir os processos abaixo.' ;;
+    diag_cpu)     printf 'Uso sustentado de CPU. Conferir os processos abaixo e se há build, cron ou importação rodando.' ;;
+    diag_mem_sem_swap) printf 'Restam %%s MB disponíveis e este servidor não tem swap: estourar significa OOM kill, processo morto sem erro no log da aplicação. Conferir os processos abaixo.' ;;
+    diag_mem)     printf 'Restam %%s MB disponíveis. Conferir os processos abaixo e, se for aplicação Node, se há limite de heap configurado.' ;;
+    diag_disco)   printf 'Conferir os maiores diretórios abaixo. Suspeitos frequentes: /var/log, /var/lib/docker e dump de banco esquecido.' ;;
+    diag_inode)   printf 'Inodes esgotados: o disco aceita bytes mas não aceita arquivo novo, e o df comum não mostra isso. Procurar diretório com muitos arquivos pequenos (cache de sessão, fila de e-mail).' ;;
+    diag_swap)    printf 'Swap em uso alto deixa a aplicação lenta sem derrubar nada, então chega como reclamação de lentidão. Páginas em swap não voltam sozinhas.' ;;
+    diag_load_m)  printf 'Load average em %%s por núcleo: há processo esperando a vez. Load alto com CPU baixa costuma ser espera de disco ou de rede.' ;;
+    diag_steal_m) printf 'A instância está pedindo mais CPU do que o provedor entrega neste momento. Em EC2 burstable, isso é crédito esgotado. Trocar de família ou ligar o modo unlimited resolve; ajuste dentro do servidor não.' ;;
+    diag_padrao)  printf 'Conferir os processos abaixo.' ;;
+
+    tpl_data)     printf 'Data' ;;
+    tpl_servidor) printf 'Servidor' ;;
+    tpl_rodape)   printf 'Alerta automático. Não responda.' ;;
+    *) printf '' ;;
+  esac
+}
+
+msg_en() {
+  case "$1" in
+    rotulo_memoria) printf 'Memory' ;;
+    rotulo_steal)   printf 'CPU contention' ;;
+    rotulo_load)    printf 'Load average' ;;
+    tabela_steal)   printf 'Contention (steal)' ;;
+    rotulo_disco)   printf 'Disk' ;;
+    rotulo_agente)  printf 'Agent' ;;
+
+    sev_atencao) printf 'WARNING' ;;
+    sev_critico) printf 'CRITICAL' ;;
+    sev_segue)   printf 'ONGOING' ;;
+    sev_ok)      printf 'RESOLVED' ;;
+    sev_aviso)   printf 'NOTICE' ;;
+    nivel_atencao) printf 'warning' ;;
+    nivel_critico) printf 'critical' ;;
+
+    dur_segundos) printf 's' ;;
+    dur_minutos)  printf 'min' ;;
+    dur_horas)    printf 'h' ;;
+    dur_dias)     printf 'd' ;;
+
+    titulo_normalizou) printf '%%s back to normal on %%s' ;;
+    titulo_alerta)     printf '%%s at %%s%%s on %%s' ;;
+    corpo_normalizou)  printf '<strong>%%s is back to normal.</strong> Current value: %%s%%s. It lasted %%s and peaked at %%s%%s.' ;;
+    corpo_valor)       printf '<strong>%%s: %%s%%s</strong> (threshold %%s%%s)' ;;
+    corpo_desde)       printf 'Like this for %%s, peaked at %%s%%s. Confirmed over %%s consecutive readings.' ;;
+    corpo_estado)      printf 'Server state right now' ;;
+    corpo_comecar)     printf 'Where to start' ;;
+    corpo_proc_cpu)    printf 'Top processes by CPU' ;;
+    corpo_proc_mem)    printf 'Top processes by memory' ;;
+    corpo_dirs)        printf 'Largest directories in %%s' ;;
+    corpo_media_de)    printf '%%s average' ;;
+    corpo_sem_swap)    printf 'no swap configured' ;;
+    corpo_disponiveis) printf '%%s GB available' ;;
+    corpo_por_nucleo)  printf '%%s per core, %%s cores' ;;
+
+    tg_normalizou) printf '%%s %%s back to normal on %%s\n\nCurrent: %%s%%s | lasted %%s | peak %%s%%s' ;;
+    tg_alerta)     printf '%%s %%s at %%s%%s - %%s\n\nLike this for %%s (peak %%s%%s, threshold %%s%%s)\n\n%%s' ;;
+
+    resumo_assunto) printf '%%s alerts in the last hour' ;;
+    resumo_titulo)  printf 'Several metrics out of range' ;;
+    resumo_corpo)   printf 'This server went over the limit of %%s alerts per hour. Instead of one message per event, here is the grouped summary:' ;;
+    resumo_tg)      printf '[SUMMARY] %%s - %%s alerts in the last hour\n\nThe limit of %%s per hour was reached and individual messages were grouped.\n\n%%s' ;;
+
+    diag_steal)   printf 'CPU contention at %%s%%%% (steal): the limit is on the provider side, not on the server. On a burstable instance (EC2 t2/t3/t3a) this means CPU credits ran out. Check CPUCreditBalance in the provider console.' ;;
+    diag_iowait)  printf 'iowait at %%s%%%%: the CPU is waiting on disk, not computing. The bottleneck is I/O. Check with: iostat -x 1 5' ;;
+    diag_load)    printf 'Load average at %%s per core: processes are queued waiting for CPU, not just using it. Check the processes below.' ;;
+    diag_cpu)     printf 'Sustained CPU usage. Check the processes below and whether a build, cron job or import is running.' ;;
+    diag_mem_sem_swap) printf 'Only %%s MB available and this server has no swap: running out means an OOM kill, a process killed with no error in the application log. Check the processes below.' ;;
+    diag_mem)     printf 'Only %%s MB available. Check the processes below and, for a Node application, whether a heap limit is configured.' ;;
+    diag_disco)   printf 'Check the largest directories below. Usual suspects: /var/log, /var/lib/docker and a forgotten database dump.' ;;
+    diag_inode)   printf 'Inodes exhausted: the disk still accepts bytes but refuses new files, and plain df does not show this. Look for a directory with many small files (session cache, mail queue).' ;;
+    diag_swap)    printf 'Heavy swap usage makes the application slow without taking anything down, so it arrives as a complaint about slowness. Pages in swap do not come back on their own.' ;;
+    diag_load_m)  printf 'Load average at %%s per core: processes are waiting their turn. High load with low CPU usually means waiting on disk or network.' ;;
+    diag_steal_m) printf 'This instance is asking for more CPU than the provider is delivering right now. On EC2 burstable, that means credits ran out. Switching instance family or enabling unlimited mode fixes it; tuning inside the server does not.' ;;
+    diag_padrao)  printf 'Check the processes below.' ;;
+
+    tpl_data)     printf 'Date' ;;
+    tpl_servidor) printf 'Server' ;;
+    tpl_rodape)   printf 'Automated alert. Do not reply.' ;;
+    *) printf '' ;;
+  esac
+}
+
+msg_es() {
+  case "$1" in
+    rotulo_memoria) printf 'Memoria' ;;
+    rotulo_steal)   printf 'Contención de CPU' ;;
+    rotulo_load)    printf 'Load average' ;;
+    tabela_steal)   printf 'Contención (steal)' ;;
+    rotulo_disco)   printf 'Disco' ;;
+    rotulo_agente)  printf 'Agente' ;;
+
+    sev_atencao) printf 'ATENCIÓN' ;;
+    sev_critico) printf 'CRÍTICO' ;;
+    sev_segue)   printf 'CONTINÚA' ;;
+    sev_ok)      printf 'OK' ;;
+    sev_aviso)   printf 'AVISO' ;;
+    nivel_atencao) printf 'atención' ;;
+    nivel_critico) printf 'crítico' ;;
+
+    dur_segundos) printf 's' ;;
+    dur_minutos)  printf 'min' ;;
+    dur_horas)    printf 'h' ;;
+    dur_dias)     printf 'd' ;;
+
+    titulo_normalizou) printf '%%s se normalizó en %%s' ;;
+    titulo_alerta)     printf '%%s en %%s%%s en %%s' ;;
+    corpo_normalizou)  printf '<strong>%%s se normalizó.</strong> Valor actual: %%s%%s. El problema duró %%s y llegó a %%s%%s.' ;;
+    corpo_valor)       printf '<strong>%%s: %%s%%s</strong> (umbral %%s%%s)' ;;
+    corpo_desde)       printf 'Así desde hace %%s, pico de %%s%%s. Confirmado en %%s lecturas seguidas.' ;;
+    corpo_estado)      printf 'Estado del servidor ahora' ;;
+    corpo_comecar)     printf 'Por dónde empezar' ;;
+    corpo_proc_cpu)    printf 'Procesos por CPU' ;;
+    corpo_proc_mem)    printf 'Procesos por memoria' ;;
+    corpo_dirs)        printf 'Directorios más grandes en %%s' ;;
+    corpo_media_de)    printf 'promedio de %%s' ;;
+    corpo_sem_swap)    printf 'sin swap configurado' ;;
+    corpo_disponiveis) printf '%%s GB disponibles' ;;
+    corpo_por_nucleo)  printf '%%s por núcleo, %%s núcleos' ;;
+
+    tg_normalizou) printf '%%s %%s se normalizó en %%s\n\nActual: %%s%%s | duró %%s | pico %%s%%s' ;;
+    tg_alerta)     printf '%%s %%s en %%s%%s - %%s\n\nAsí desde hace %%s (pico %%s%%s, umbral %%s%%s)\n\n%%s' ;;
+
+    resumo_assunto) printf '%%s alertas en la última hora' ;;
+    resumo_titulo)  printf 'Varias métricas fuera de rango' ;;
+    resumo_corpo)   printf 'El servidor superó el límite de %%s alertas por hora. En lugar de un mensaje por evento, este es el resumen agrupado:' ;;
+    resumo_tg)      printf '[RESUMEN] %%s - %%s alertas en la última hora\n\nSe alcanzó el límite de %%s por hora y los mensajes individuales fueron agrupados.\n\n%%s' ;;
+
+    diag_steal)   printf 'Contención de CPU en %%s%%%% (steal): el límite está en el proveedor, no en el servidor. En instancia burstable (EC2 t2/t3/t3a) significa que se agotaron los créditos de CPU. Revisar CPUCreditBalance en la consola del proveedor.' ;;
+    diag_iowait)  printf 'iowait en %%s%%%%: la CPU está esperando el disco, no calculando. El cuello de botella es de E/S. Revisar con: iostat -x 1 5' ;;
+    diag_load)    printf 'Load average en %%s por núcleo: hay procesos en cola esperando CPU, no solo usándola. Revisar los procesos abajo.' ;;
+    diag_cpu)     printf 'Uso sostenido de CPU. Revisar los procesos abajo y si hay un build, cron o importación corriendo.' ;;
+    diag_mem_sem_swap) printf 'Quedan %%s MB disponibles y este servidor no tiene swap: agotarla significa OOM kill, un proceso terminado sin error en el log de la aplicación. Revisar los procesos abajo.' ;;
+    diag_mem)     printf 'Quedan %%s MB disponibles. Revisar los procesos abajo y, si es una aplicación Node, si hay límite de heap configurado.' ;;
+    diag_disco)   printf 'Revisar los directorios más grandes abajo. Sospechosos frecuentes: /var/log, /var/lib/docker y un dump de base de datos olvidado.' ;;
+    diag_inode)   printf 'Inodos agotados: el disco acepta bytes pero no acepta archivos nuevos, y el df normal no muestra esto. Buscar un directorio con muchos archivos pequeños (caché de sesión, cola de correo).' ;;
+    diag_swap)    printf 'El uso alto de swap deja la aplicación lenta sin tumbar nada, así que llega como queja de lentitud. Las páginas en swap no vuelven solas.' ;;
+    diag_load_m)  printf 'Load average en %%s por núcleo: hay procesos esperando su turno. Load alto con CPU baja suele ser espera de disco o de red.' ;;
+    diag_steal_m) printf 'La instancia está pidiendo más CPU de la que el proveedor entrega en este momento. En EC2 burstable, eso significa que se agotaron los créditos. Cambiar de familia o activar el modo unlimited lo resuelve; ajustar dentro del servidor no.' ;;
+    diag_padrao)  printf 'Revisar los procesos abajo.' ;;
+
+    tpl_data)     printf 'Fecha' ;;
+    tpl_servidor) printf 'Servidor' ;;
+    tpl_rodape)   printf 'Alerta automática. No responda.' ;;
+    *) printf '' ;;
+  esac
+}
+
+
+# ---------------------------------------------------------------------------
+# Templates de e-mail
+# ---------------------------------------------------------------------------
+#
+# Os templates em /opt/alerts/templates vem do instalador e tem rotulo fixo em
+# portugues: "Data:", "Servidor:", "Alerta automatico. Nao responda.". Nem eles
+# nem o send_html_alert.sh entram no manifesto de atualizacao, entao nao ha
+# como traduzi-los pelo canal normal.
+#
+# A saida e o agente reescrever os arquivos. O send_html_alert.sh so faz
+#   envsubst '${TITLE} ${MESSAGE} ${DATE} ${HOST}'
+# ou seja, substitui quatro variaveis e copia o resto literalmente. Entao o
+# template pode ir para o disco ja traduzido.
+#
+# A reescrita acontece quando o idioma muda, nao em toda rodada: gravar cinco
+# arquivos por minuto em todo servidor da frota seria desperdicio puro.
+
+TEMPLATES_DIR="${TEMPLATES_DIR:-/opt/alerts/templates}"
+
+# Um arquivo por tipo de alerta, cada um com a cor da borda e o rotulo que o
+# instalador original usava.
+_templates_lista() {
+  printf '%s\n' \
+    "alert.html|#64748b" \
+    "cpu-alert.html|#f97316" \
+    "memory-alert.html|#8b5cf6" \
+    "disk-alert.html|#0ea5e9" \
+    "clamav-alert.html|#ef4444"
+}
+
+escreve_template() {
+  local caminho="$1" cor="$2"
+  local rot_data rot_servidor rodape
+  rot_data="$(t tpl_data)"
+  rot_servidor="$(t tpl_servidor)"
+  rodape="$(t tpl_rodape)"
+
+  # ${TITLE}, ${MESSAGE}, ${DATE} e ${HOST} ficam literais: quem substitui e o
+  # envsubst dentro do send_html_alert.sh, na hora do envio.
+  cat <<TEMPLATE | escreve_atomico "$caminho"
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="$(idioma_html)">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>\${TITLE}</title>
+  <style type="text/css">
+    table, td { border-collapse: collapse; }
+    body { margin: 0; padding: 0; width: 100% !important; background-color: #f4f4f7; }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f7; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#f4f4f7">
+    <tr><td align="center" style="padding: 40px 10px;">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 640px; background-color: #ffffff; border-radius: 8px; border: 1px solid #eaeaec;">
+        <tr>
+          <td style="padding: 30px 40px 20px 40px; border-bottom: 4px solid ${cor};">
+            <h1 style="margin: 0; font-size: 22px; font-weight: bold; color: #1f2937;">\${TITLE}</h1>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 15px;">
+              <tr><td style="color: #6b7280; font-size: 13px;"><strong>${rot_data}:</strong> \${DATE} | <strong>${rot_servidor}:</strong> \${HOST}</td></tr>
+            </table>
+          </td>
+        </tr>
+        <tr><td style="padding: 28px 40px; color: #374151; font-size: 14px; line-height: 1.6;">\${MESSAGE}</td></tr>
+        <tr>
+          <td style="padding: 18px 40px 30px 40px; border-top: 1px solid #eaeaec;">
+            <p style="margin: 0; font-size: 12px; color: #9ca3af; text-align: center;">${rodape}</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+TEMPLATE
+}
+
+idioma_html() {
+  case "$(idioma_normalizado)" in
+    pt) printf 'pt-BR' ;;
+    en) printf 'en-US' ;;
+    *)  printf 'es-CO' ;;
+  esac
+}
+
+# Reescreve os templates se o idioma gravado em disco nao for o configurado.
+# A marca fica num arquivo proprio, e nao dentro do HTML, para nao depender de
+# conseguir ler de volta um arquivo que alguem pode ter editado a mao.
+sincroniza_templates() {
+  local marca="${TEMPLATES_DIR}/.idioma"
+  local atual=""
+  [[ -f "$marca" ]] && atual="$(tr -d '[:space:]' <"$marca" 2>/dev/null)"
+
+  if [[ "$atual" == "${IDIOMA}" ]] && [[ -f "${TEMPLATES_DIR}/alert.html" ]]; then
+    return 0
+  fi
+
+  if ! mkdir -p "$TEMPLATES_DIR" 2>/dev/null; then
+    log_erro "nao consegui criar ${TEMPLATES_DIR}; templates nao traduzidos"
+    return 1
+  fi
+  if [[ ! -w "$TEMPLATES_DIR" ]]; then
+    log_erro "${TEMPLATES_DIR} nao e gravavel; templates seguem no idioma anterior"
+    return 1
+  fi
+
+  local linha nome cor escritos=0
+  while IFS='|' read -r nome cor; do
+    [[ -z "$nome" ]] && continue
+    if escreve_template "${TEMPLATES_DIR}/${nome}" "$cor"; then
+      escritos=$(( escritos + 1 ))
+    else
+      log_erro "falhei ao escrever ${nome}"
+    fi
+  done < <(_templates_lista)
+
+  if [[ "$escritos" -gt 0 ]]; then
+    printf '%s' "$IDIOMA" | escreve_atomico "$marca" 2>/dev/null || true
+    log_info "templates reescritos em ${IDIOMA} (${escritos} arquivos)"
+  fi
+  return 0
 }
 
 
@@ -801,62 +1230,30 @@ diagnostico() {
   case "$metrica" in
     cpu)
       if maior "${MEDIDA_STEAL:-0}" "${STEAL_ATENCAO:-10}"; then
-        printf 'Steal em %s%%: o limite esta no provedor, nao no servidor. Em instancia burstable (EC2 t2/t3/t3a) isso e credito de CPU esgotado. Conferir CPUCreditBalance no painel do provedor.' "$MEDIDA_STEAL"
+        t diag_steal "$MEDIDA_STEAL"
       elif maior "${MEDIDA_IOWAIT:-0}" "25"; then
-        printf 'iowait em %s%%: a CPU esta esperando disco, nao calculando. O gargalo e de I/O. Conferir com: iostat -x 1 5' "$MEDIDA_IOWAIT"
+        t diag_iowait "$MEDIDA_IOWAIT"
       elif maior "${MEDIDA_LOAD:-0}" "1.5"; then
-        printf 'Load normalizado em %s por nucleo: ha processo na fila esperando CPU, nao so usando. Conferir os processos abaixo.' "$MEDIDA_LOAD"
+        t diag_load "$MEDIDA_LOAD"
       else
-        printf 'Uso sustentado de CPU. Conferir os processos abaixo e se ha build, cron ou importacao rodando.'
+        t diag_cpu
       fi
       ;;
     memoria)
       local disp_mb
       disp_mb="$(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.0f", k/1024}')"
       if [[ "${MEDIDA_SWAP_TOTAL_KB:-0}" -eq 0 ]]; then
-        printf 'Restam %s MB disponiveis e este servidor nao tem swap: estourar significa OOM kill, processo morto sem erro no log da aplicacao. Conferir os processos abaixo.' "$disp_mb"
+        t diag_mem_sem_swap "$disp_mb"
       else
-        printf 'Restam %s MB disponiveis. Conferir os processos abaixo e, se for aplicacao Node, se ha limite de heap configurado.' "$disp_mb"
+        t diag_mem "$disp_mb"
       fi
       ;;
-    disco)
-      printf 'Conferir os maiores diretorios abaixo. Suspeitos frequentes: /var/log, /var/lib/docker e dump de banco esquecido.'
-      ;;
-    inode)
-      printf 'Inodes esgotados: o disco aceita bytes mas nao aceita arquivo novo, e o df comum nao mostra isso. Procurar diretorio com muitos arquivos pequenos (cache de sessao, fila de e-mail).'
-      ;;
-    swap)
-      printf 'Swap em uso alto deixa a aplicacao lenta sem derrubar nada, entao chega como reclamacao de lentidao. Paginas em swap nao voltam sozinhas.'
-      ;;
-    load)
-      printf 'Load por nucleo em %s: ha processo esperando a vez. Load alto com CPU baixa costuma ser espera de disco ou de rede.' "$valor"
-      ;;
-    steal)
-      printf 'O hypervisor esta tirando CPU desta instancia. Em EC2 burstable, credito esgotado. Trocar de familia ou ligar o modo unlimited resolve; ajuste dentro do servidor nao.'
-      ;;
-    *)
-      printf 'Conferir os processos abaixo.'
-      ;;
-  esac
-}
-
-rotulo_metrica() {
-  case "$1" in
-    cpu) printf 'CPU' ;;
-    memoria) printf 'Memoria' ;;
-    disco) printf 'Disco' ;;
-    inode) printf 'Inodes' ;;
-    swap) printf 'Swap' ;;
-    load) printf 'Load' ;;
-    steal) printf 'CPU roubada' ;;
-    *) printf '%s' "$1" ;;
-  esac
-}
-
-unidade_metrica() {
-  case "$1" in
-    load) printf '' ;;
-    *) printf '%%' ;;
+    disco) t diag_disco ;;
+    inode) t diag_inode ;;
+    swap)  t diag_swap ;;
+    load)  t diag_load_m "$valor" ;;
+    steal) t diag_steal_m ;;
+    *)     t diag_padrao ;;
   esac
 }
 
@@ -871,15 +1268,7 @@ unidade_metrica() {
 #   send_telegram_alert.sh TEXTO
 #   send_dashboard_metrics.sh incident|metrics   (JSON no stdin)
 
-prefixo_assunto() {
-  case "$1" in
-    abrir)   printf '[ATENCAO]' ;;
-    escalar) printf '[CRITICO]' ;;
-    repetir) printf '[SEGUE]' ;;
-    resolver)printf '[OK]' ;;
-    *)       printf '[AVISO]' ;;
-  esac
-}
+# prefixo_assunto vive em 25-idioma.sh.
 
 # Escolhe o template entre os que o instalador escreve; cai no generico.
 template_de() {
@@ -902,28 +1291,29 @@ monta_corpo() {
 
   local linha_estado
   if [[ "$acao" == "resolver" ]]; then
-    linha_estado="<p style=\"margin:0 0 18px\"><strong>${rot} normalizou.</strong> Valor atual: ${valor}${uni}. O problema durou $(duracao_humana "$dur") e chegou a ${pico}${uni}.</p>"
+    linha_estado="<p style=\"margin:0 0 18px\">$(t corpo_normalizou "$rot" "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")</p>"
   else
-    linha_estado="<p style=\"margin:0 0 6px\"><strong>${rot}: ${valor}${uni}</strong> (limiar ${limiar}${uni})</p><p style=\"margin:0 0 18px;color:#6b7280\">Assim ha $(duracao_humana "$dur"), pico de ${pico}${uni}. Confirmado em ${CICLOS_CONFIRMACAO} leituras seguidas.</p>"
+    linha_estado="<p style=\"margin:0 0 6px\">$(t corpo_valor "$rot" "$valor" "$uni" "$limiar" "$uni")</p>"
+    linha_estado+="<p style=\"margin:0 0 18px;color:#6b7280\">$(t corpo_desde "$(duracao_humana "$dur")" "$pico" "$uni" "$CICLOS_CONFIRMACAO")</p>"
   fi
 
-  local contexto=""
-  contexto+="<p style=\"margin:0 0 4px\"><strong>Estado do servidor agora</strong></p>"
+  local contexto="" td_rot="padding:3px 14px 3px 0;color:#6b7280"
+  contexto+="<p style=\"margin:0 0 4px\"><strong>$(t corpo_estado)</strong></p>"
   contexto+="<table style=\"border-collapse:collapse;font-size:13px;margin:0 0 18px\">"
-  [[ -n "${MEDIDA_CPU:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">CPU</td><td>${MEDIDA_CPU}% (media de $(duracao_humana "${MEDIDA_CPU_JANELA:-0}"))</td></tr>"
-  [[ -n "${MEDIDA_IOWAIT:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">iowait</td><td>${MEDIDA_IOWAIT}%</td></tr>"
-  [[ -n "${MEDIDA_STEAL:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">steal</td><td>${MEDIDA_STEAL}%</td></tr>"
-  [[ -n "${MEDIDA_MEM:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">Memoria</td><td>${MEDIDA_MEM}% ($(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.1f", k/1048576}') GB disponiveis)</td></tr>"
+  [[ -n "${MEDIDA_CPU:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">CPU</td><td>${MEDIDA_CPU}% ($(t corpo_media_de "$(duracao_humana "${MEDIDA_CPU_JANELA:-0}")"))</td></tr>"
+  [[ -n "${MEDIDA_IOWAIT:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">iowait</td><td>${MEDIDA_IOWAIT}%</td></tr>"
+  [[ -n "${MEDIDA_STEAL:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t tabela_steal)</td><td>${MEDIDA_STEAL}%</td></tr>"
+  [[ -n "${MEDIDA_MEM:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t rotulo_memoria)</td><td>${MEDIDA_MEM}% ($(t corpo_disponiveis "$(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.1f", k/1048576}')"))</td></tr>"
   if [[ "${MEDIDA_SWAP_TOTAL_KB:-0}" -gt 0 ]]; then
-    contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">Swap</td><td>${MEDIDA_SWAP:-0}%</td></tr>"
+    contexto+="<tr><td style=\"${td_rot}\">Swap</td><td>${MEDIDA_SWAP:-0}%</td></tr>"
   else
-    contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">Swap</td><td>sem swap configurado</td></tr>"
+    contexto+="<tr><td style=\"${td_rot}\">Swap</td><td>$(t corpo_sem_swap)</td></tr>"
   fi
-  [[ -n "${MEDIDA_LOAD:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">Load</td><td>${MEDIDA_LOAD_BRUTO} (${MEDIDA_LOAD} por nucleo, ${MEDIDA_NUCLEOS:-?} nucleos)</td></tr>"
+  [[ -n "${MEDIDA_LOAD:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t rotulo_load)</td><td>${MEDIDA_LOAD_BRUTO} ($(t corpo_por_nucleo "$MEDIDA_LOAD" "${MEDIDA_NUCLEOS:-?}"))</td></tr>"
   contexto+="</table>"
 
   local bloco_diag
-  bloco_diag="<div style=\"background:#f8fafc;border-left:3px solid #64748b;padding:12px 16px;margin:0 0 18px;font-size:13px\"><strong>Por onde comecar</strong><br/>${diag}</div>"
+  bloco_diag="<div style=\"background:#f8fafc;border-left:3px solid #64748b;padding:12px 16px;margin:0 0 18px;font-size:13px\"><strong>$(t corpo_comecar)</strong><br/>${diag}</div>"
 
   printf '%s%s%s%s' "$linha_estado" "$bloco_diag" "$contexto" "$extra"
 }
@@ -948,11 +1338,16 @@ envia_alerta() {
   rot="$(rotulo_metrica "$metrica")"
   uni="$(unidade_metrica "$metrica")"
   assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} - ${SERVER_ID}"
-  [[ "$metrica" == "disco" || "$metrica" == "inode" ]] && assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} em ${chave#*:} - ${SERVER_ID}"
+  # Em disco e inode o ponto de montagem entra no assunto: sem ele, dois
+  # alertas do mesmo servidor ficam identicos na caixa de entrada.
+  [[ "$metrica" == "disco" || "$metrica" == "inode" ]] &&     assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} ${chave#*:} - ${SERVER_ID}"
   if [[ "$acao" == "resolver" ]]; then
-    titulo="${rot} normalizou em ${SERVER_ID}"
+    titulo="$(t titulo_normalizou "$rot" "$SERVER_ID")"
   else
-    titulo="${rot} em ${valor}${uni} ($([[ "$acao" == "escalar" ]] && printf 'critico' || printf 'atencao'))"
+    # O nivel ja aparece no assunto, entre colchetes. Repetir no titulo gastava
+    # a linha mais visivel do e-mail com informacao duplicada; o nome do
+    # servidor serve melhor, principalmente quando o alerta e encaminhado.
+    titulo="$(t titulo_alerta "$rot" "$valor" "$uni" "$SERVER_ID")"
   fi
 
   corpo="$(monta_corpo "$metrica" "$valor" "$limiar" "$acao" "$dur" "$pico" "$extra_html")"
@@ -967,13 +1362,12 @@ envia_alerta() {
   if [[ "${CANAL_TELEGRAM:-1}" == "1" && "$manda_tg" == "1" && -x "${AGENTE_BIN}/send_telegram_alert.sh" ]]; then
     local txt
     if [[ "$acao" == "resolver" ]]; then
-      txt="$(printf '%s %s normalizou em %s\n\nAtual: %s%s | durou %s | pico %s%s' \
-        "$(prefixo_assunto "$acao")" "$rot" "$SERVER_ID" "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")"
+      txt="$(t tg_normalizou "$(prefixo_assunto "$acao")" "$rot" "$SERVER_ID"         "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")"
     else
-      txt="$(printf '%s %s em %s%s - %s\n\nAssim ha %s (pico %s%s, limiar %s%s)\n\n%s%s' \
-        "$(prefixo_assunto "$acao")" "$rot" "$valor" "$uni" "$SERVER_ID" \
-        "$(duracao_humana "$dur")" "$pico" "$uni" "$limiar" "$uni" \
-        "$(diagnostico "$metrica" "$valor")" "${extra_txt:+$'\n\n'$extra_txt}")"
+      txt="$(t tg_alerta "$(prefixo_assunto "$acao")" "$rot" "$valor" "$uni" "$SERVER_ID"         "$(duracao_humana "$dur")" "$pico" "$uni" "$limiar" "$uni"         "$(diagnostico "$metrica" "$valor")")"
+      [[ -n "$extra_txt" ]] && txt="${txt}"$'
+
+'"${extra_txt}"
     fi
     "${AGENTE_BIN}/send_telegram_alert.sh" "$txt" >/dev/null 2>&1 || log_erro "envio ao Telegram falhou para ${chave}"
   fi
@@ -1006,16 +1400,10 @@ despacha_agregado() {
   linhas="$(awk '{printf "%s: %s\n", $2, $3}' "$arq" 2>/dev/null | sort | uniq -c | sort -rn | head -15)"
 
   if [[ "${CANAL_TELEGRAM:-1}" == "1" && -x "${AGENTE_BIN}/send_telegram_alert.sh" ]]; then
-    "${AGENTE_BIN}/send_telegram_alert.sh" \
-      "$(printf '[RESUMO] %s - %s alertas na ultima hora\n\nO limite de %s/hora foi atingido e as mensagens individuais foram agrupadas.\n\n%s' \
-        "$SERVER_ID" "$total" "$MAX_ALERTAS_HORA" "$linhas")" >/dev/null 2>&1 || true
+    "${AGENTE_BIN}/send_telegram_alert.sh"       "$(t resumo_tg "$SERVER_ID" "$total" "$MAX_ALERTAS_HORA" "$linhas")" >/dev/null 2>&1 || true
   fi
   if [[ "${CANAL_EMAIL:-1}" == "1" && -n "${RECIPIENTS:-}" && -x "${AGENTE_BIN}/send_html_alert.sh" ]]; then
-    "${AGENTE_BIN}/send_html_alert.sh" "/opt/alerts/templates/alert.html" "$RECIPIENTS" \
-      "[RESUMO] ${total} alertas na ultima hora - ${SERVER_ID}" \
-      "Varias metricas fora do normal" \
-      "<p>O servidor passou do limite de ${MAX_ALERTAS_HORA} alertas por hora. Em vez de uma mensagem por ocorrencia, segue o agrupamento:</p><pre>$(printf '%s' "$linhas" | escapa_html)</pre>" \
-      >/dev/null 2>&1 || true
+    "${AGENTE_BIN}/send_html_alert.sh" "/opt/alerts/templates/alert.html" "$RECIPIENTS"       "$(prefixo_assunto resumo) $(t resumo_assunto "$total") - ${SERVER_ID}"       "$(t resumo_titulo)"       "<p>$(t resumo_corpo "$MAX_ALERTAS_HORA")</p><pre>$(printf '%s' "$linhas" | escapa_html)</pre>"       >/dev/null 2>&1 || true
   fi
 
   printf '%s' "$(agora)" | escreve_atomico "$marca" 2>/dev/null || true
@@ -1356,6 +1744,10 @@ RENOTIFICAR_MIN=60
 MAX_ALERTAS_HORA=12
 ALERTA_RECUPERACAO=1
 
+# Idioma dos alertas: pt-BR, en-US ou es-CO. Vem do painel; es-CO e o padrao
+# de quem nao esta conectado a nenhum painel.
+IDIOMA=${IDIOMA:-es-CO}
+
 # Canais
 CANAL_EMAIL=1
 CANAL_TELEGRAM=1
@@ -1561,6 +1953,17 @@ sincroniza_config() {
     done
   fi
 
+  # O idioma e da empresa, nao do servidor: muda no painel e vale para todos
+  # os servidores daquela conta. Valor que nao reconhecemos e ignorado, em vez
+  # de deixar o agente mudo ou cair num catalogo vazio.
+  local idioma_novo
+  idioma_novo="$(printf '%s' "$resp" | sed -n 's/.*"locale":"\([^"]*\)".*/\1/p' | head -1)"
+  case "$idioma_novo" in
+    pt-BR|en-US|es-CO) _grava_conf IDIOMA "$idioma_novo" ;;
+    "") : ;;
+    *) log_erro "painel mandou idioma desconhecido (${idioma_novo}); mantido ${IDIOMA}" ;;
+  esac
+
   local nome
   nome="$(printf '%s' "$resp" | sed -n 's/.*"server_name":"\([^"]*\)".*/\1/p' | head -1)"
   if [[ -n "$nome" && -f "${AGENTE_RAIZ}/email.conf" ]]; then
@@ -1600,7 +2003,13 @@ sincroniza_config() {
     inicia_silencio "${manut}s" "manutencao programada no painel"
   fi
 
-  [[ "$mudou" -eq 1 ]] && log_info "configuracao sincronizada com o painel"
+  if [[ "$mudou" -eq 1 ]]; then
+    log_info "configuracao sincronizada com o painel"
+    # Rele o arquivo para o valor novo valer ainda nesta rodada: num servidor
+    # que acabou de trocar de idioma, o alerta seguinte ja sai traduzido.
+    carrega_config
+  fi
+  sincroniza_templates
   return 0
 }
 
@@ -1641,6 +2050,10 @@ rodada() {
     return 0
   fi
 
+  # Barato: sai na primeira comparacao quando o idioma nao mudou. Sem isto, o
+  # primeiro alerta depois de instalar sairia no template antigo em portugues.
+  sincroniza_templates
+
   mede_cpu     || log_info "CPU sem medida nesta rodada"
   mede_memoria || log_erro "memoria sem medida nesta rodada"
   mede_load    || true
@@ -1655,8 +2068,20 @@ rodada() {
   [[ "${VIGIAR_CPU:-1}" == "1" ]] && \
     avalia_e_notifica cpu cpu "${MEDIDA_CPU:-}" "${html_cpu}${html_mem}" "$proc_cpu"
 
-  [[ "${VIGIAR_STEAL:-1}" == "1" ]] && \
+  # Steal so e avaliado quando a CPU tambem esta acima do limiar de atencao.
+  # Sem essa condicao, qualquer burst normal de instancia t3/t3a gera alerta
+  # com o servidor ocioso: medicao real de 09/10/2026 num t3a.xlarge deu steal
+  # de 16,6% com a CPU em 29,5% e load de 0,41 por nucleo, e virou e-mail.
+  # Quando a CPU esta baixa, o steal continua aparecendo no corpo do alerta e
+  # no diagnostico, que e onde ele serve.
+  if [[ "${VIGIAR_STEAL:-1}" == "1" ]] && [[ -n "${MEDIDA_CPU:-}" ]]      && maior "${MEDIDA_CPU:-0}" "${CPU_ATENCAO:-85}"; then
     avalia_e_notifica steal steal "${MEDIDA_STEAL:-}" "$html_cpu" "$proc_cpu"
+  elif [[ -f "$(caminho_estado steal)" ]]; then
+    # Incidente de steal aberto nao pode ficar pendurado quando a CPU
+    # normaliza antes dele: alimenta a maquina de estado com um valor em
+    # ordem para que ela feche pelo caminho normal, com aviso de recuperacao.
+    avalia_e_notifica steal steal "0"
+  fi
 
   [[ "${VIGIAR_MEMORIA:-1}" == "1" ]] && \
     avalia_e_notifica memoria memoria "${MEDIDA_MEM:-}" "${html_mem}${html_cpu}" "$proc_mem"
@@ -1832,6 +2257,9 @@ Agente de monitoramento de servidores.
   monitoring-agent.sh atualizar         busca e aplica atualizacao, com rollback se o autoteste falhar
   monitoring-agent.sh instalar          (re)instala o agente e migra o cron
   monitoring-agent.sh versao
+
+Idioma: pt-BR, en-US ou es-CO, em IDIOMA no agent.conf. Chega do painel, e
+vale para e-mail, Telegram e os templates em /opt/alerts/templates.
 
 Configuracao: /opt/monitoring/agent.conf
 Registro:     /var/log/monitoring-agent.log

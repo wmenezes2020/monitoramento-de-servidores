@@ -86,6 +86,10 @@ RENOTIFICAR_MIN=60
 MAX_ALERTAS_HORA=12
 ALERTA_RECUPERACAO=1
 
+# Idioma dos alertas: pt-BR, en-US ou es-CO. Vem do painel; es-CO e o padrao
+# de quem nao esta conectado a nenhum painel.
+IDIOMA=${IDIOMA:-es-CO}
+
 # Canais
 CANAL_EMAIL=1
 CANAL_TELEGRAM=1

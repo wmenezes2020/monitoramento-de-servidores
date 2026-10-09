@@ -25,10 +25,18 @@ carrega_config() {
   # Load normalizado por nucleo. 1.0 = todos os nucleos ocupados sem fila.
   LOAD_ATENCAO="${LOAD_ATENCAO:-1.5}"
   LOAD_CRITICO="${LOAD_CRITICO:-3.0}"
-  # Steal alto em instancia burstable (EC2 t2/t3/t3a) significa credito de CPU
-  # esgotado: o limite e do provedor, nao do servidor.
-  STEAL_ATENCAO="${STEAL_ATENCAO:-10}"
-  STEAL_CRITICO="${STEAL_CRITICO:-25}"
+  # Steal sozinho NAO e incidente. Em instancia burstable (EC2 t2/t3/t3a) ele
+  # aparece toda vez que a maquina usa burst acima do baseline: e o mecanismo
+  # funcionando. Medicao real de 09/10/2026 num t3a.xlarge: steal de 16,6% com
+  # a CPU em 29,5% e load de 0,41 por nucleo, ou seja, servidor tranquilo. Com
+  # o limiar antigo de 10 isso virou e-mail, que e exatamente o alerta que
+  # ensina a pessoa a ignorar os outros.
+  #
+  # Steal so vira problema quando o servidor QUER CPU e o provedor nao da.
+  # Por isso o limiar subiu e a avaliacao passou a exigir CPU alta junto
+  # (ver VIGIAR_STEAL em 90-main.sh).
+  STEAL_ATENCAO="${STEAL_ATENCAO:-25}"
+  STEAL_CRITICO="${STEAL_CRITICO:-40}"
 
   # --- Histerese: o coracao do "parar de alertar a toa" ---
   CICLOS_CONFIRMACAO="${CICLOS_CONFIRMACAO:-3}"
@@ -53,6 +61,12 @@ carrega_config() {
   # O df ja filtra por tipo com -x, mas a lista vale como segunda linha para
   # versao antiga de df que ignore o -x.
   DISCO_IGNORAR="${DISCO_IGNORAR:-/var/lib/docker/* /snap/* /run/* /dev/shm /dev/* }"
+
+  # --- Idioma ---
+  # pt-BR, en-US ou es-CO. Chega do painel junto com os limiares. O padrao e
+  # es-CO porque servidor instalado sem conectar ao painel nao tem de quem
+  # herdar idioma, e essa foi a decisao do dono do produto.
+  IDIOMA="${IDIOMA:-es-CO}"
 
   # --- Canais ---
   CANAL_EMAIL="${CANAL_EMAIL:-1}"

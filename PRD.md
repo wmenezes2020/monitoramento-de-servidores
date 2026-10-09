@@ -110,6 +110,36 @@ falhar.
 
 ## Histórico
 
+### 2.1.0, 2026-10-09: três idiomas e contenção de CPU
+
+**Três idiomas:** pt-BR, en-US e es-CO, com `es-CO` como padrão de quem não
+está conectado a painel nenhum. O idioma chega do painel e vale para e-mail,
+Telegram e para os templates HTML, que o agente reescreve em disco quando o
+idioma muda. Nem os templates nem o `send_html_alert.sh` eram atualizáveis
+antes; passaram a ser.
+
+**O alerta de steal estava errado.** O limiar era 10% e não olhava mais nada.
+Em instância burstable, steal aparece toda vez que a máquina usa burst acima
+do baseline: num `t3a.xlarge` medido em 09/10/2026, steal de 16,6% com a CPU
+em 29,5% e load de 0,41 por núcleo gerou e-mail, com o servidor tranquilo.
+Agora o limiar é 25% e só alerta se a CPU também estiver acima do limiar de
+atenção no mesmo ciclo.
+
+**"CPU roubada" virou "contenção de CPU".** Era tradução literal, não existe
+em ferramenta nenhuma e assusta quem lê. O termo novo é o usado em VMware,
+Nutanix e Kubernetes, e a palavra "steal" continua na linha técnica do corpo
+do alerta, que é onde serve para pesquisar.
+
+**Texto do e-mail.** Saiu o subtítulo fixo que não dizia nada sobre a métrica
+do alerta, saiu o rodapé vazio, a data passou a sair no formato e no fuso do
+servidor em vez de ISO em UTC, e o título passou a levar o nome do servidor
+em vez de repetir o nível que já está no assunto.
+
+**O envio ao Telegram deixou de engolir erro.** Token trocado ou chat ID
+errado deixava o canal mudo sem deixar rastro; agora aparece no registro. A
+mensagem também é cortada em 3900 caracteres, porque acima de 4096 o Telegram
+recusa a mensagem inteira.
+
 ### 2.0.0, 2026-10-09
 
 Reescrita a partir de três defeitos encontrados no código da versão 1.

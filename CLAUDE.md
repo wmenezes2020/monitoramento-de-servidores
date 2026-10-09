@@ -46,7 +46,10 @@ Tudo que entra aqui é lido por qualquer pessoa, hoje e para sempre.
   SessionStart e **pode desfazer a redação**. Conferir antes de todo commit:
 
 ```bash
-grep -rliE "life company|fonewhats|choveu|vantoris|fervo|codeclaro|anota ?ai" .claude/
+# A lista de nomes a procurar fica no CLAUDE.md global da máquina, não aqui:
+# escrevê-la neste arquivo publicaria justamente o que ela existe para
+# esconder. Guarde-a em ~/.nomes-internos (fora do repositório) e rode:
+grep -rliFf ~/.nomes-internos .claude/ docs/ *.md
 ```
 
 A skill `archify` não está versionada aqui de propósito: são 5,4 MB e 128
@@ -96,7 +99,8 @@ receber aviso nenhum.
 
 ```bash
 ./scripts/build.sh
-./tests/roda-testes.sh      # 136 verificações de unidade
+./tests/roda-testes.sh      # 134 verificações de unidade
+./tests/testa-idioma.sh     # 112 verificações dos três idiomas
 ./tests/testa-migracao.sh   # 31 verificações de migração ponta a ponta
 ```
 
@@ -125,6 +129,16 @@ O `dashboard_fetch_updates.sh` dos servidores que ainda não migraram aplica
 ponte e deixa esses servidores sem receber limiar e destinatário do painel.
 A bateria tem uma verificação para cada uma dessas quatro linhas.
 
+### Os auxiliares de envio entram no manifesto
+
+`send_html_alert.sh` e `send_telegram_alert.sh` vivem em `/usr/local/bin`, que
+é onde o atualizador instala, então eles são distribuíveis como o agente. A
+fonte fica em `src/envio/` e o build os publica na raiz.
+
+Isso foi descoberto tarde: antes eles existiam só dentro do instalador, e um
+servidor já instalado nunca os recebia de volta. A data em UTC e o cabeçalho
+em português ficavam cravados para sempre.
+
 ### O manifesto coerente com os arquivos
 
 `agent.manifest` traz o SHA-256 de cada artefato. Se ele não bater com o que
@@ -146,6 +160,41 @@ saía, e ninguém percebia. Toda aritmética é em `awk`, que é POSIX.
 Pelo mesmo motivo o agente **não usa `set -e`**. Um `curl`, `du` ou `ps` que
 falhe não pode derrubar a rodada inteira, porque o resultado seria um servidor
 sem vigilância e ninguém sabendo.
+
+## Idioma dos alertas
+
+Catálogo em `src/agent/25-idioma.sh`, três idiomas: `pt-BR`, `en-US`, `es-CO`.
+Todo texto que sai para uma pessoa passa por `t <chave>`.
+
+`es-CO` é o padrão porque servidor sem painel não tem de quem herdar idioma.
+
+**Nome de métrica não se traduz.** CPU, Swap, Inodes, Load average e contenção
+de CPU são iguais nos três, porque é assim que aparecem no `top`, no `vmstat`
+e no painel do provedor: é por esse nome que a pessoa pesquisa.
+
+**"CPU roubada" não volta.** Era tradução literal, não existe em ferramenta
+nenhuma e assusta quem lê. Há teste nos três idiomas garantindo isso.
+
+O catálogo passa por `printf`: `%` literal precisa vir como `%%`. Errar isso
+deixa `40%%` no corpo do e-mail ou come o argumento seguinte.
+
+Os templates em `/opt/alerts/templates` são **reescritos pelo agente** quando
+o idioma muda. Eles vêm do instalador com rótulo fixo em português, e a
+reescrita é o único caminho para traduzi-los. As quatro variáveis
+`${TITLE} ${MESSAGE} ${DATE} ${HOST}` precisam continuar literais no arquivo:
+quem substitui é o `envsubst` dentro do `send_html_alert.sh`, no envio.
+
+## Steal não é alerta sozinho
+
+Em instância burstable, steal aparece toda vez que a máquina usa burst acima
+do baseline: é o mecanismo funcionando. Medição de 09/10/2026 num `t3a.xlarge`
+deu steal de 16,6% com a CPU em 29,5% e load de 0,41 por núcleo, servidor
+tranquilo, e virou e-mail porque o limiar era 10 e não olhava mais nada.
+
+Hoje o limiar é 25 **e** a avaliação exige CPU acima do limiar de atenção no
+mesmo ciclo. Steal só é problema quando o servidor quer CPU e o provedor não
+dá. Com a CPU baixa ele continua aparecendo no corpo e no diagnóstico, que é
+onde serve.
 
 ## Texto que a pessoa lê
 

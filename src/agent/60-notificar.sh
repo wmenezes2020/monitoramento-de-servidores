@@ -9,15 +9,7 @@
 #   send_telegram_alert.sh TEXTO
 #   send_dashboard_metrics.sh incident|metrics   (JSON no stdin)
 
-prefixo_assunto() {
-  case "$1" in
-    abrir)   printf '[ATENCAO]' ;;
-    escalar) printf '[CRITICO]' ;;
-    repetir) printf '[SEGUE]' ;;
-    resolver)printf '[OK]' ;;
-    *)       printf '[AVISO]' ;;
-  esac
-}
+# prefixo_assunto vive em 25-idioma.sh.
 
 # Escolhe o template entre os que o instalador escreve; cai no generico.
 template_de() {
@@ -40,28 +32,29 @@ monta_corpo() {
 
   local linha_estado
   if [[ "$acao" == "resolver" ]]; then
-    linha_estado="<p style=\"margin:0 0 18px\"><strong>${rot} normalizou.</strong> Valor atual: ${valor}${uni}. O problema durou $(duracao_humana "$dur") e chegou a ${pico}${uni}.</p>"
+    linha_estado="<p style=\"margin:0 0 18px\">$(t corpo_normalizou "$rot" "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")</p>"
   else
-    linha_estado="<p style=\"margin:0 0 6px\"><strong>${rot}: ${valor}${uni}</strong> (limiar ${limiar}${uni})</p><p style=\"margin:0 0 18px;color:#6b7280\">Assim ha $(duracao_humana "$dur"), pico de ${pico}${uni}. Confirmado em ${CICLOS_CONFIRMACAO} leituras seguidas.</p>"
+    linha_estado="<p style=\"margin:0 0 6px\">$(t corpo_valor "$rot" "$valor" "$uni" "$limiar" "$uni")</p>"
+    linha_estado+="<p style=\"margin:0 0 18px;color:#6b7280\">$(t corpo_desde "$(duracao_humana "$dur")" "$pico" "$uni" "$CICLOS_CONFIRMACAO")</p>"
   fi
 
-  local contexto=""
-  contexto+="<p style=\"margin:0 0 4px\"><strong>Estado do servidor agora</strong></p>"
+  local contexto="" td_rot="padding:3px 14px 3px 0;color:#6b7280"
+  contexto+="<p style=\"margin:0 0 4px\"><strong>$(t corpo_estado)</strong></p>"
   contexto+="<table style=\"border-collapse:collapse;font-size:13px;margin:0 0 18px\">"
-  [[ -n "${MEDIDA_CPU:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">CPU</td><td>${MEDIDA_CPU}% (media de $(duracao_humana "${MEDIDA_CPU_JANELA:-0}"))</td></tr>"
-  [[ -n "${MEDIDA_IOWAIT:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">iowait</td><td>${MEDIDA_IOWAIT}%</td></tr>"
-  [[ -n "${MEDIDA_STEAL:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">steal</td><td>${MEDIDA_STEAL}%</td></tr>"
-  [[ -n "${MEDIDA_MEM:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">Memoria</td><td>${MEDIDA_MEM}% ($(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.1f", k/1048576}') GB disponiveis)</td></tr>"
+  [[ -n "${MEDIDA_CPU:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">CPU</td><td>${MEDIDA_CPU}% ($(t corpo_media_de "$(duracao_humana "${MEDIDA_CPU_JANELA:-0}")"))</td></tr>"
+  [[ -n "${MEDIDA_IOWAIT:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">iowait</td><td>${MEDIDA_IOWAIT}%</td></tr>"
+  [[ -n "${MEDIDA_STEAL:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t tabela_steal)</td><td>${MEDIDA_STEAL}%</td></tr>"
+  [[ -n "${MEDIDA_MEM:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t rotulo_memoria)</td><td>${MEDIDA_MEM}% ($(t corpo_disponiveis "$(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.1f", k/1048576}')"))</td></tr>"
   if [[ "${MEDIDA_SWAP_TOTAL_KB:-0}" -gt 0 ]]; then
-    contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">Swap</td><td>${MEDIDA_SWAP:-0}%</td></tr>"
+    contexto+="<tr><td style=\"${td_rot}\">Swap</td><td>${MEDIDA_SWAP:-0}%</td></tr>"
   else
-    contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">Swap</td><td>sem swap configurado</td></tr>"
+    contexto+="<tr><td style=\"${td_rot}\">Swap</td><td>$(t corpo_sem_swap)</td></tr>"
   fi
-  [[ -n "${MEDIDA_LOAD:-}" ]] && contexto+="<tr><td style=\"padding:3px 14px 3px 0;color:#6b7280\">Load</td><td>${MEDIDA_LOAD_BRUTO} (${MEDIDA_LOAD} por nucleo, ${MEDIDA_NUCLEOS:-?} nucleos)</td></tr>"
+  [[ -n "${MEDIDA_LOAD:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t rotulo_load)</td><td>${MEDIDA_LOAD_BRUTO} ($(t corpo_por_nucleo "$MEDIDA_LOAD" "${MEDIDA_NUCLEOS:-?}"))</td></tr>"
   contexto+="</table>"
 
   local bloco_diag
-  bloco_diag="<div style=\"background:#f8fafc;border-left:3px solid #64748b;padding:12px 16px;margin:0 0 18px;font-size:13px\"><strong>Por onde comecar</strong><br/>${diag}</div>"
+  bloco_diag="<div style=\"background:#f8fafc;border-left:3px solid #64748b;padding:12px 16px;margin:0 0 18px;font-size:13px\"><strong>$(t corpo_comecar)</strong><br/>${diag}</div>"
 
   printf '%s%s%s%s' "$linha_estado" "$bloco_diag" "$contexto" "$extra"
 }
@@ -86,11 +79,16 @@ envia_alerta() {
   rot="$(rotulo_metrica "$metrica")"
   uni="$(unidade_metrica "$metrica")"
   assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} - ${SERVER_ID}"
-  [[ "$metrica" == "disco" || "$metrica" == "inode" ]] && assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} em ${chave#*:} - ${SERVER_ID}"
+  # Em disco e inode o ponto de montagem entra no assunto: sem ele, dois
+  # alertas do mesmo servidor ficam identicos na caixa de entrada.
+  [[ "$metrica" == "disco" || "$metrica" == "inode" ]] &&     assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} ${chave#*:} - ${SERVER_ID}"
   if [[ "$acao" == "resolver" ]]; then
-    titulo="${rot} normalizou em ${SERVER_ID}"
+    titulo="$(t titulo_normalizou "$rot" "$SERVER_ID")"
   else
-    titulo="${rot} em ${valor}${uni} ($([[ "$acao" == "escalar" ]] && printf 'critico' || printf 'atencao'))"
+    # O nivel ja aparece no assunto, entre colchetes. Repetir no titulo gastava
+    # a linha mais visivel do e-mail com informacao duplicada; o nome do
+    # servidor serve melhor, principalmente quando o alerta e encaminhado.
+    titulo="$(t titulo_alerta "$rot" "$valor" "$uni" "$SERVER_ID")"
   fi
 
   corpo="$(monta_corpo "$metrica" "$valor" "$limiar" "$acao" "$dur" "$pico" "$extra_html")"
@@ -105,13 +103,12 @@ envia_alerta() {
   if [[ "${CANAL_TELEGRAM:-1}" == "1" && "$manda_tg" == "1" && -x "${AGENTE_BIN}/send_telegram_alert.sh" ]]; then
     local txt
     if [[ "$acao" == "resolver" ]]; then
-      txt="$(printf '%s %s normalizou em %s\n\nAtual: %s%s | durou %s | pico %s%s' \
-        "$(prefixo_assunto "$acao")" "$rot" "$SERVER_ID" "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")"
+      txt="$(t tg_normalizou "$(prefixo_assunto "$acao")" "$rot" "$SERVER_ID"         "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")"
     else
-      txt="$(printf '%s %s em %s%s - %s\n\nAssim ha %s (pico %s%s, limiar %s%s)\n\n%s%s' \
-        "$(prefixo_assunto "$acao")" "$rot" "$valor" "$uni" "$SERVER_ID" \
-        "$(duracao_humana "$dur")" "$pico" "$uni" "$limiar" "$uni" \
-        "$(diagnostico "$metrica" "$valor")" "${extra_txt:+$'\n\n'$extra_txt}")"
+      txt="$(t tg_alerta "$(prefixo_assunto "$acao")" "$rot" "$valor" "$uni" "$SERVER_ID"         "$(duracao_humana "$dur")" "$pico" "$uni" "$limiar" "$uni"         "$(diagnostico "$metrica" "$valor")")"
+      [[ -n "$extra_txt" ]] && txt="${txt}"$'
+
+'"${extra_txt}"
     fi
     "${AGENTE_BIN}/send_telegram_alert.sh" "$txt" >/dev/null 2>&1 || log_erro "envio ao Telegram falhou para ${chave}"
   fi
@@ -144,16 +141,10 @@ despacha_agregado() {
   linhas="$(awk '{printf "%s: %s\n", $2, $3}' "$arq" 2>/dev/null | sort | uniq -c | sort -rn | head -15)"
 
   if [[ "${CANAL_TELEGRAM:-1}" == "1" && -x "${AGENTE_BIN}/send_telegram_alert.sh" ]]; then
-    "${AGENTE_BIN}/send_telegram_alert.sh" \
-      "$(printf '[RESUMO] %s - %s alertas na ultima hora\n\nO limite de %s/hora foi atingido e as mensagens individuais foram agrupadas.\n\n%s' \
-        "$SERVER_ID" "$total" "$MAX_ALERTAS_HORA" "$linhas")" >/dev/null 2>&1 || true
+    "${AGENTE_BIN}/send_telegram_alert.sh"       "$(t resumo_tg "$SERVER_ID" "$total" "$MAX_ALERTAS_HORA" "$linhas")" >/dev/null 2>&1 || true
   fi
   if [[ "${CANAL_EMAIL:-1}" == "1" && -n "${RECIPIENTS:-}" && -x "${AGENTE_BIN}/send_html_alert.sh" ]]; then
-    "${AGENTE_BIN}/send_html_alert.sh" "/opt/alerts/templates/alert.html" "$RECIPIENTS" \
-      "[RESUMO] ${total} alertas na ultima hora - ${SERVER_ID}" \
-      "Varias metricas fora do normal" \
-      "<p>O servidor passou do limite de ${MAX_ALERTAS_HORA} alertas por hora. Em vez de uma mensagem por ocorrencia, segue o agrupamento:</p><pre>$(printf '%s' "$linhas" | escapa_html)</pre>" \
-      >/dev/null 2>&1 || true
+    "${AGENTE_BIN}/send_html_alert.sh" "/opt/alerts/templates/alert.html" "$RECIPIENTS"       "$(prefixo_assunto resumo) $(t resumo_assunto "$total") - ${SERVER_ID}"       "$(t resumo_titulo)"       "<p>$(t resumo_corpo "$MAX_ALERTAS_HORA")</p><pre>$(printf '%s' "$linhas" | escapa_html)</pre>"       >/dev/null 2>&1 || true
   fi
 
   printf '%s' "$(agora)" | escreve_atomico "$marca" 2>/dev/null || true
