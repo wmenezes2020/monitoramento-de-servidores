@@ -78,6 +78,16 @@ sincroniza_config() {
       || printf 'SERVER_ID="%s"\n' "$nome" >>"${AGENTE_RAIZ}/email.conf" 2>/dev/null || true
   fi
 
+  # Remetente dos e-mails, por servidor. Campo vazio no painel NAO apaga o
+  # remetente local: servidor ja instalado tem um valor que funciona, e uma
+  # tela aberta so para olhar nao pode deixa-lo sem conseguir enviar.
+  local remetente nome_remetente
+  remetente="$(printf '%s' "$resp" | sed -n 's/.*"sender_email":"\([^"]*\)".*//p' | head -1)"
+  nome_remetente="$(printf '%s' "$resp" | sed -n 's/.*"sender_name":"\([^"]*\)".*//p' | head -1)"
+  if [[ -n "$remetente" ]]; then
+    aplica_remetente "$remetente" "$nome_remetente" && mudou=1
+  fi
+
   local emails
   emails="$(printf '%s' "$resp" | grep -o '"emails":\[[^]]*\]' | head -1 | sed 's/"emails":\[//; s/\]$//; s/","/,/g; s/"//g')"
   if [[ -n "$emails" ]]; then
