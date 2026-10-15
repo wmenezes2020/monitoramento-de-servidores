@@ -99,12 +99,14 @@ receber aviso nenhum.
 
 ```bash
 ./scripts/build.sh
-./tests/roda-testes.sh      # 134 verificações de unidade
-./tests/testa-idioma.sh     # 112 verificações dos três idiomas
-./tests/testa-migracao.sh   # 31 verificações de migração ponta a ponta
+./tests/roda-testes.sh        # 134 verificações de unidade
+./tests/testa-idioma.sh       # 112 verificações dos três idiomas
+./tests/testa-migracao.sh     #  31 verificações de migração ponta a ponta
+./tests/testa-remetente.sh    #  28 verificações do remetente e do Postfix
+./tests/testa-envio-email.sh  #  25 verificações do envio de e-mail
 ```
 
-As duas baterias precisam estar verdes. Elas rodam em qualquer máquina com
+Todas precisam estar verdes. Elas rodam em qualquer máquina com
 bash e awk, inclusive Windows com Git Bash, porque toda fonte de dado do
 agente é injetável (`PROC_STAT`, `PROC_MEMINFO`, `PROC_LOADAVG`, `FIXTURE_DF`).
 
@@ -138,6 +140,33 @@ fonte fica em `src/envio/` e o build os publica na raiz.
 Isso foi descoberto tarde: antes eles existiam só dentro do instalador, e um
 servidor já instalado nunca os recebia de volta. A data em UTC e o cabeçalho
 em português ficavam cravados para sempre.
+
+### Cabeçalho de e-mail só aceita ASCII
+
+Assunto e nome do remetente passam por `codifica_cabecalho()` em
+`src/envio/send_html_alert.sh`, que converte em encoded-word da RFC 2047 quando
+há byte fora do ASCII e devolve o texto intacto quando não há.
+
+Isso não é detalhe de formatação. O motivo é concreto: a 2.1.0 trocou
+`[ATENCAO]` por `[ATENÇÃO]` e `[CRITICO]` por `[CRÍTICO]` no catálogo, o MTA
+passou a recusar esses cabeçalhos, e **o alerta de abertura parou de chegar
+para a frota inteira**. Só o de recuperação saía, porque `[OK]` e `[SEGUE]` são
+ASCII puro. Durou da 2.1.0 à 2.3.0.
+
+Quem acrescentar prefixo de severidade, nome de métrica ou saudação em
+cabeçalho de e-mail passa pela função. A bateria `testa-envio-email.sh` confere
+nos três idiomas, e confere que o texto **decodifica de volta igual**, porque
+codificar errado troca um alerta que não chega por um que chega ilegível.
+
+### Um envio por destinatário
+
+O `mail` espera um endereço por argumento. A lista do painel vem separada por
+vírgula, e passá-la inteira faz ele tratar tudo como endereço único: foi o que
+deixou só o primeiro da lista recebendo até a 2.3.0.
+
+O laço envia um por um e devolve sucesso se ao menos um passou. Endereço com
+erro de digitação no meio da lista não pode calar o alerta para o resto do
+time, e cada falha vai para o registro com o endereço.
 
 ### O manifesto coerente com os arquivos
 
