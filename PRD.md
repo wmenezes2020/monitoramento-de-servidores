@@ -56,6 +56,10 @@ Cada alerta traz o valor, há quanto tempo está assim, o pico, o estado geral
 do servidor e uma frase dizendo por onde começar a investigação. Incidente
 resolvido gera aviso de recuperação com a duração e o pico.
 
+O e-mail sai pelo remetente cadastrado para aquele servidor no painel, e cada
+endereço da lista de destinatários recebe seu próprio envio: um endereço com
+erro de digitação no meio da lista não cala o alerta para o resto do time.
+
 ### Silencia quando faz sentido
 
 `monitoring-agent.sh silenciar 20m "deploy da api"` suprime alertas sem parar
@@ -86,6 +90,8 @@ falhar.
 | RF-12 | Migrar sozinho uma instalação da versão 1, preservando configuração |
 | RF-13 | Responder `status`, `autoteste`, `silenciar`, `falar`, `versao` |
 | RF-14 | Varrer com ClamAV diariamente e alertar sobre arquivo infectado |
+| RF-15 | Aplicar o remetente de e-mail definido no painel, inclusive no Postfix |
+| RF-16 | Entregar o alerta a todos os destinatários da lista, um envio por endereço |
 
 ## Requisitos não funcionais
 
@@ -97,7 +103,8 @@ falhar.
 | RNF-04 | Duas execuções simultâneas não corrompem o estado |
 | RNF-05 | Troca de arquivo atômica, no mesmo filesystem |
 | RNF-06 | Registro rotacionado, para não encher o disco que ele vigia |
-| RNF-07 | Texto de alerta em português, sem jargão e sem travessão |
+| RNF-07 | Texto de alerta no idioma da conta, sem jargão e sem travessão |
+| RNF-09 | Cabeçalho de e-mail em ASCII, com acento em encoded-word da RFC 2047 |
 | RNF-08 | Bateria de testes executável em qualquer máquina com bash |
 
 ## O que ele não faz
@@ -109,6 +116,35 @@ falhar.
 - Não monitora aplicação (endpoint HTTP, fila, latência). Só o servidor.
 
 ## Histórico
+
+### 2.3.0, 2026-10-14: o alerta de abertura voltou a chegar
+
+**Dois defeitos que se somavam no pior jeito possível.** O assunto do alerta de
+atenção e de crítico tem acento em português e em espanhol, e cabeçalho de
+e-mail só aceita ASCII: o MTA recusava a mensagem. `[OK]` e `[SEGUE]` são ASCII
+puro, então o único e-mail que saía era o de recuperação. Quem lê recebia
+"resolvido" de um problema que nunca foi anunciado. Era regressão da 2.1.0,
+quando o catálogo de idiomas trocou `[ATENCAO]` por `[ATENÇÃO]`.
+
+**E só o primeiro destinatário recebia.** A lista do painel ia inteira num
+argumento, e o `mail` tratava `a@x.com,b@y.com` como um endereço só.
+
+Agora o assunto acentuado vai como encoded-word da RFC 2047, o que é ASCII puro
+segue legível no log do servidor de e-mail, e cada endereço recebe um envio
+próprio. Detalhe em `docs/SDD_ENVIO_DE_EMAIL.md`.
+
+### 2.2.0, 2026-10-14: remetente por servidor, definido no painel
+
+O endereço que envia os alertas de cada servidor passou a ser campo do cadastro
+no painel, e o agente o aplica no mesmo ciclo em que busca configuração, em até
+cinco minutos.
+
+Gravar só o arquivo de configuração seria mentira: o Postfix reescreve o
+remetente do envelope pelo `smtp_generic_maps`, então a troca só vale de fato
+quando o mapa `/etc/postfix/generic` acompanha. Endereço inválido é recusado
+antes de gravar, e falha na aplicação volta o valor anterior, porque um
+remetente pela metade deixa o servidor sem conseguir enviar nada. Detalhe em
+`docs/SDD_REMETENTE_POR_SERVIDOR.md`.
 
 ### 2.1.0, 2026-10-09: três idiomas e contenção de CPU
 

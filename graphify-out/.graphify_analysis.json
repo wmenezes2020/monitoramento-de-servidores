@@ -27,6 +27,27 @@
       "tests_roda_testes_zera_estado"
     ],
     "1": [
+      "tests_testa_remetente",
+      "tests_testa_remetente_agente_bin",
+      "tests_testa_remetente_agente_estado",
+      "tests_testa_remetente_agente_log",
+      "tests_testa_remetente_agente_raiz",
+      "tests_testa_remetente_agente_so_carregar",
+      "tests_testa_remetente_contem",
+      "tests_testa_remetente_falha",
+      "tests_testa_remetente_grupo",
+      "tests_testa_remetente_igual",
+      "tests_testa_remetente_mentira",
+      "tests_testa_remetente_ok",
+      "tests_testa_remetente_path",
+      "tests_testa_remetente_postfix_generic",
+      "tests_testa_remetente_postmap_falha",
+      "tests_testa_remetente_postmap_log",
+      "tests_testa_remetente_prepara",
+      "tests_testa_remetente_sh__entry",
+      "tests_testa_remetente_verdade"
+    ],
+    "2": [
       "src_agent_10_util",
       "src_agent_10_util_agora",
       "src_agent_10_util_delta",
@@ -46,7 +67,7 @@
       "src_agent_10_util_sh__entry",
       "src_agent_10_util_solta_trava"
     ],
-    "2": [
+    "3": [
       "tests_testa_idioma",
       "tests_testa_idioma_agente_bin",
       "tests_testa_idioma_agente_estado",
@@ -66,7 +87,25 @@
       "tests_testa_idioma_templates_dir",
       "tests_testa_idioma_verdade"
     ],
-    "3": [
+    "4": [
+      "tests_testa_envio_email",
+      "tests_testa_envio_email_campo",
+      "tests_testa_envio_email_chama",
+      "tests_testa_envio_email_contem",
+      "tests_testa_envio_email_envios_log",
+      "tests_testa_envio_email_falha",
+      "tests_testa_envio_email_grupo",
+      "tests_testa_envio_email_igual",
+      "tests_testa_envio_email_linhas",
+      "tests_testa_envio_email_mentira",
+      "tests_testa_envio_email_nao_contem",
+      "tests_testa_envio_email_ok",
+      "tests_testa_envio_email_path",
+      "tests_testa_envio_email_sh__entry",
+      "tests_testa_envio_email_so_ascii",
+      "tests_testa_envio_email_verdade"
+    ],
+    "5": [
       "src_agent_30_medir",
       "src_agent_30_medir_campo_meminfo",
       "src_agent_30_medir_ignorar_montagem",
@@ -81,7 +120,7 @@
       "src_agent_30_medir_sh__entry",
       "src_agent_30_medir_top_processos"
     ],
-    "4": [
+    "6": [
       "src_agent_90_main",
       "src_agent_90_main_autoteste",
       "src_agent_90_main_avalia_e_notifica",
@@ -96,7 +135,7 @@
       "src_agent_90_main_status",
       "src_agent_90_main_uso"
     ],
-    "5": [
+    "7": [
       "src_agent_25_idioma",
       "src_agent_25_idioma_data_local",
       "src_agent_25_idioma_duracao_humana",
@@ -110,7 +149,7 @@
       "src_agent_25_idioma_t",
       "src_agent_25_idioma_unidade_metrica"
     ],
-    "6": [
+    "8": [
       "tests_testa_migracao",
       "tests_testa_migracao_agente_bin",
       "tests_testa_migracao_agente_estado",
@@ -124,7 +163,7 @@
       "tests_testa_migracao_sh__entry",
       "tests_testa_migracao_tem"
     ],
-    "7": [
+    "9": [
       "src_agent_40_estado",
       "src_agent_40_estado_caminho_estado",
       "src_agent_40_estado_consome_orcamento",
@@ -137,7 +176,7 @@
       "src_agent_40_estado_sh__entry",
       "src_agent_40_estado_silencio_ativo"
     ],
-    "8": [
+    "10": [
       "src_agent_80_bootstrap",
       "src_agent_80_bootstrap_escreve_config_inicial",
       "src_agent_80_bootstrap_instala_binarios",
@@ -150,7 +189,7 @@
       "src_agent_80_bootstrap_sh__entry",
       "src_agent_80_bootstrap_sou_root"
     ],
-    "9": [
+    "11": [
       "json",
       "path",
       "pathlib",
@@ -162,7 +201,7 @@
       "scripts_gerar_grafo_rationale_2",
       "sys"
     ],
-    "10": [
+    "12": [
       "src_agent_70_autoupdate",
       "src_agent_70_autoupdate_atualiza_agente",
       "src_agent_70_autoupdate_baixa",
@@ -174,7 +213,7 @@
       "src_agent_70_autoupdate_versao_instalada",
       "src_agent_70_autoupdate_versao_maior"
     ],
-    "11": [
+    "13": [
       "src_agent_60_notificar",
       "src_agent_60_notificar_despacha_agregado",
       "src_agent_60_notificar_envia_alerta",
@@ -185,7 +224,17 @@
       "src_agent_60_notificar_sh__entry",
       "src_agent_60_notificar_template_de"
     ],
-    "12": [
+    "14": [
+      "src_agent_28_remetente",
+      "src_agent_28_remetente_aplica_remetente",
+      "src_agent_28_remetente_atualiza_generic_do_postfix",
+      "src_agent_28_remetente_dominio_do_postfix",
+      "src_agent_28_remetente_email_valido",
+      "src_agent_28_remetente_grava_no_email_conf",
+      "src_agent_28_remetente_le_do_email_conf",
+      "src_agent_28_remetente_sh__entry"
+    ],
+    "15": [
       "src_agent_20_config",
       "src_agent_20_config_carrega_config",
       "src_agent_20_config_limiar_de",
@@ -193,7 +242,7 @@
       "src_agent_20_config_sh__entry",
       "src_agent_20_config_valida_config"
     ],
-    "13": [
+    "16": [
       "src_agent_27_templates",
       "src_agent_27_templates_escreve_template",
       "src_agent_27_templates_idioma_html",
@@ -201,52 +250,61 @@
       "src_agent_27_templates_sincroniza_templates",
       "src_agent_27_templates_templates_lista"
     ],
-    "14": [
+    "17": [
       "src_agent_50_avaliar",
       "src_agent_50_avaliar_avalia",
       "src_agent_50_avaliar_diagnostico",
       "src_agent_50_avaliar_sh__entry"
     ],
-    "15": [
+    "18": [
       "scripts_build",
       "scripts_build_sh__entry",
       "scripts_build_sha"
     ],
-    "16": [
+    "19": [
+      "src_envio_send_html_alert",
+      "src_envio_send_html_alert_codifica_cabecalho",
+      "src_envio_send_html_alert_sh__entry"
+    ],
+    "20": [
       "src_agent_00_cabecalho",
       "src_agent_00_cabecalho_sh__entry"
     ],
-    "17": [
-      "src_envio_send_html_alert",
-      "src_envio_send_html_alert_sh__entry"
-    ],
-    "18": [
+    "21": [
       "src_envio_send_telegram_alert",
       "src_envio_send_telegram_alert_sh__entry"
     ]
   },
   "cohesion": {
     "0": 0.12681159420289856,
-    "1": 0.1437908496732026,
-    "2": 0.23529411764705882,
-    "3": 0.21794871794871795,
-    "4": 0.2564102564102564,
-    "5": 0.21212121212121213,
-    "6": 0.3333333333333333,
-    "7": 0.2,
-    "8": 0.3090909090909091,
-    "9": 0.26666666666666666,
-    "10": 0.3333333333333333,
-    "11": 0.3055555555555556,
-    "12": 0.4,
-    "13": 0.4,
-    "14": 0.5,
-    "15": 0.6666666666666666,
-    "16": 1.0,
-    "17": 1.0,
-    "18": 1.0
+    "1": 0.1871345029239766,
+    "2": 0.1437908496732026,
+    "3": 0.23529411764705882,
+    "4": 0.3,
+    "5": 0.21794871794871795,
+    "6": 0.2564102564102564,
+    "7": 0.21212121212121213,
+    "8": 0.3333333333333333,
+    "9": 0.2,
+    "10": 0.3090909090909091,
+    "11": 0.26666666666666666,
+    "12": 0.3333333333333333,
+    "13": 0.3055555555555556,
+    "14": 0.42857142857142855,
+    "15": 0.4,
+    "16": 0.4,
+    "17": 0.5,
+    "18": 0.6666666666666666,
+    "19": 1.0,
+    "20": 1.0,
+    "21": 1.0
   },
   "gods": [
+    {
+      "id": "tests_testa_envio_email_sh__entry",
+      "label": "testa-envio-email.sh script",
+      "degree": 10
+    },
     {
       "id": "src_agent_70_autoupdate_atualiza_agente",
       "label": "atualiza_agente()",
@@ -263,6 +321,16 @@
       "degree": 7
     },
     {
+      "id": "tests_testa_envio_email_ok",
+      "label": "ok()",
+      "degree": 7
+    },
+    {
+      "id": "tests_testa_envio_email_falha",
+      "label": "falha()",
+      "degree": 7
+    },
+    {
       "id": "tests_testa_idioma_ok",
       "label": "ok()",
       "degree": 7
@@ -273,29 +341,14 @@
       "degree": 7
     },
     {
-      "id": "src_agent_80_bootstrap_roda_bootstrap",
-      "label": "roda_bootstrap()",
+      "id": "tests_testa_remetente_sh__entry",
+      "label": "testa-remetente.sh script",
+      "degree": 7
+    },
+    {
+      "id": "src_agent_28_remetente_aplica_remetente",
+      "label": "aplica_remetente()",
       "degree": 6
-    },
-    {
-      "id": "src_agent_90_main_principal",
-      "label": "principal()",
-      "degree": 6
-    },
-    {
-      "id": "tests_testa_migracao_sh__entry",
-      "label": "testa-migracao.sh script",
-      "degree": 6
-    },
-    {
-      "id": "src_agent_90_main_rodada",
-      "label": "rodada()",
-      "degree": 5
-    },
-    {
-      "id": "tests_testa_migracao_ok",
-      "label": "ok()",
-      "degree": 5
     }
   ],
   "surprises": [],
@@ -303,7 +356,7 @@
     {
       "type": "isolated_nodes",
       "question": "What connects `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script` to the rest of the system?",
-      "why": "35 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "why": "46 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
       "type": "low_cohesion",
