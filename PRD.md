@@ -138,6 +138,23 @@ falhar.
 
 ## Histórico
 
+### 2.5.2, 2026-10-16: o instalador parou de apagar as correções
+
+Dois servidores foram reinstalados e nenhum e-mail chegou, nem o de boas-vindas.
+
+A causa: o instalador carregava uma cópia própria do script de envio, parada no
+tempo. Ela só sabia usar o `mail` do Postfix local, e com conta de e-mail vinda
+do painel o instalador nem instala o `mail`. A cada instalação, as correções das
+versões 2.3, 2.4 e 2.5 eram apagadas da máquina.
+
+O agravante: como o instalador baixa a versão publicada do agente, a
+auto-atualização não tinha o que fazer, e o script velho ficava lá para sempre.
+
+Agora os dois auxiliares de envio vêm do manifesto, com checksum, junto do
+agente. E os limiares que o instalador grava no `agent.conf` passaram a ser
+conferidos contra os padrões do agente: ele ainda gravava `LOAD_ATENCAO=1.5` e
+`STEAL_ATENCAO=10`, desfazendo em toda instalação nova o que a 2.4 corrigiu.
+
 ### 2.5.1, 2026-10-16: o serviço de e-mail que é nosso tem precedência
 
 A 2.5.0 passou a enviar direto pelo SMTP sempre que havia conta no painel. A

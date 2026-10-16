@@ -540,35 +540,20 @@ log_step "Estrutura de alertas (send_html_alert.sh e diretorios)"
 mkdir -p /opt/alerts/templates
 
 # send_html_alert.sh (usa From de /opt/monitoring/email.conf = remetente configurado na instalacao)
-cat > /usr/local/bin/send_html_alert.sh << 'SENDHTML'
-#!/usr/bin/env bash
-set -euo pipefail
-TEMPLATE_PATH="${1:-/opt/alerts/templates/alert.html}"
-RECIPIENT="${2:-}"
-[[ -z "$RECIPIENT" ]] && exit 0
-SUBJECT="${3:-Alerta do servidor}"
-TITLE="${4:-Alerta do servidor}"
-MESSAGE="${5:-Mensagem nao especificada}"
-DATE="$(date '+%Y-%m-%d %H:%M:%S %Z')"
-HOST="$(hostname)"
-SENDER_EMAIL=""
-SERVER_ID=""
-[[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf
-HOST="${SERVER_ID:-$(hostname)}"
-[[ ! -f "$TEMPLATE_PATH" ]] && { echo "Template nao encontrado: $TEMPLATE_PATH" >&2; exit 1; }
-export TITLE MESSAGE DATE HOST
-RENDERED_FILE="$(mktemp /tmp/alert-email-XXXXXX.html)"
-envsubst '${TITLE} ${MESSAGE} ${DATE} ${HOST}' < "$TEMPLATE_PATH" > "$RENDERED_FILE"
-if [[ -n "${SENDER_EMAIL:-}" ]]; then
-  FROM_HEADER="Monitoramento de Servidores <${SENDER_EMAIL}>"
-  cat "$RENDERED_FILE" | mail -r "$SENDER_EMAIL" -a "From: $FROM_HEADER" -a "Content-Type: text/html; charset=UTF-8" -s "$SUBJECT" "$RECIPIENT"
-else
-  cat "$RENDERED_FILE" | mail -a "Content-Type: text/html; charset=UTF-8" -s "$SUBJECT" "$RECIPIENT"
-fi
-rm -f "$RENDERED_FILE"
-SENDHTML
-chmod +x /usr/local/bin/send_html_alert.sh
-log_ok "Script send_html_alert.sh criado."
+# Os auxiliares de envio NAO sao escritos aqui.
+#
+# Eles vinham embutidos neste instalador, numa copia que ficou velha: so
+# sabia usar o `mail` do Postfix local, nao lia a conta de envio do painel,
+# nao codificava assunto com acento e mandava a lista inteira de
+# destinatarios num argumento so.
+#
+# Isso apagava, no momento da instalacao, todas as correcoes das versoes
+# 2.3, 2.4 e 2.5. E, com conta vinda do painel, o instalador nem instala o
+# `mail`: a copia antiga nao tinha como enviar coisa nenhuma, e o e-mail de
+# boas-vindas sumia em silencio.
+#
+# Agora eles vem do manifesto publicado, com checksum conferido, junto do
+# agente. Uma fonte so.
 
 # --- 4b. E-mail: remetente e identificador do servidor (From + nome em todos os alertas) ---
 mkdir -p /opt/monitoring
@@ -620,22 +605,6 @@ TELEGRAMCONF
   chmod 640 /opt/monitoring/telegram.conf
 fi
 
-cat > /usr/local/bin/send_telegram_alert.sh << 'SENDTG'
-#!/usr/bin/env bash
-# Envia mensagem para o Telegram. Uso: send_telegram_alert.sh "Texto da mensagem"
-# Config em /opt/monitoring/telegram.conf
-CONF="/opt/monitoring/telegram.conf"
-[[ ! -f "$CONF" ]] && exit 0
-source "$CONF" 2>/dev/null || true
-[[ -z "$TELEGRAM_BOT_TOKEN" ]] && exit 0
-[[ -z "$TELEGRAM_CHAT_ID" ]] && exit 0
-MSG="${1:-Alerta do servidor}"
-curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-  -d "chat_id=${TELEGRAM_CHAT_ID}" \
-  --data-urlencode "text=${MSG}" \
-  -d "disable_web_page_preview=true" >/dev/null 2>&1 || true
-SENDTG
-chmod +x /usr/local/bin/send_telegram_alert.sh
 
 cat > /usr/local/bin/telegram-get-chat-id.sh << 'GETCHATID'
 #!/usr/bin/env bash
@@ -886,6 +855,37 @@ instala_agente() {
   fi
 
   install -m 755 "${AGENTE_TMP}/monitoring-agent.sh" /usr/local/bin/monitoring-agent.sh
+
+  # Os auxiliares de envio vem do mesmo manifesto, com o mesmo cuidado. Sem
+  # isto, o servidor nasce com o enviador antigo e perde tudo o que foi
+  # corrigido depois: o assunto com acento, o envio por destinatario e a conta
+  # de e-mail vinda do painel.
+  local auxiliar esperado_aux obtido_aux
+  for auxiliar in send_html_alert.sh send_telegram_alert.sh; do
+    esperado_aux="$(awk -v a="$auxiliar" '$0 ~ "^ARQUIVO="a" " {print $2; exit}' "${AGENTE_TMP}/manifest")"
+    if [[ -z "$esperado_aux" ]]; then
+      log_warn "${auxiliar} nao esta no manifesto; seguindo sem atualizar este auxiliar"
+      continue
+    fi
+    if ! curl -fsSL --max-time 30 --retry 2 -o "${AGENTE_TMP}/${auxiliar}" "${AGENTE_BASE}/${auxiliar}" 2>/dev/null; then
+      log_err "Nao consegui baixar ${auxiliar}"
+      return 1
+    fi
+    if command -v sha256sum >/dev/null 2>&1; then
+      obtido_aux="$(sha256sum "${AGENTE_TMP}/${auxiliar}" | awk '{print $1}')"
+    else
+      obtido_aux="$(shasum -a 256 "${AGENTE_TMP}/${auxiliar}" | awk '{print $1}')"
+    fi
+    if [[ "$obtido_aux" != "$esperado_aux" ]]; then
+      log_err "Checksum de ${auxiliar} nao confere. Nada foi instalado."
+      return 1
+    fi
+    if ! bash -n "${AGENTE_TMP}/${auxiliar}" 2>/dev/null; then
+      log_err "${auxiliar} baixado nao passa em bash -n. Nada foi instalado."
+      return 1
+    fi
+    install -m 755 "${AGENTE_TMP}/${auxiliar}" "/usr/local/bin/${auxiliar}"
+  done
   # Os tres nomes antigos apontam para o mesmo arquivo: runbook, script e
   # documentacao que chamem monitor_cpu.sh continuam funcionando.
   local nome
@@ -926,17 +926,32 @@ SWAP_ATENCAO=50
 SWAP_CRITICO=80
 INODE_ATENCAO=85
 INODE_CRITICO=93
-LOAD_ATENCAO=1.5
-LOAD_CRITICO=3.0
-STEAL_ATENCAO=10
-STEAL_CRITICO=25
+# Fila de processos, por nucleo. Fica acima de 1 de proposito: 1.0 quer dizer
+# "todos os nucleos ocupados, sem ninguem esperando", e com 1.5 qualquer
+# servidor de build vivia em alerta. O agente ainda exige CPU alta ou espera de
+# disco no mesmo ciclo para abrir incidente de fila.
+LOAD_ATENCAO=2.5
+LOAD_CRITICO=4.0
+# Contencao de CPU. Em instancia burstable, steal aparece em todo burst normal:
+# com 10 o alerta saia com o servidor tranquilo.
+STEAL_ATENCAO=25
+STEAL_CRITICO=40
+# Acima disto a CPU esta esperando disco, e aí a fila importa.
+IOWAIT_ATENCAO=25
 
 # Histerese: quantas leituras seguidas confirmam o problema antes de avisar,
 # e quantas confirmam que ele passou. E o que separa um pico de um incidente.
 CICLOS_CONFIRMACAO=3
 CICLOS_RECUPERACAO=3
 BANDA_SAIDA=8
+# A banda do load e em fila por nucleo, nao em pontos percentuais: oito pontos
+# descontados de um limiar 2.5 davam ponto de saida negativo, preso em zero, e
+# o incidente de fila so se fecharia com o load exatamente zero.
+BANDA_SAIDA_LOAD=0.3
+# A espera DOBRA a cada repeticao, deste minimo ate o teto. Intervalo fixo
+# transformou um incidente de seis dias em perto de 148 e-mails identicos.
 RENOTIFICAR_MIN=60
+RENOTIFICAR_MAX_MIN=1440
 MAX_ALERTAS_HORA=12
 ALERTA_RECUPERACAO=1
 

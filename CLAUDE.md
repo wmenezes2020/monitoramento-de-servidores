@@ -75,6 +75,31 @@ shell. A cópia global na máquina continua intacta e ativa.
    regra não é opcional aqui.
 5. **Histórico.** Conferir se algo sensível entrou e saiu em commit anterior.
 
+## O instalador não carrega cópia dos scripts de envio
+
+`send_html_alert.sh` e `send_telegram_alert.sh` vêm do **manifesto**, com
+checksum conferido, junto do agente. O instalador não os escreve.
+
+Eles já vieram embutidos nele, e a cópia ficou velha: só sabia usar o `mail` do
+Postfix local. A cada instalação ela apagava do servidor as correções das
+versões 2.3, 2.4 e 2.5, e com conta de e-mail vinda do painel o instalador nem
+instala o `mail`. Resultado, em 16/10/2026: dois servidores reinstalados, nenhum
+e-mail, nem o de boas-vindas.
+
+O agravante que fecha a armadilha: o instalador baixa **a versão publicada** do
+agente, então a auto-atualização não tem o que fazer e o enviador velho fica
+lá para sempre, até sair uma versão nova.
+
+Isto é o mesmo erro que já está documentado logo abaixo, na seção do bundle,
+pela segunda vez e no mesmo lugar. `tests/testa-instalador.sh` existe para não
+haver terceira.
+
+**Os limiares do `agent.conf` gerado também são conferidos lá**, contra os
+padrões de `20-config.sh`. O arquivo vence o padrão do código: gravar valor
+velho ali desfaz, em toda instalação nova, a correção feita no agente. Foi o
+que aconteceu com `LOAD_ATENCAO=1.5` e `STEAL_ATENCAO=10`, que o instalador
+continuava gravando depois de a 2.4 tê-los corrigido.
+
 ## O agente é gerado, não escrito à mão
 
 **Nunca editar `monitoring-agent.sh`, `monitor_cpu.sh`, `monitor_memory.sh` nem
@@ -105,7 +130,8 @@ receber aviso nenhum.
 ./tests/testa-remetente.sh    #  28 verificações do remetente e do Postfix
 ./tests/testa-envio-email.sh  #  25 verificações do envio de e-mail
 ./tests/testa-ruido.sh        #  77 verificações do que NÃO deve virar alerta
-./tests/testa-servicos.sh     #  44 verificações dos serviços vindos do painel
+./tests/testa-servicos.sh     #  56 verificações dos serviços vindos do painel
+./tests/testa-instalador.sh   #  33 verificações do instalador
 ```
 
 Todas precisam estar verdes. Elas rodam em qualquer máquina com

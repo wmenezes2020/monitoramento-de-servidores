@@ -289,6 +289,18 @@
       "src_agent_70_autoupdate_versao_maior"
     ],
     "17": [
+      "tests_testa_instalador",
+      "tests_testa_instalador_contem",
+      "tests_testa_instalador_falha",
+      "tests_testa_instalador_grupo",
+      "tests_testa_instalador_igual",
+      "tests_testa_instalador_nao_contem",
+      "tests_testa_instalador_ok",
+      "tests_testa_instalador_padrao_no_agente",
+      "tests_testa_instalador_sh__entry",
+      "tests_testa_instalador_valor_no_instalador"
+    ],
+    "18": [
       "src_agent_28_remetente",
       "src_agent_28_remetente_aplica_remetente",
       "src_agent_28_remetente_atualiza_generic_do_postfix",
@@ -298,7 +310,7 @@
       "src_agent_28_remetente_le_do_email_conf",
       "src_agent_28_remetente_sh__entry"
     ],
-    "18": [
+    "19": [
       "src_agent_50_avaliar",
       "src_agent_50_avaliar_avalia",
       "src_agent_50_avaliar_banda_de",
@@ -308,7 +320,7 @@
       "src_agent_50_avaliar_sh__entry",
       "src_agent_50_avaliar_valor_para_fechar_load"
     ],
-    "19": [
+    "20": [
       "src_envio_send_html_alert",
       "src_envio_send_html_alert_codifica_cabecalho",
       "src_envio_send_html_alert_envia_direto",
@@ -318,7 +330,7 @@
       "src_envio_send_html_alert_tem_smtp_do_painel",
       "src_envio_send_html_alert_usa_smtp_direto"
     ],
-    "20": [
+    "21": [
       "src_agent_20_config",
       "src_agent_20_config_carrega_config",
       "src_agent_20_config_limiar_de",
@@ -326,7 +338,7 @@
       "src_agent_20_config_sh__entry",
       "src_agent_20_config_valida_config"
     ],
-    "21": [
+    "22": [
       "src_agent_27_templates",
       "src_agent_27_templates_escreve_template",
       "src_agent_27_templates_idioma_html",
@@ -334,16 +346,16 @@
       "src_agent_27_templates_sincroniza_templates",
       "src_agent_27_templates_templates_lista"
     ],
-    "22": [
+    "23": [
       "scripts_build",
       "scripts_build_sh__entry",
       "scripts_build_sha"
     ],
-    "23": [
+    "24": [
       "src_agent_00_cabecalho",
       "src_agent_00_cabecalho_sh__entry"
     ],
-    "24": [
+    "25": [
       "src_envio_send_telegram_alert",
       "src_envio_send_telegram_alert_sh__entry"
     ]
@@ -366,14 +378,15 @@
     "14": 0.26666666666666666,
     "15": 0.28888888888888886,
     "16": 0.3333333333333333,
-    "17": 0.42857142857142855,
-    "18": 0.32142857142857145,
-    "19": 0.4642857142857143,
-    "20": 0.4,
+    "17": 0.4888888888888889,
+    "18": 0.42857142857142855,
+    "19": 0.32142857142857145,
+    "20": 0.4642857142857143,
     "21": 0.4,
-    "22": 0.6666666666666666,
-    "23": 1.0,
-    "24": 1.0
+    "22": 0.4,
+    "23": 0.6666666666666666,
+    "24": 1.0,
+    "25": 1.0
   },
   "gods": [
     {
@@ -402,6 +415,11 @@
       "degree": 8
     },
     {
+      "id": "tests_testa_instalador_sh__entry",
+      "label": "testa-instalador.sh script",
+      "degree": 8
+    },
+    {
       "id": "tests_testa_servicos_sh__entry",
       "label": "testa-servicos.sh script",
       "degree": 8
@@ -419,11 +437,6 @@
     {
       "id": "tests_testa_envio_email_falha",
       "label": "falha()",
-      "degree": 7
-    },
-    {
-      "id": "tests_testa_idioma_ok",
-      "label": "ok()",
       "degree": 7
     }
   ],

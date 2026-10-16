@@ -4,7 +4,7 @@
 - Corpus is ~19,117 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 297 nodes · 460 edges · 25 communities (22 shown, 3 thin omitted)
+- 307 nodes · 482 edges · 26 communities (23 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
@@ -26,6 +26,7 @@
 - gerar-grafo
 - 60-notificar
 - 70-autoupdate
+- testa-instalador
 - 28-remetente
 - 50-avaliar
 - send_html_alert
@@ -41,11 +42,11 @@
 3. `testa-ruido.sh script` - 9 edges
 4. `atualiza_agente()` - 8 edges
 5. `testa-idioma.sh script` - 8 edges
-6. `testa-servicos.sh script` - 8 edges
-7. `roda-testes.sh script` - 7 edges
-8. `ok()` - 7 edges
-9. `falha()` - 7 edges
-10. `ok()` - 7 edges
+6. `testa-instalador.sh script` - 8 edges
+7. `testa-servicos.sh script` - 8 edges
+8. `roda-testes.sh script` - 7 edges
+9. `ok()` - 7 edges
+10. `falha()` - 7 edges
 
 ## Surprising Connections (you probably didn't know these)
 - None detected - all connections are within the same source files.
@@ -53,7 +54,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (25 total, 3 thin omitted)
+## Communities (26 total, 3 thin omitted)
 
 ### Community 0 - "roda-testes"
 Cohesion: 0.13
@@ -123,23 +124,27 @@ Nodes (6): envia_alerta(), envia_incidente_dashboard(), monta_corpo(), monta_tex
 Cohesion: 0.33
 Nodes (8): atualiza_agente(), baixa(), reporta_falha_update(), restaura_rollback(), 70-autoupdate.sh script, sha256_de(), versao_instalada(), versao_maior()
 
-### Community 17 - "28-remetente"
+### Community 17 - "testa-instalador"
+Cohesion: 0.49
+Nodes (9): contem(), falha(), grupo(), igual(), nao_contem(), ok(), padrao_no_agente(), testa-instalador.sh script (+1 more)
+
+### Community 18 - "28-remetente"
 Cohesion: 0.43
 Nodes (7): aplica_remetente(), atualiza_generic_do_postfix(), dominio_do_postfix(), email_valido(), grava_no_email_conf(), le_do_email_conf(), 28-remetente.sh script
 
-### Community 18 - "50-avaliar"
+### Community 19 - "50-avaliar"
 Cohesion: 0.32
 Nodes (5): avalia(), banda_de(), espera_renotificacao(), 50-avaliar.sh script, valor_para_fechar_load()
 
-### Community 19 - "send_html_alert"
+### Community 20 - "send_html_alert"
 Cohesion: 0.46
 Nodes (7): codifica_cabecalho(), envia_direto(), monta_mime(), mta_e_nosso(), send_html_alert.sh script, tem_smtp_do_painel(), usa_smtp_direto()
 
-### Community 20 - "20-config"
+### Community 21 - "20-config"
 Cohesion: 0.40
 Nodes (3): carrega_config(), 20-config.sh script, valida_config()
 
-### Community 21 - "27-templates"
+### Community 22 - "27-templates"
 Cohesion: 0.40
 Nodes (3): escreve_template(), 27-templates.sh script, sincroniza_templates()
 
