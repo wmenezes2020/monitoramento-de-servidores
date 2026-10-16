@@ -23,6 +23,69 @@
 
 CAMINHO_SMTP="${AGENTE_RAIZ}/smtp.conf"
 CAMINHO_TELEGRAM="${AGENTE_RAIZ}/telegram.conf"
+POSTFIX_MAIN="${POSTFIX_MAIN:-/etc/postfix/main.cf}"
+POSTFIX_SASL="${POSTFIX_SASL:-/etc/postfix/sasl_passwd}"
+# O mesmo texto que o instalador escreve no main.cf quando E ELE quem configura
+# o Postfix. E por esta linha que o agente sabe de quem e o servico de e-mail
+# da maquina.
+MARCA_DO_INSTALADOR="# --- Sistema de Monitoramento de Servidores ---"
+
+# O Postfix da maquina foi configurado por nos?
+#
+# Esta pergunta decide tudo o que vem depois. Sendo nosso, a conta do painel e
+# aplicada NELE e o envio continua saindo pela propria maquina, como sempre
+# saiu. Sendo de outra pessoa, nao se toca em nada e o envio vai direto ao
+# SMTP: e a diferenca entre atualizar o que e nosso e mexer no que nao e.
+mta_e_nosso() {
+  [[ -f "$POSTFIX_MAIN" ]] || return 1
+  grep -qF "$MARCA_DO_INSTALADOR" "$POSTFIX_MAIN" 2>/dev/null
+}
+
+# Aplica a conta do painel no relay do Postfix: para onde manda, com qual
+# usuario e com qual senha.
+#
+# O sasl_passwd e reescrito preservando a linha de qualquer outro destino: o
+# instalador antigo o sobrescrevia inteiro, e quem tivesse uma segunda regra ali
+# a perdia sem aviso.
+aplica_relay_no_postfix() {
+  local host="$1" porta="$2" usuario="$3" senha="$4"
+  command -v postmap >/dev/null 2>&1 || { log_erro "postmap ausente; relay do Postfix nao atualizado"; return 1; }
+
+  local destino="[${host}]:${porta}"
+
+  # O relay anterior sai do mapa junto: ele era nosso, e deixar a linha ali
+  # guarda uma senha que nao serve mais para nada. Linha de QUALQUER outro
+  # destino fica, porque pode ser regra que alguem somou a mao.
+  local relay_anterior
+  relay_anterior="$(sed -n 's/^relayhost[[:space:]]*=[[:space:]]*//p' "$POSTFIX_MAIN" 2>/dev/null | head -1 | tr -d '[:space:]')"
+
+  local tmp
+  tmp="$(mktemp "${POSTFIX_SASL}.XXXXXX" 2>/dev/null)" || return 1
+  chmod 600 "$tmp" 2>/dev/null || true
+  if [[ -f "$POSTFIX_SASL" ]]; then
+    grep -v -F "$destino" "$POSTFIX_SASL" 2>/dev/null       | { if [[ -n "$relay_anterior" ]]; then grep -v -F "$relay_anterior"; else cat; fi; }       | grep -v '^[[:space:]]*$' >"$tmp" || true
+  fi
+  printf '%s %s:%s
+' "$destino" "$usuario" "$senha" >>"$tmp" || { rm -f "$tmp"; return 1; }
+  mv -f "$tmp" "$POSTFIX_SASL" 2>/dev/null || { rm -f "$tmp"; return 1; }
+  chmod 600 "$POSTFIX_SASL" 2>/dev/null || true
+  postmap "$POSTFIX_SASL" >/dev/null 2>&1 || { log_erro "postmap falhou em ${POSTFIX_SASL}"; return 1; }
+
+  # O relayhost mora no bloco que o instalador escreveu. Trocar a linha no
+  # lugar mantem o resto do main.cf intacto, inclusive o que alguem somou.
+  if grep -q '^relayhost[[:space:]]*=' "$POSTFIX_MAIN" 2>/dev/null; then
+    sed -i "s|^relayhost[[:space:]]*=.*|relayhost = ${destino}|" "$POSTFIX_MAIN" 2>/dev/null || return 1
+  else
+    printf 'relayhost = %s\n' "$destino" >>"$POSTFIX_MAIN" 2>/dev/null || return 1
+  fi
+
+  if ! postfix check >/dev/null 2>&1; then
+    log_erro "postfix check reprovou a configuracao depois da troca de relay"
+    return 1
+  fi
+  postfix reload >/dev/null 2>&1 || systemctl reload postfix >/dev/null 2>&1 || true
+  return 0
+}
 
 # Le um valor de um arquivo de configuracao sem dar source. O arquivo pode ter
 # sido editado a mao, e um source executaria o que estivesse la dentro.
@@ -94,7 +157,23 @@ aplica_servico_email() {
   grava_no_email_conf SENDER_EMAIL "$remetente" || true
   [[ -n "$nome" ]] && grava_no_email_conf SENDER_NAME "$nome"
 
-  log_info "conta de envio do painel aplicada: ${usuario} em ${host}:${porta:-587}"
+  # Postfix nosso: a conta do painel vai PARA ELE, e o envio segue saindo pela
+  # propria maquina. So quando o servico de e-mail nao e nosso e que o agente
+  # passa por fora, falando direto com o SMTP.
+  if mta_e_nosso; then
+    if aplica_relay_no_postfix "$host" "${porta:-587}" "$usuario" "$senha"; then
+      log_info "conta de envio do painel aplicada no Postfix deste servidor: ${usuario} em ${host}:${porta:-587}"
+    else
+      log_erro "nao consegui aplicar a conta no Postfix; o envio continua pelo relay anterior"
+    fi
+    # O dominio do mapa nao muda com a troca de conta, mas o remetente sim:
+    # sem reescrever o generic, o Postfix continua reescrevendo o endereco de
+    # origem para o antigo, e o e-mail chega com o remetente errado.
+    atualiza_generic_do_postfix "$remetente" "$(dominio_do_postfix)" >/dev/null 2>&1 || true
+    return 0
+  fi
+
+  log_info "conta de envio do painel aplicada: ${usuario} em ${host}:${porta:-587} (envio direto, sem tocar no servico de e-mail da maquina)"
   return 0
 }
 

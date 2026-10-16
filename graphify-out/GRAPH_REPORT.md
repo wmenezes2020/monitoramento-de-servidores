@@ -1,26 +1,26 @@
 # Graph Report - monitoramento-de-servidores  (2026-10-16)
 
 ## Corpus Check
-- Corpus is ~18,368 words - fits in a single context window. You may not need a graph.
+- Corpus is ~19,117 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 291 nodes · 450 edges · 25 communities (22 shown, 3 thin omitted)
+- 297 nodes · 460 edges · 25 communities (22 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
 - roda-testes
+- testa-servicos
 - testa-remetente
 - 10-util
 - testa-idioma
-- testa-servicos
 - 25-idioma
 - testa-ruido
 - testa-envio-email
 - 30-medir
+- 29-servicos
 - 90-main
 - testa-migracao
-- 29-servicos
 - 40-estado
 - 80-bootstrap
 - gerar-grafo
@@ -28,9 +28,9 @@
 - 70-autoupdate
 - 28-remetente
 - 50-avaliar
+- send_html_alert
 - 20-config
 - 27-templates
-- send_html_alert
 - build
 - 00-cabecalho
 - send_telegram_alert
@@ -59,21 +59,21 @@
 Cohesion: 0.13
 Nodes (19): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, falha(), FIXTURE_DF, FIXTURE_DF_INODES (+11 more)
 
-### Community 1 - "testa-remetente"
+### Community 1 - "testa-servicos"
+Cohesion: 0.21
+Nodes (19): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, chmod_funciona(), contem(), falha() (+11 more)
+
+### Community 2 - "testa-remetente"
 Cohesion: 0.19
 Nodes (18): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, contem(), falha(), grupo() (+10 more)
 
-### Community 2 - "10-util"
+### Community 3 - "10-util"
 Cohesion: 0.14
 Nodes (6): agora(), log(), log_erro(), log_info(), pega_trava(), 10-util.sh script
 
-### Community 3 - "testa-idioma"
+### Community 4 - "testa-idioma"
 Cohesion: 0.24
 Nodes (16): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, casa(), contem(), falha() (+8 more)
-
-### Community 4 - "testa-servicos"
-Cohesion: 0.24
-Nodes (17): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, chmod_funciona(), contem(), falha() (+9 more)
 
 ### Community 5 - "25-idioma"
 Cohesion: 0.18
@@ -91,17 +91,17 @@ Nodes (14): campo(), chama(), contem(), ENVIOS_LOG, falha(), grupo(), igual(), m
 Cohesion: 0.18
 Nodes (9): campo_meminfo(), ignorar_montagem(), le_cpu_bruto(), mede_cpu(), mede_disco(), mede_memoria(), _saida_df(), _saida_df_inodes() (+1 more)
 
-### Community 9 - "90-main"
+### Community 9 - "29-servicos"
+Cohesion: 0.27
+Nodes (9): aplica_relay_no_postfix(), aplica_servico_email(), aplica_servico_telegram(), aplica_servicos_do_painel(), bloco_json(), escreve_arquivo_de_credencial(), le_do_arquivo(), mta_e_nosso() (+1 more)
+
+### Community 10 - "90-main"
 Cohesion: 0.26
 Nodes (9): autoteste(), avalia_e_notifica(), principal(), registra_heartbeat(), rodada(), 90-main.sh script, sincroniza_config(), status() (+1 more)
 
-### Community 10 - "testa-migracao"
+### Community 11 - "testa-migracao"
 Cohesion: 0.33
 Nodes (11): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, falha(), igual(), naotem(), ok() (+3 more)
-
-### Community 11 - "29-servicos"
-Cohesion: 0.31
-Nodes (7): aplica_servico_email(), aplica_servico_telegram(), aplica_servicos_do_painel(), bloco_json(), escreve_arquivo_de_credencial(), le_do_arquivo(), 29-servicos.sh script
 
 ### Community 12 - "40-estado"
 Cohesion: 0.20
@@ -131,28 +131,28 @@ Nodes (7): aplica_remetente(), atualiza_generic_do_postfix(), dominio_do_postfix
 Cohesion: 0.32
 Nodes (5): avalia(), banda_de(), espera_renotificacao(), 50-avaliar.sh script, valor_para_fechar_load()
 
-### Community 19 - "20-config"
+### Community 19 - "send_html_alert"
+Cohesion: 0.46
+Nodes (7): codifica_cabecalho(), envia_direto(), monta_mime(), mta_e_nosso(), send_html_alert.sh script, tem_smtp_do_painel(), usa_smtp_direto()
+
+### Community 20 - "20-config"
 Cohesion: 0.40
 Nodes (3): carrega_config(), 20-config.sh script, valida_config()
 
-### Community 20 - "27-templates"
+### Community 21 - "27-templates"
 Cohesion: 0.40
 Nodes (3): escreve_template(), 27-templates.sh script, sincroniza_templates()
 
-### Community 21 - "send_html_alert"
-Cohesion: 0.60
-Nodes (5): codifica_cabecalho(), envia_direto(), monta_mime(), send_html_alert.sh script, tem_smtp_do_painel()
-
 ## Knowledge Gaps
-- **57 isolated node(s):** `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script`, `20-config.sh script`, `25-idioma.sh script` (+52 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 117 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **59 isolated node(s):** `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script`, `20-config.sh script`, `25-idioma.sh script` (+54 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 119 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **What connects `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script` to the rest of the system?**
-  _57 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _59 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `roda-testes` be split into smaller, more focused modules?**
   _Cohesion score 0.12681159420289856 - nodes in this community are weakly interconnected._
 - **Should `10-util` be split into smaller, more focused modules?**

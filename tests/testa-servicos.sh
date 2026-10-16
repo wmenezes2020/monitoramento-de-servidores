@@ -220,9 +220,10 @@ igual "sasl_passwd intacto" "$ANTES_SASL"    "$(cat "${SANDBOX}/etc/postfix/sasl
 igual "generic intacto"     "$ANTES_GENERIC" "$(cat "${SANDBOX}/etc/postfix/generic")"
 
 # =========================================================================
-grupo "Sem conta no painel, o caminho antigo continua valendo"
+grupo "Postfix nosso: atualiza e envia pela propria maquina"
 # =========================================================================
 
+# O mail de mentira registra que o envio saiu pela propria maquina.
 cat >"${SANDBOX}/falso/mail" <<'FALSO'
 #!/usr/bin/env bash
 cat >/dev/null
@@ -230,6 +231,80 @@ printf 'MAIL_USADO\n' >>"$CURL_LOG"
 exit 0
 FALSO
 chmod +x "${SANDBOX}/falso/mail"
+#
+# A regra, na palavra do dono: so usar o envio direto quando JA EXISTIR um MTA
+# instalado que NAO e nosso. Sendo nosso, a conta do painel e aplicada nele e o
+# envio continua saindo pela maquina, como sempre saiu.
+#
+# A marca no main.cf e o que separa um caso do outro: e a linha que o nosso
+# instalador escreve quando e ele quem configura o Postfix.
+
+MARCA='# --- Sistema de Monitoramento de Servidores ---'
+printf '%s
+relayhost = [smtp.antigo.com]:587
+myhostname = loja.exemplo
+' "$MARCA"   >"${SANDBOX}/etc/postfix/main.cf"
+printf '[smtp.antigo.com]:587 antigo:senha-antiga
+[outro.destino.com]:25 terceiro:outra
+'   >"${SANDBOX}/etc/postfix/sasl_passwd"
+
+export POSTFIX_MAIN="${SANDBOX}/etc/postfix/main.cf"
+export POSTFIX_SASL="${SANDBOX}/etc/postfix/sasl_passwd"
+
+verdade "reconhece o Postfix que nos configuramos" mta_e_nosso
+
+# postmap e postfix de mentira: o teste nao tem Postfix e nao vai ter.
+for prog in postmap postfix; do
+  printf '#!/usr/bin/env bash
+exit 0
+' >"${SANDBOX}/falso/${prog}"
+  chmod +x "${SANDBOX}/falso/${prog}"
+done
+
+PATH="${SANDBOX}/falso:${PATH}" aplica_relay_no_postfix "smtp.novo.com" "2525" "novo@empresa.com" "senha-nova"
+SASL="$(cat "${SANDBOX}/etc/postfix/sasl_passwd")"
+MAIN="$(cat "${SANDBOX}/etc/postfix/main.cf")"
+
+contem "a conta nova entrou no mapa"        "$SASL" "[smtp.novo.com]:2525 novo@empresa.com:senha-nova"
+nao_contem "e a anterior do mesmo destino saiu" "$SASL" "antigo:senha-antiga"
+contem "a linha de terceiro foi preservada" "$SASL" "[outro.destino.com]:25 terceiro:outra"
+contem "o relayhost aponta para o novo"     "$MAIN" "relayhost = [smtp.novo.com]:2525"
+contem "e a marca do instalador continua la" "$MAIN" "$MARCA"
+
+# Com Postfix nosso, o enviador NAO vai por fora, mesmo tendo conta do painel.
+printf 'SMTP_HOST="smtp.gmail.com"
+SMTP_PORTA="587"
+SMTP_SEGURO="0"
+SMTP_USUARIO="avisos@empresa.com"
+SMTP_SENHA="abcd efgh"
+' >"${SANDBOX}/smtp.conf"
+: >"$CHAMADAS"
+PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" POSTFIX_MAIN="${SANDBOX}/etc/postfix/main.cf"   bash "${SANDBOX}/envia.sh" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>"   >/dev/null 2>&1
+
+contem     "com Postfix nosso, envia pela maquina" "$(cat "$CHAMADAS")" "MAIL_USADO"
+nao_contem "e nao chama o SMTP por fora"           "$(cat "$CHAMADAS")" "URL=smtp"
+
+# Tirando a marca, o mesmo servidor vira "MTA de outra pessoa" e o envio passa
+# a ir por fora, sem tocar em nada.
+printf 'relayhost = [smtp.doutro.com]:587
+myhostname = loja.exemplo
+' >"${SANDBOX}/etc/postfix/main.cf"
+mentira "sem a marca, o MTA nao e nosso" mta_e_nosso
+
+: >"$CHAMADAS"
+PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" POSTFIX_MAIN="${SANDBOX}/etc/postfix/main.cf"   bash "${SANDBOX}/envia.sh" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>"   >/dev/null 2>&1
+
+contem     "MTA de terceiro: envia direto" "$(cat "$CHAMADAS")" "URL=smtp://smtp.gmail.com:587"
+nao_contem "e nao usa o mail da maquina"   "$(cat "$CHAMADAS")" "MAIL_USADO"
+
+# Maquina sem Postfix nenhum: nao ha o que usar, entao vai direto.
+rm -f "${SANDBOX}/etc/postfix/main.cf"
+mentira "sem main.cf, o MTA nao e nosso" mta_e_nosso
+unset POSTFIX_MAIN POSTFIX_SASL
+
+# =========================================================================
+grupo "Sem conta no painel, o caminho antigo continua valendo"
+# =========================================================================
 
 : >"$CHAMADAS"
 : >"${SANDBOX}/smtp.conf"   # sem conta do painel

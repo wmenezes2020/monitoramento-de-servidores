@@ -170,11 +170,22 @@ O laço envia um por um e devolve sucesso se ao menos um passou. Endereço com
 erro de digitação no meio da lista não pode calar o alerta para o resto do
 time, e cada falha vai para o registro com o endereço.
 
-### Conta do painel envia direto, sem tocar no MTA da máquina
+### MTA nosso tem precedência; direto só no que não é nosso
 
-Havendo `smtp.conf` (gravado pelo agente com o que veio do painel), o
-`send_html_alert.sh` envia por `curl` direto ao SMTP. Ele não instala Postfix,
-não edita `main.cf`, não toca em `sasl_passwd` nem em `generic`.
+A regra tem duas metades, e a ordem entre elas importa:
+
+1. **O Postfix da máquina é nosso** (tem a marca do instalador no `main.cf`):
+   a conta do painel é aplicada NELE, por `aplica_relay_no_postfix`, e o envio
+   continua saindo pela própria máquina, como sempre saiu. Atualizar o que é
+   nosso é diferente de mexer no que não é.
+2. **O serviço de e-mail é de outra pessoa, ou não existe:** nada é tocado, e o
+   envio vai direto ao SMTP por `curl`.
+
+`mta_e_nosso()` existe nos dois lados, no agente e no enviador, e procura a
+mesma linha: `# --- Sistema de Monitoramento de Servidores ---`.
+
+No caminho direto, o agente não instala Postfix, não edita `main.cf`, não toca
+em `sasl_passwd` nem em `generic`.
 
 O motivo é concreto: `detect_mail_conflict`, no instalador, acha Postfix, Exim,
 Sendmail ou cPanel e **desliga o e-mail** para não brigar com eles. Protege o
@@ -188,8 +199,13 @@ Dois pontos que não podem ser relaxados:
 - **`--ssl-reqd` fora da porta 465.** Servidor sem TLS faz o alerta não sair,
   em vez de a credencial viajar em texto claro.
 
-`testa-servicos.sh` monta um servidor que já tem Postfix de outra pessoa e
-compara `main.cf`, `sasl_passwd` e `generic` byte a byte depois do envio.
+`testa-servicos.sh` cobre os três casos com o mesmo servidor de teste: com a
+marca, sem a marca e sem `main.cf` nenhum. No caso de terceiro, compara
+`main.cf`, `sasl_passwd` e `generic` byte a byte depois do envio.
+
+**Trocar a conta no painel tira do `sasl_passwd` a linha do relay anterior**,
+que era nossa e guardava uma senha que não serve mais. Linha de qualquer outro
+destino fica: pode ser regra que alguém somou à mão.
 
 ### Bloco ausente não apaga configuração
 

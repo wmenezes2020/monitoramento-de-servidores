@@ -100,6 +100,28 @@ tem_smtp_do_painel() {
     && command -v curl >/dev/null 2>&1
 }
 
+# O Postfix da maquina foi configurado pelo nosso instalador?
+#
+# Sendo nosso, o envio SAI POR ELE, mesmo com conta vinda do painel: o agente
+# ja aplicou a conta no relay (ver aplica_relay_no_postfix), entao passar por
+# fora seria abrir um segundo caminho de envio para a mesma conta, com outra
+# fila e outro log, sem ganho nenhum.
+#
+# O envio direto existe para o caso oposto: servidor com Exim de painel de
+# hospedagem, com cPanel ou com Postfix de outra pessoa, onde nao se toca em
+# nada. E tambem para a maquina sem MTA nenhum, onde nao ha o que usar.
+mta_e_nosso() {
+  local main_cf="${POSTFIX_MAIN:-/etc/postfix/main.cf}"
+  [[ -f "$main_cf" ]] || return 1
+  grep -qF '# --- Sistema de Monitoramento de Servidores ---' "$main_cf" 2>/dev/null
+}
+
+usa_smtp_direto() {
+  tem_smtp_do_painel || return 1
+  mta_e_nosso && return 1
+  return 0
+}
+
 # envia_direto DESTINATARIO ARQUIVO_MIME
 envia_direto() {
   local destinatario="$1" arquivo="$2"
@@ -166,7 +188,7 @@ for BRUTO in "${LISTA[@]}"; do
   RECIPIENT="$(printf '%s' "$BRUTO" | tr -d '[:space:]')"
   [[ -z "$RECIPIENT" ]] && continue
 
-  if tem_smtp_do_painel; then
+  if usa_smtp_direto; then
     MIME_FILE="$(mktemp /tmp/alerta.XXXXXX.eml)" || exit 1
     monta_mime "$RECIPIENT" "$MIME_FILE"
     if envia_direto "$RECIPIENT" "$MIME_FILE"; then
