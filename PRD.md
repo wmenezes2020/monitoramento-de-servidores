@@ -106,6 +106,10 @@ falhar.
 | RF-14 | Varrer com ClamAV diariamente e alertar sobre arquivo infectado |
 | RF-15 | Aplicar o remetente de e-mail definido no painel, inclusive no Postfix |
 | RF-16 | Entregar o alerta a todos os destinatários da lista, um envio por endereço |
+| RF-24 | Enviar direto pelo SMTP da conta escolhida no painel, sem instalar nem alterar serviço de e-mail da máquina |
+| RF-25 | Receber do painel a conta de envio e o bot, e aplicá-los no ciclo de configuração |
+| RF-26 | Instalar sem perguntar o que o painel já tem cadastrado |
+| RF-27 | Medir e enviar a saúde da máquina: fila nas três janelas, programas, linhas de execução e tempo ligado |
 | RF-17 | Dizer em uma frase o que houve, o que causa e se precisa de alguém agora |
 | RF-18 | Espaçar a renotificação de incidente longo, dobrando até o teto de um dia |
 | RF-19 | Só alertar por fila (load) ou contenção (steal) com sintoma medido junto |
@@ -133,6 +137,33 @@ falhar.
 - Não monitora aplicação (endpoint HTTP, fila, latência). Só o servidor.
 
 ## Histórico
+
+### 2.5.0, 2026-10-16: conta de envio do painel e saúde da máquina
+
+**Servidor com serviço de e-mail já instalado voltou a avisar por e-mail.** O
+instalador detecta Postfix, Exim, Sendmail e cPanel e, achando qualquer um,
+desliga o e-mail para não brigar com o que existe. A proteção estava certa e o
+preço era alto: a máquina ficava sem alerta por e-mail, calada.
+
+Agora, quando há conta de envio escolhida no painel, o agente fala direto com
+o servidor de e-mail por `curl`. Não instala nada, não edita `main.cf`, não
+toca em `sasl_passwd` nem em `generic`, e convive com o Exim de um painel de
+hospedagem sem disputar nada.
+
+**Conta e bot deixaram de ser cópia por servidor.** Eles são cadastro do
+painel, com título, e cada servidor escolhe qual usa. O agente aplica a escolha
+no mesmo ciclo em que busca limiares e idioma.
+
+**A instalação parou de perguntar o que o painel já sabe.** Conectado ao
+painel, com conta cadastrada, o instalador liga o e-mail sozinho e pula as
+perguntas de SMTP.
+
+**Saúde da máquina.** O agente passou a enviar a fila de processos nas três
+janelas, quantos programas existem e quantos estão trabalhando, as linhas de
+execução e o tempo ligado. Vai junto das métricas, então fica na série temporal
+e o filtro de data do painel alcança.
+
+Detalhe em `docs/SDD_SERVICOS_E_SAUDE.md`.
 
 ### 2.4.0, 2026-10-15: aviso que se entende de olho batido, e só quando importa
 

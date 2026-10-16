@@ -88,6 +88,26 @@
       "tests_testa_idioma_verdade"
     ],
     "4": [
+      "tests_testa_servicos",
+      "tests_testa_servicos_agente_bin",
+      "tests_testa_servicos_agente_estado",
+      "tests_testa_servicos_agente_log",
+      "tests_testa_servicos_agente_raiz",
+      "tests_testa_servicos_agente_so_carregar",
+      "tests_testa_servicos_chmod_funciona",
+      "tests_testa_servicos_contem",
+      "tests_testa_servicos_falha",
+      "tests_testa_servicos_grupo",
+      "tests_testa_servicos_igual",
+      "tests_testa_servicos_mentira",
+      "tests_testa_servicos_nao_contem",
+      "tests_testa_servicos_ok",
+      "tests_testa_servicos_permissao_600",
+      "tests_testa_servicos_pulado",
+      "tests_testa_servicos_sh__entry",
+      "tests_testa_servicos_verdade"
+    ],
+    "5": [
       "src_agent_25_idioma",
       "src_agent_25_idioma_data_local",
       "src_agent_25_idioma_duracao_humana",
@@ -106,7 +126,7 @@
       "src_agent_25_idioma_unidade_metrica",
       "src_agent_25_idioma_urgencia"
     ],
-    "5": [
+    "6": [
       "tests_testa_ruido",
       "tests_testa_ruido_agente_bin",
       "tests_testa_ruido_agente_estado",
@@ -125,7 +145,7 @@
       "tests_testa_ruido_sh__entry",
       "tests_testa_ruido_verdade"
     ],
-    "6": [
+    "7": [
       "tests_testa_envio_email",
       "tests_testa_envio_email_campo",
       "tests_testa_envio_email_chama",
@@ -143,7 +163,7 @@
       "tests_testa_envio_email_so_ascii",
       "tests_testa_envio_email_verdade"
     ],
-    "7": [
+    "8": [
       "src_agent_30_medir",
       "src_agent_30_medir_campo_meminfo",
       "src_agent_30_medir_ignorar_montagem",
@@ -153,12 +173,14 @@
       "src_agent_30_medir_mede_disco",
       "src_agent_30_medir_mede_load",
       "src_agent_30_medir_mede_memoria",
+      "src_agent_30_medir_mede_threads",
+      "src_agent_30_medir_mede_uptime",
       "src_agent_30_medir_saida_df",
       "src_agent_30_medir_saida_df_inodes",
       "src_agent_30_medir_sh__entry",
       "src_agent_30_medir_top_processos"
     ],
-    "8": [
+    "9": [
       "src_agent_90_main",
       "src_agent_90_main_autoteste",
       "src_agent_90_main_avalia_e_notifica",
@@ -173,7 +195,7 @@
       "src_agent_90_main_status",
       "src_agent_90_main_uso"
     ],
-    "9": [
+    "10": [
       "tests_testa_migracao",
       "tests_testa_migracao_agente_bin",
       "tests_testa_migracao_agente_estado",
@@ -187,7 +209,20 @@
       "tests_testa_migracao_sh__entry",
       "tests_testa_migracao_tem"
     ],
-    "10": [
+    "11": [
+      "src_agent_29_servicos",
+      "src_agent_29_servicos_aplica_servico_email",
+      "src_agent_29_servicos_aplica_servico_telegram",
+      "src_agent_29_servicos_aplica_servicos_do_painel",
+      "src_agent_29_servicos_bloco_json",
+      "src_agent_29_servicos_campo_json",
+      "src_agent_29_servicos_campo_json_booleano",
+      "src_agent_29_servicos_campo_json_numero",
+      "src_agent_29_servicos_escreve_arquivo_de_credencial",
+      "src_agent_29_servicos_le_do_arquivo",
+      "src_agent_29_servicos_sh__entry"
+    ],
+    "12": [
       "src_agent_40_estado",
       "src_agent_40_estado_caminho_estado",
       "src_agent_40_estado_consome_orcamento",
@@ -200,7 +235,7 @@
       "src_agent_40_estado_sh__entry",
       "src_agent_40_estado_silencio_ativo"
     ],
-    "11": [
+    "13": [
       "src_agent_80_bootstrap",
       "src_agent_80_bootstrap_escreve_config_inicial",
       "src_agent_80_bootstrap_instala_binarios",
@@ -213,7 +248,7 @@
       "src_agent_80_bootstrap_sh__entry",
       "src_agent_80_bootstrap_sou_root"
     ],
-    "12": [
+    "14": [
       "json",
       "path",
       "pathlib",
@@ -225,7 +260,7 @@
       "scripts_gerar_grafo_rationale_2",
       "sys"
     ],
-    "13": [
+    "15": [
       "src_agent_60_notificar",
       "src_agent_60_notificar_despacha_agregado",
       "src_agent_60_notificar_envia_alerta",
@@ -237,7 +272,7 @@
       "src_agent_60_notificar_sh__entry",
       "src_agent_60_notificar_template_de"
     ],
-    "14": [
+    "16": [
       "src_agent_70_autoupdate",
       "src_agent_70_autoupdate_atualiza_agente",
       "src_agent_70_autoupdate_baixa",
@@ -249,7 +284,7 @@
       "src_agent_70_autoupdate_versao_instalada",
       "src_agent_70_autoupdate_versao_maior"
     ],
-    "15": [
+    "17": [
       "src_agent_28_remetente",
       "src_agent_28_remetente_aplica_remetente",
       "src_agent_28_remetente_atualiza_generic_do_postfix",
@@ -259,7 +294,7 @@
       "src_agent_28_remetente_le_do_email_conf",
       "src_agent_28_remetente_sh__entry"
     ],
-    "16": [
+    "18": [
       "src_agent_50_avaliar",
       "src_agent_50_avaliar_avalia",
       "src_agent_50_avaliar_banda_de",
@@ -269,7 +304,7 @@
       "src_agent_50_avaliar_sh__entry",
       "src_agent_50_avaliar_valor_para_fechar_load"
     ],
-    "17": [
+    "19": [
       "src_agent_20_config",
       "src_agent_20_config_carrega_config",
       "src_agent_20_config_limiar_de",
@@ -277,7 +312,7 @@
       "src_agent_20_config_sh__entry",
       "src_agent_20_config_valida_config"
     ],
-    "18": [
+    "20": [
       "src_agent_27_templates",
       "src_agent_27_templates_escreve_template",
       "src_agent_27_templates_idioma_html",
@@ -285,21 +320,24 @@
       "src_agent_27_templates_sincroniza_templates",
       "src_agent_27_templates_templates_lista"
     ],
-    "19": [
+    "21": [
+      "src_envio_send_html_alert",
+      "src_envio_send_html_alert_codifica_cabecalho",
+      "src_envio_send_html_alert_envia_direto",
+      "src_envio_send_html_alert_monta_mime",
+      "src_envio_send_html_alert_sh__entry",
+      "src_envio_send_html_alert_tem_smtp_do_painel"
+    ],
+    "22": [
       "scripts_build",
       "scripts_build_sh__entry",
       "scripts_build_sha"
     ],
-    "20": [
-      "src_envio_send_html_alert",
-      "src_envio_send_html_alert_codifica_cabecalho",
-      "src_envio_send_html_alert_sh__entry"
-    ],
-    "21": [
+    "23": [
       "src_agent_00_cabecalho",
       "src_agent_00_cabecalho_sh__entry"
     ],
-    "22": [
+    "24": [
       "src_envio_send_telegram_alert",
       "src_envio_send_telegram_alert_sh__entry"
     ]
@@ -309,25 +347,27 @@
     "1": 0.1871345029239766,
     "2": 0.1437908496732026,
     "3": 0.23529411764705882,
-    "4": 0.17647058823529413,
-    "5": 0.2647058823529412,
-    "6": 0.3,
-    "7": 0.21794871794871795,
-    "8": 0.2564102564102564,
-    "9": 0.3333333333333333,
-    "10": 0.2,
+    "4": 0.24183006535947713,
+    "5": 0.17647058823529413,
+    "6": 0.2647058823529412,
+    "7": 0.3,
+    "8": 0.18095238095238095,
+    "9": 0.2564102564102564,
+    "10": 0.3333333333333333,
     "11": 0.3090909090909091,
-    "12": 0.26666666666666666,
-    "13": 0.28888888888888886,
-    "14": 0.3333333333333333,
-    "15": 0.42857142857142855,
-    "16": 0.32142857142857145,
-    "17": 0.4,
-    "18": 0.4,
-    "19": 0.6666666666666666,
-    "20": 1.0,
-    "21": 1.0,
-    "22": 1.0
+    "12": 0.2,
+    "13": 0.3090909090909091,
+    "14": 0.26666666666666666,
+    "15": 0.28888888888888886,
+    "16": 0.3333333333333333,
+    "17": 0.42857142857142855,
+    "18": 0.32142857142857145,
+    "19": 0.4,
+    "20": 0.4,
+    "21": 0.6,
+    "22": 0.6666666666666666,
+    "23": 1.0,
+    "24": 1.0
   },
   "gods": [
     {
@@ -356,6 +396,11 @@
       "degree": 8
     },
     {
+      "id": "tests_testa_servicos_sh__entry",
+      "label": "testa-servicos.sh script",
+      "degree": 8
+    },
+    {
       "id": "tests_roda_testes_sh__entry",
       "label": "roda-testes.sh script",
       "degree": 7
@@ -374,11 +419,6 @@
       "id": "tests_testa_idioma_ok",
       "label": "ok()",
       "degree": 7
-    },
-    {
-      "id": "tests_testa_idioma_falha",
-      "label": "falha()",
-      "degree": 7
     }
   ],
   "surprises": [],
@@ -386,7 +426,7 @@
     {
       "type": "isolated_nodes",
       "question": "What connects `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script` to the rest of the system?",
-      "why": "51 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "why": "57 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
       "type": "low_cohesion",

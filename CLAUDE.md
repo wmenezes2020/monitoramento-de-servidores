@@ -105,6 +105,7 @@ receber aviso nenhum.
 ./tests/testa-remetente.sh    #  28 verificações do remetente e do Postfix
 ./tests/testa-envio-email.sh  #  25 verificações do envio de e-mail
 ./tests/testa-ruido.sh        #  77 verificações do que NÃO deve virar alerta
+./tests/testa-servicos.sh     #  44 verificações dos serviços vindos do painel
 ```
 
 Todas precisam estar verdes. Elas rodam em qualquer máquina com
@@ -168,6 +169,44 @@ deixou só o primeiro da lista recebendo até a 2.3.0.
 O laço envia um por um e devolve sucesso se ao menos um passou. Endereço com
 erro de digitação no meio da lista não pode calar o alerta para o resto do
 time, e cada falha vai para o registro com o endereço.
+
+### Conta do painel envia direto, sem tocar no MTA da máquina
+
+Havendo `smtp.conf` (gravado pelo agente com o que veio do painel), o
+`send_html_alert.sh` envia por `curl` direto ao SMTP. Ele não instala Postfix,
+não edita `main.cf`, não toca em `sasl_passwd` nem em `generic`.
+
+O motivo é concreto: `detect_mail_conflict`, no instalador, acha Postfix, Exim,
+Sendmail ou cPanel e **desliga o e-mail** para não brigar com eles. Protege o
+servidor e deixava o monitoramento mudo, para sempre, sem ninguém notar.
+
+Dois pontos que não podem ser relaxados:
+
+- **Senha nunca na linha de comando.** `--user usuario:senha` fica visível no
+  `ps` para qualquer usuário da máquina. Ela vai num arquivo de configuração do
+  `curl`, com permissão 600 antes de receber conteúdo, apagado no fim.
+- **`--ssl-reqd` fora da porta 465.** Servidor sem TLS faz o alerta não sair,
+  em vez de a credencial viajar em texto claro.
+
+`testa-servicos.sh` monta um servidor que já tem Postfix de outra pessoa e
+compara `main.cf`, `sasl_passwd` e `generic` byte a byte depois do envio.
+
+### Bloco ausente não apaga configuração
+
+Em `aplica_servicos_do_painel`, bloco que não veio quer dizer "nada escolhido
+no painel", e não "apague o que existe". Quem nunca abriu a tela de serviços
+não pode perder o envio que já funcionava.
+
+Os arquivos `smtp.conf` e `telegram.conf` nascem com 600 **antes** de receber
+conteúdo: criar aberto e apertar depois deixa uma janela em que a senha fica
+legível para qualquer usuário da máquina.
+
+### Teste que o ambiente não consegue provar é pulado, não aprovado
+
+`chmod` não tem efeito em todo sistema de arquivos: no Git Bash sobre NTFS ele
+é aceito e ignorado. `testa-servicos.sh` descobre isso sozinho e marca a
+verificação como **pulada**, com o motivo. Marcar verde ali seria dizer que a
+permissão foi conferida quando não foi.
 
 ### O manifesto coerente com os arquivos
 

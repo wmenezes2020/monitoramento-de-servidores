@@ -70,6 +70,10 @@ sincroniza_config() {
     *) log_erro "painel mandou idioma desconhecido (${idioma_novo}); mantido ${IDIOMA}" ;;
   esac
 
+  # Conta de envio e bot escolhidos no painel. Quando vem, o envio deixa de
+  # depender do servico de e-mail da maquina: ver 29-servicos.sh.
+  aplica_servicos_do_painel "$resp" || true
+
   local nome
   nome="$(printf '%s' "$resp" | sed -n 's/.*"server_name":"\([^"]*\)".*/\1/p' | head -1)"
   if [[ -n "$nome" && -f "${AGENTE_RAIZ}/email.conf" ]]; then
@@ -174,6 +178,10 @@ rodada() {
   mede_memoria || log_erro "memoria sem medida nesta rodada"
   mede_load    || true
   mede_disco   || true
+  # Nao derrubam a rodada: servidor sem /proc/uptime legivel continua sendo
+  # vigiado, so fica sem essa linha no painel.
+  mede_uptime  || true
+  mede_threads || true
 
   local proc_cpu proc_mem html_cpu html_mem
   proc_cpu="$(top_processos cpu 12)"

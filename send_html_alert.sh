@@ -11,6 +11,9 @@ set -uo pipefail
 
 [[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf 2>/dev/null
 [[ -f /opt/monitoring/agent.conf ]] && source /opt/monitoring/agent.conf 2>/dev/null
+# Conta de envio escolhida no painel. Existindo, o envio vai direto ao SMTP e
+# nao passa pelo servico de e-mail da maquina. Ver o bloco "envio direto".
+[[ -f /opt/monitoring/smtp.conf ]] && source /opt/monitoring/smtp.conf 2>/dev/null
 
 TEMPLATE_PATH="${1:-/opt/alerts/templates/alert.html}"
 RECIPIENTS="${2:-}"
@@ -75,6 +78,77 @@ FROM_HEADER="$(codifica_cabecalho "$NOME_REMETENTE") <${REMETENTE}>"
 ASSUNTO="$(codifica_cabecalho "$SUBJECT")"
 
 # ---------------------------------------------------------------------------
+# Envio direto pelo SMTP, sem passar pelo servico de e-mail da maquina
+# ---------------------------------------------------------------------------
+#
+# Por que este caminho existe, com nome e sobrenome:
+#
+# O instalador procura Postfix, Exim, Sendmail e cPanel antes de configurar
+# qualquer coisa. Achando um deles, ele NAO instala e NAO configura, para nao
+# brigar com o que ja esta rodando. A protecao e correta e tem um custo que
+# ninguem via: o servidor fica sem alerta por e-mail, calado, para sempre.
+#
+# Falando direto com o SMTP, o agente nao instala nada, nao edita main.cf, nao
+# toca em sasl_passwd nem em generic, e convive com o Exim de um painel de
+# hospedagem ou com o Postfix de outra pessoa sem disputar nada.
+#
+# A senha NAO entra na linha de comando: qualquer usuario da maquina leria no
+# "ps". Ela vai num arquivo de configuracao do curl, criado com permissao 600
+# antes de receber conteudo e apagado na saida.
+tem_smtp_do_painel() {
+  [[ -n "${SMTP_HOST:-}" && -n "${SMTP_USUARIO:-}" && -n "${SMTP_SENHA:-}" ]] \
+    && command -v curl >/dev/null 2>&1
+}
+
+# envia_direto DESTINATARIO ARQUIVO_MIME
+envia_direto() {
+  local destinatario="$1" arquivo="$2"
+  local esquema="smtp" porta="${SMTP_PORTA:-587}" extra=()
+
+  # Porta 465 fala TLS desde o primeiro byte (smtps). As demais sobem para TLS
+  # com STARTTLS, e --ssl-reqd recusa seguir em texto claro se o servidor nao
+  # oferecer: mandar credencial em claro seria pior que nao mandar o alerta.
+  if [[ "${SMTP_SEGURO:-0}" == "1" || "$porta" == "465" ]]; then
+    esquema="smtps"
+  else
+    extra+=(--ssl-reqd)
+  fi
+
+  local cfg
+  cfg="$(mktemp /tmp/smtp.XXXXXX.conf)" || return 1
+  chmod 600 "$cfg" 2>/dev/null || true
+  printf 'user = "%s:%s"\n' "$SMTP_USUARIO" "$SMTP_SENHA" >"$cfg"
+
+  curl --silent --show-error --config "$cfg" \
+    --url "${esquema}://${SMTP_HOST}:${porta}" \
+    --mail-from "$REMETENTE" \
+    --mail-rcpt "$destinatario" \
+    --upload-file "$arquivo" \
+    --connect-timeout 15 --max-time 60 \
+    "${extra[@]}" 2>/dev/null
+  local codigo=$?
+  rm -f "$cfg"
+  return "$codigo"
+}
+
+# Monta a mensagem inteira, com cabecalhos, do jeito que o SMTP espera receber.
+# O `mail` fazia isso por nos no caminho antigo.
+monta_mime() {
+  local destinatario="$1" saida="$2"
+  {
+    printf 'From: %s\n' "$FROM_HEADER"
+    printf 'To: %s\n' "$destinatario"
+    printf 'Subject: %s\n' "$ASSUNTO"
+    printf 'Date: %s\n' "$(date -R 2>/dev/null || date)"
+    printf 'MIME-Version: 1.0\n'
+    printf 'Content-Type: text/html; charset=UTF-8\n'
+    printf 'Content-Transfer-Encoding: 8bit\n'
+    printf '\n'
+    cat "$RENDERED_FILE"
+  } >"$saida"
+}
+
+# ---------------------------------------------------------------------------
 # Um envio por destinatario
 # ---------------------------------------------------------------------------
 #
@@ -92,7 +166,18 @@ for BRUTO in "${LISTA[@]}"; do
   RECIPIENT="$(printf '%s' "$BRUTO" | tr -d '[:space:]')"
   [[ -z "$RECIPIENT" ]] && continue
 
-  if command -v mail >/dev/null 2>&1; then
+  if tem_smtp_do_painel; then
+    MIME_FILE="$(mktemp /tmp/alerta.XXXXXX.eml)" || exit 1
+    monta_mime "$RECIPIENT" "$MIME_FILE"
+    if envia_direto "$RECIPIENT" "$MIME_FILE"; then
+      enviado=$(( enviado + 1 ))
+    else
+      recusado=$(( recusado + 1 ))
+      printf 'send_html_alert: envio direto para %s falhou (SMTP %s:%s)\n' \
+        "$RECIPIENT" "$SMTP_HOST" "${SMTP_PORTA:-587}" >&2
+    fi
+    rm -f "$MIME_FILE"
+  elif command -v mail >/dev/null 2>&1; then
     if mail -r "$REMETENTE" \
       -a "From: $FROM_HEADER" \
       -a "Content-Type: text/html; charset=UTF-8" \

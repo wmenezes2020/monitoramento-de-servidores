@@ -8,7 +8,7 @@
       "label": "alvos()",
       "_callable": true,
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "code",
       "norm_label": "alvos()",
       "source_file": "scripts/gerar-grafo.py",
@@ -19,7 +19,7 @@
       "label": "arquivos_do_corpus()",
       "_callable": true,
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "code",
       "norm_label": "arquivos_do_corpus()",
       "source_file": "scripts/gerar-grafo.py",
@@ -30,7 +30,7 @@
       "label": "limpa_midia()",
       "_callable": true,
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "code",
       "norm_label": "limpa_midia()",
       "source_file": "scripts/gerar-grafo.py",
@@ -41,7 +41,7 @@
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "scripts/gerar-grafo.py",
@@ -650,10 +650,332 @@
       "source_location": "L31"
     },
     {
+      "id": "tests_testa_migracao",
+      "label": "testa-migracao.sh",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "testa-migracao.sh",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_testa_migracao_agente_bin",
+      "label": "AGENTE_BIN",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_bin",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L30"
+    },
+    {
+      "id": "tests_testa_migracao_agente_estado",
+      "label": "AGENTE_ESTADO",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_estado",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L28"
+    },
+    {
+      "id": "tests_testa_migracao_agente_log",
+      "label": "AGENTE_LOG",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_log",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L29"
+    },
+    {
+      "id": "tests_testa_migracao_agente_raiz",
+      "label": "AGENTE_RAIZ",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_raiz",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L27"
+    },
+    {
+      "id": "tests_testa_migracao_falha",
+      "label": "falha()",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "falha()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L18"
+    },
+    {
+      "id": "tests_testa_migracao_igual",
+      "label": "igual()",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "igual()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L20"
+    },
+    {
+      "id": "tests_testa_migracao_naotem",
+      "label": "naotem()",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "naotem()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L22"
+    },
+    {
+      "id": "tests_testa_migracao_ok",
+      "label": "ok()",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "ok()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L17"
+    },
+    {
+      "id": "tests_testa_migracao_path",
+      "label": "PATH",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "path",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L58"
+    },
+    {
+      "id": "tests_testa_migracao_sh__entry",
+      "label": "testa-migracao.sh script",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "testa-migracao.sh script",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_testa_migracao_tem",
+      "label": "tem()",
+      "_origin": "ast",
+      "community": 10,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "tem()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L21"
+    },
+    {
+      "id": "src_agent_29_servicos",
+      "label": "29-servicos.sh",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "29-servicos.sh",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_29_servicos_aplica_servico_email",
+      "label": "aplica_servico_email()",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "aplica_servico_email()",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L55"
+    },
+    {
+      "id": "src_agent_29_servicos_aplica_servico_telegram",
+      "label": "aplica_servico_telegram()",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "aplica_servico_telegram()",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L102"
+    },
+    {
+      "id": "src_agent_29_servicos_aplica_servicos_do_painel",
+      "label": "aplica_servicos_do_painel()",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "aplica_servicos_do_painel()",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L156"
+    },
+    {
+      "id": "src_agent_29_servicos_bloco_json",
+      "label": "bloco_json()",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "bloco_json()",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L146"
+    },
+    {
+      "id": "src_agent_29_servicos_campo_json",
+      "label": "campo_json()",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "campo_json()",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L129"
+    },
+    {
+      "id": "src_agent_29_servicos_campo_json_booleano",
+      "label": "campo_json_booleano()",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "campo_json_booleano()",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L139"
+    },
+    {
+      "id": "src_agent_29_servicos_campo_json_numero",
+      "label": "campo_json_numero()",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "campo_json_numero()",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L134"
+    },
+    {
+      "id": "src_agent_29_servicos_escreve_arquivo_de_credencial",
+      "label": "escreve_arquivo_de_credencial()",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "escreve_arquivo_de_credencial()",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L38"
+    },
+    {
+      "id": "src_agent_29_servicos_le_do_arquivo",
+      "label": "le_do_arquivo()",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "le_do_arquivo()",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L29"
+    },
+    {
+      "id": "src_agent_29_servicos_sh__entry",
+      "label": "29-servicos.sh script",
+      "_origin": "ast",
+      "community": 11,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "29-servicos.sh script",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L1"
+    },
+    {
       "id": "src_agent_40_estado",
       "label": "40-estado.sh",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -667,7 +989,7 @@
       "id": "src_agent_40_estado_caminho_estado",
       "label": "caminho_estado()",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -681,7 +1003,7 @@
       "id": "src_agent_40_estado_consome_orcamento",
       "label": "consome_orcamento()",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -695,7 +1017,7 @@
       "id": "src_agent_40_estado_encerra_silencio",
       "label": "encerra_silencio()",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -709,7 +1031,7 @@
       "id": "src_agent_40_estado_grava_estado",
       "label": "grava_estado()",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -723,7 +1045,7 @@
       "id": "src_agent_40_estado_inicia_silencio",
       "label": "inicia_silencio()",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -737,7 +1059,7 @@
       "id": "src_agent_40_estado_le_estado",
       "label": "le_estado()",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -751,7 +1073,7 @@
       "id": "src_agent_40_estado_nome_seguro",
       "label": "nome_seguro()",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -765,7 +1087,7 @@
       "id": "src_agent_40_estado_orcamento_estourado",
       "label": "orcamento_estourado()",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -779,7 +1101,7 @@
       "id": "src_agent_40_estado_sh__entry",
       "label": "40-estado.sh script",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -793,7 +1115,7 @@
       "id": "src_agent_40_estado_silencio_ativo",
       "label": "silencio_ativo()",
       "_origin": "ast",
-      "community": 10,
+      "community": 12,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -807,7 +1129,7 @@
       "id": "src_agent_80_bootstrap",
       "label": "80-bootstrap.sh",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -821,7 +1143,7 @@
       "id": "src_agent_80_bootstrap_escreve_config_inicial",
       "label": "escreve_config_inicial()",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -835,7 +1157,7 @@
       "id": "src_agent_80_bootstrap_instala_binarios",
       "label": "instala_binarios()",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -849,7 +1171,7 @@
       "id": "src_agent_80_bootstrap_instala_cron",
       "label": "instala_cron()",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -863,7 +1185,7 @@
       "id": "src_agent_80_bootstrap_le_legado",
       "label": "le_legado()",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -877,7 +1199,7 @@
       "id": "src_agent_80_bootstrap_meu_caminho",
       "label": "meu_caminho()",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -891,7 +1213,7 @@
       "id": "src_agent_80_bootstrap_precisa_bootstrap",
       "label": "precisa_bootstrap()",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -905,7 +1227,7 @@
       "id": "src_agent_80_bootstrap_preserva_destinatarios",
       "label": "preserva_destinatarios()",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -919,7 +1241,7 @@
       "id": "src_agent_80_bootstrap_roda_bootstrap",
       "label": "roda_bootstrap()",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -933,7 +1255,7 @@
       "id": "src_agent_80_bootstrap_sh__entry",
       "label": "80-bootstrap.sh script",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -947,7 +1269,7 @@
       "id": "src_agent_80_bootstrap_sou_root",
       "label": "sou_root()",
       "_origin": "ast",
-      "community": 11,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -961,7 +1283,7 @@
       "id": "path",
       "label": "Path",
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "code",
       "norm_label": "path",
       "source_file": "",
@@ -971,7 +1293,7 @@
       "id": "scripts_gerar_grafo",
       "label": "gerar-grafo.py",
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "code",
       "norm_label": "gerar-grafo.py",
       "source_file": "scripts/gerar-grafo.py",
@@ -981,7 +1303,7 @@
       "id": "scripts_gerar_grafo_rationale_2",
       "label": "Gera o grafo do repositorio em graphify-out/. python scripts/gerar-grafo.py usa\u2026",
       "_origin": "ast",
-      "community": 12,
+      "community": 14,
       "file_type": "rationale",
       "norm_label": "gera o grafo do repositorio em graphify-out/. python scripts/gerar-grafo.py usa...",
       "source_file": "scripts/gerar-grafo.py",
@@ -991,7 +1313,7 @@
       "id": "src_agent_60_notificar",
       "label": "60-notificar.sh",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1005,7 +1327,7 @@
       "id": "src_agent_60_notificar_despacha_agregado",
       "label": "despacha_agregado()",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1019,7 +1341,7 @@
       "id": "src_agent_60_notificar_envia_alerta",
       "label": "envia_alerta()",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1033,7 +1355,7 @@
       "id": "src_agent_60_notificar_envia_incidente_dashboard",
       "label": "envia_incidente_dashboard()",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1047,7 +1369,7 @@
       "id": "src_agent_60_notificar_envia_metricas_dashboard",
       "label": "envia_metricas_dashboard()",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1061,7 +1383,7 @@
       "id": "src_agent_60_notificar_monta_corpo",
       "label": "monta_corpo()",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1075,7 +1397,7 @@
       "id": "src_agent_60_notificar_monta_texto_tg",
       "label": "monta_texto_tg()",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1089,7 +1411,7 @@
       "id": "src_agent_60_notificar_registra_agregado",
       "label": "registra_agregado()",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1103,7 +1425,7 @@
       "id": "src_agent_60_notificar_sh__entry",
       "label": "60-notificar.sh script",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1117,7 +1439,7 @@
       "id": "src_agent_60_notificar_template_de",
       "label": "template_de()",
       "_origin": "ast",
-      "community": 13,
+      "community": 15,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1131,7 +1453,7 @@
       "id": "src_agent_70_autoupdate",
       "label": "70-autoupdate.sh",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1145,7 +1467,7 @@
       "id": "src_agent_70_autoupdate_atualiza_agente",
       "label": "atualiza_agente()",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1159,7 +1481,7 @@
       "id": "src_agent_70_autoupdate_baixa",
       "label": "baixa()",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1173,7 +1495,7 @@
       "id": "src_agent_70_autoupdate_limpa_update",
       "label": "_limpa_update()",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1187,7 +1509,7 @@
       "id": "src_agent_70_autoupdate_reporta_falha_update",
       "label": "reporta_falha_update()",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1201,7 +1523,7 @@
       "id": "src_agent_70_autoupdate_restaura_rollback",
       "label": "restaura_rollback()",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1215,7 +1537,7 @@
       "id": "src_agent_70_autoupdate_sh__entry",
       "label": "70-autoupdate.sh script",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1229,7 +1551,7 @@
       "id": "src_agent_70_autoupdate_sha256_de",
       "label": "sha256_de()",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1243,7 +1565,7 @@
       "id": "src_agent_70_autoupdate_versao_instalada",
       "label": "versao_instalada()",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1257,7 +1579,7 @@
       "id": "src_agent_70_autoupdate_versao_maior",
       "label": "versao_maior()",
       "_origin": "ast",
-      "community": 14,
+      "community": 16,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1271,7 +1593,7 @@
       "id": "src_agent_28_remetente",
       "label": "28-remetente.sh",
       "_origin": "ast",
-      "community": 15,
+      "community": 17,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1285,7 +1607,7 @@
       "id": "src_agent_28_remetente_aplica_remetente",
       "label": "aplica_remetente()",
       "_origin": "ast",
-      "community": 15,
+      "community": 17,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1299,7 +1621,7 @@
       "id": "src_agent_28_remetente_atualiza_generic_do_postfix",
       "label": "atualiza_generic_do_postfix()",
       "_origin": "ast",
-      "community": 15,
+      "community": 17,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1313,7 +1635,7 @@
       "id": "src_agent_28_remetente_dominio_do_postfix",
       "label": "dominio_do_postfix()",
       "_origin": "ast",
-      "community": 15,
+      "community": 17,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1327,7 +1649,7 @@
       "id": "src_agent_28_remetente_email_valido",
       "label": "email_valido()",
       "_origin": "ast",
-      "community": 15,
+      "community": 17,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1341,7 +1663,7 @@
       "id": "src_agent_28_remetente_grava_no_email_conf",
       "label": "grava_no_email_conf()",
       "_origin": "ast",
-      "community": 15,
+      "community": 17,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1355,7 +1677,7 @@
       "id": "src_agent_28_remetente_le_do_email_conf",
       "label": "le_do_email_conf()",
       "_origin": "ast",
-      "community": 15,
+      "community": 17,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1369,7 +1691,7 @@
       "id": "src_agent_28_remetente_sh__entry",
       "label": "28-remetente.sh script",
       "_origin": "ast",
-      "community": 15,
+      "community": 17,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1383,7 +1705,7 @@
       "id": "src_agent_50_avaliar",
       "label": "50-avaliar.sh",
       "_origin": "ast",
-      "community": 16,
+      "community": 18,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1397,7 +1719,7 @@
       "id": "src_agent_50_avaliar_avalia",
       "label": "avalia()",
       "_origin": "ast",
-      "community": 16,
+      "community": 18,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1411,7 +1733,7 @@
       "id": "src_agent_50_avaliar_banda_de",
       "label": "banda_de()",
       "_origin": "ast",
-      "community": 16,
+      "community": 18,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1425,7 +1747,7 @@
       "id": "src_agent_50_avaliar_diagnostico",
       "label": "diagnostico()",
       "_origin": "ast",
-      "community": 16,
+      "community": 18,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1439,7 +1761,7 @@
       "id": "src_agent_50_avaliar_espera_renotificacao",
       "label": "espera_renotificacao()",
       "_origin": "ast",
-      "community": 16,
+      "community": 18,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1453,7 +1775,7 @@
       "id": "src_agent_50_avaliar_load_vira_alerta",
       "label": "load_vira_alerta()",
       "_origin": "ast",
-      "community": 16,
+      "community": 18,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1467,7 +1789,7 @@
       "id": "src_agent_50_avaliar_sh__entry",
       "label": "50-avaliar.sh script",
       "_origin": "ast",
-      "community": 16,
+      "community": 18,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1481,7 +1803,7 @@
       "id": "src_agent_50_avaliar_valor_para_fechar_load",
       "label": "valor_para_fechar_load()",
       "_origin": "ast",
-      "community": 16,
+      "community": 18,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1495,7 +1817,7 @@
       "id": "src_agent_20_config",
       "label": "20-config.sh",
       "_origin": "ast",
-      "community": 17,
+      "community": 19,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1509,7 +1831,7 @@
       "id": "src_agent_20_config_carrega_config",
       "label": "carrega_config()",
       "_origin": "ast",
-      "community": 17,
+      "community": 19,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1523,7 +1845,7 @@
       "id": "src_agent_20_config_limiar_de",
       "label": "limiar_de()",
       "_origin": "ast",
-      "community": 17,
+      "community": 19,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1537,7 +1859,7 @@
       "id": "src_agent_20_config_mapeia_vigiar",
       "label": "mapeia_vigiar()",
       "_origin": "ast",
-      "community": 17,
+      "community": 19,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1551,7 +1873,7 @@
       "id": "src_agent_20_config_sh__entry",
       "label": "20-config.sh script",
       "_origin": "ast",
-      "community": 17,
+      "community": 19,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1565,7 +1887,7 @@
       "id": "src_agent_20_config_valida_config",
       "label": "valida_config()",
       "_origin": "ast",
-      "community": 17,
+      "community": 19,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1574,132 +1896,6 @@
       "norm_label": "valida_config()",
       "source_file": "src/agent/20-config.sh",
       "source_location": "L133"
-    },
-    {
-      "id": "src_agent_27_templates",
-      "label": "27-templates.sh",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "27-templates.sh",
-      "source_file": "src/agent/27-templates.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_27_templates_escreve_template",
-      "label": "escreve_template()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "escreve_template()",
-      "source_file": "src/agent/27-templates.sh",
-      "source_location": "L32"
-    },
-    {
-      "id": "src_agent_27_templates_idioma_html",
-      "label": "idioma_html()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "idioma_html()",
-      "source_file": "src/agent/27-templates.sh",
-      "source_location": "L79"
-    },
-    {
-      "id": "src_agent_27_templates_sh__entry",
-      "label": "27-templates.sh script",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "27-templates.sh script",
-      "source_file": "src/agent/27-templates.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_27_templates_sincroniza_templates",
-      "label": "sincroniza_templates()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "sincroniza_templates()",
-      "source_file": "src/agent/27-templates.sh",
-      "source_location": "L90"
-    },
-    {
-      "id": "src_agent_27_templates_templates_lista",
-      "label": "_templates_lista()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "_templates_lista()",
-      "source_file": "src/agent/27-templates.sh",
-      "source_location": "L23"
-    },
-    {
-      "id": "scripts_build",
-      "label": "build.sh",
-      "_origin": "ast",
-      "community": 19,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "build.sh",
-      "source_file": "scripts/build.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "scripts_build_sh__entry",
-      "label": "build.sh script",
-      "_origin": "ast",
-      "community": 19,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "build.sh script",
-      "source_file": "scripts/build.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "scripts_build_sha",
-      "label": "sha()",
-      "_origin": "ast",
-      "community": 19,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "sha()",
-      "source_file": "scripts/build.sh",
-      "source_location": "L53"
     },
     {
       "id": "src_agent_10_util",
@@ -1954,10 +2150,94 @@
       "source_location": "L122"
     },
     {
+      "id": "src_agent_27_templates",
+      "label": "27-templates.sh",
+      "_origin": "ast",
+      "community": 20,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "27-templates.sh",
+      "source_file": "src/agent/27-templates.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_27_templates_escreve_template",
+      "label": "escreve_template()",
+      "_origin": "ast",
+      "community": 20,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "escreve_template()",
+      "source_file": "src/agent/27-templates.sh",
+      "source_location": "L32"
+    },
+    {
+      "id": "src_agent_27_templates_idioma_html",
+      "label": "idioma_html()",
+      "_origin": "ast",
+      "community": 20,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "idioma_html()",
+      "source_file": "src/agent/27-templates.sh",
+      "source_location": "L79"
+    },
+    {
+      "id": "src_agent_27_templates_sh__entry",
+      "label": "27-templates.sh script",
+      "_origin": "ast",
+      "community": 20,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "27-templates.sh script",
+      "source_file": "src/agent/27-templates.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_27_templates_sincroniza_templates",
+      "label": "sincroniza_templates()",
+      "_origin": "ast",
+      "community": 20,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "sincroniza_templates()",
+      "source_file": "src/agent/27-templates.sh",
+      "source_location": "L90"
+    },
+    {
+      "id": "src_agent_27_templates_templates_lista",
+      "label": "_templates_lista()",
+      "_origin": "ast",
+      "community": 20,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "_templates_lista()",
+      "source_file": "src/agent/27-templates.sh",
+      "source_location": "L23"
+    },
+    {
       "id": "src_envio_send_html_alert",
       "label": "send_html_alert.sh",
       "_origin": "ast",
-      "community": 20,
+      "community": 21,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1971,7 +2251,7 @@
       "id": "src_envio_send_html_alert_codifica_cabecalho",
       "label": "codifica_cabecalho()",
       "_origin": "ast",
-      "community": 20,
+      "community": 21,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1979,13 +2259,41 @@
       },
       "norm_label": "codifica_cabecalho()",
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L38"
+      "source_location": "L41"
+    },
+    {
+      "id": "src_envio_send_html_alert_envia_direto",
+      "label": "envia_direto()",
+      "_origin": "ast",
+      "community": 21,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "envia_direto()",
+      "source_file": "src/envio/send_html_alert.sh",
+      "source_location": "L104"
+    },
+    {
+      "id": "src_envio_send_html_alert_monta_mime",
+      "label": "monta_mime()",
+      "_origin": "ast",
+      "community": 21,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "monta_mime()",
+      "source_file": "src/envio/send_html_alert.sh",
+      "source_location": "L136"
     },
     {
       "id": "src_envio_send_html_alert_sh__entry",
       "label": "send_html_alert.sh script",
       "_origin": "ast",
-      "community": 20,
+      "community": 21,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -1996,10 +2304,66 @@
       "source_location": "L1"
     },
     {
+      "id": "src_envio_send_html_alert_tem_smtp_do_painel",
+      "label": "tem_smtp_do_painel()",
+      "_origin": "ast",
+      "community": 21,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "tem_smtp_do_painel()",
+      "source_file": "src/envio/send_html_alert.sh",
+      "source_location": "L98"
+    },
+    {
+      "id": "scripts_build",
+      "label": "build.sh",
+      "_origin": "ast",
+      "community": 22,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "build.sh",
+      "source_file": "scripts/build.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "scripts_build_sh__entry",
+      "label": "build.sh script",
+      "_origin": "ast",
+      "community": 22,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "build.sh script",
+      "source_file": "scripts/build.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "scripts_build_sha",
+      "label": "sha()",
+      "_origin": "ast",
+      "community": 22,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "sha()",
+      "source_file": "scripts/build.sh",
+      "source_location": "L53"
+    },
+    {
       "id": "src_agent_00_cabecalho",
       "label": "00-cabecalho.sh",
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2013,7 +2377,7 @@
       "id": "src_agent_00_cabecalho_sh__entry",
       "label": "00-cabecalho.sh script",
       "_origin": "ast",
-      "community": 21,
+      "community": 23,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2027,7 +2391,7 @@
       "id": "src_envio_send_telegram_alert",
       "label": "send_telegram_alert.sh",
       "_origin": "ast",
-      "community": 22,
+      "community": 24,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2041,7 +2405,7 @@
       "id": "src_envio_send_telegram_alert_sh__entry",
       "label": "send_telegram_alert.sh script",
       "_origin": "ast",
-      "community": 22,
+      "community": 24,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2304,10 +2668,262 @@
       "source_location": "L30"
     },
     {
+      "id": "tests_testa_servicos",
+      "label": "testa-servicos.sh",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "testa-servicos.sh",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_testa_servicos_agente_bin",
+      "label": "AGENTE_BIN",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_bin",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L72"
+    },
+    {
+      "id": "tests_testa_servicos_agente_estado",
+      "label": "AGENTE_ESTADO",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_estado",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L71"
+    },
+    {
+      "id": "tests_testa_servicos_agente_log",
+      "label": "AGENTE_LOG",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_log",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L72"
+    },
+    {
+      "id": "tests_testa_servicos_agente_raiz",
+      "label": "AGENTE_RAIZ",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_raiz",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L71"
+    },
+    {
+      "id": "tests_testa_servicos_agente_so_carregar",
+      "label": "AGENTE_SO_CARREGAR",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_so_carregar",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L73"
+    },
+    {
+      "id": "tests_testa_servicos_chmod_funciona",
+      "label": "chmod_funciona()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "chmod_funciona()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L50"
+    },
+    {
+      "id": "tests_testa_servicos_contem",
+      "label": "contem()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "contem()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L37"
+    },
+    {
+      "id": "tests_testa_servicos_falha",
+      "label": "falha()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "falha()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L29"
+    },
+    {
+      "id": "tests_testa_servicos_grupo",
+      "label": "grupo()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "grupo()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L27"
+    },
+    {
+      "id": "tests_testa_servicos_igual",
+      "label": "igual()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "igual()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L36"
+    },
+    {
+      "id": "tests_testa_servicos_mentira",
+      "label": "mentira()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "mentira()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L40"
+    },
+    {
+      "id": "tests_testa_servicos_nao_contem",
+      "label": "nao_contem()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "nao_contem()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L38"
+    },
+    {
+      "id": "tests_testa_servicos_ok",
+      "label": "ok()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "ok()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L28"
+    },
+    {
+      "id": "tests_testa_servicos_permissao_600",
+      "label": "permissao_600()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "permissao_600()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L60"
+    },
+    {
+      "id": "tests_testa_servicos_pulado",
+      "label": "pulado()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "pulado()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L43"
+    },
+    {
+      "id": "tests_testa_servicos_sh__entry",
+      "label": "testa-servicos.sh script",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "testa-servicos.sh script",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_testa_servicos_verdade",
+      "label": "verdade()",
+      "_origin": "ast",
+      "community": 4,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "verdade()",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L39"
+    },
+    {
       "id": "src_agent_25_idioma",
       "label": "25-idioma.sh",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2321,7 +2937,7 @@
       "id": "src_agent_25_idioma_data_local",
       "label": "data_local()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2335,7 +2951,7 @@
       "id": "src_agent_25_idioma_duracao_humana",
       "label": "duracao_humana()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2349,7 +2965,7 @@
       "id": "src_agent_25_idioma_frase_problema",
       "label": "frase_problema()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2363,7 +2979,7 @@
       "id": "src_agent_25_idioma_frase_recuperacao",
       "label": "frase_recuperacao()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2377,7 +2993,7 @@
       "id": "src_agent_25_idioma_idioma_normalizado",
       "label": "idioma_normalizado()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2391,7 +3007,7 @@
       "id": "src_agent_25_idioma_impacto_metrica",
       "label": "impacto_metrica()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2405,7 +3021,7 @@
       "id": "src_agent_25_idioma_msg_en",
       "label": "msg_en()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2419,7 +3035,7 @@
       "id": "src_agent_25_idioma_msg_es",
       "label": "msg_es()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2433,7 +3049,7 @@
       "id": "src_agent_25_idioma_msg_pt",
       "label": "msg_pt()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2447,7 +3063,7 @@
       "id": "src_agent_25_idioma_prefixo_assunto",
       "label": "prefixo_assunto()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2461,7 +3077,7 @@
       "id": "src_agent_25_idioma_rotulo_metrica",
       "label": "rotulo_metrica()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2475,7 +3091,7 @@
       "id": "src_agent_25_idioma_sh__entry",
       "label": "25-idioma.sh script",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2489,7 +3105,7 @@
       "id": "src_agent_25_idioma_sujeito_metrica",
       "label": "sujeito_metrica()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2503,7 +3119,7 @@
       "id": "src_agent_25_idioma_t",
       "label": "t()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2517,7 +3133,7 @@
       "id": "src_agent_25_idioma_unidade_metrica",
       "label": "unidade_metrica()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2531,7 +3147,7 @@
       "id": "src_agent_25_idioma_urgencia",
       "label": "urgencia()",
       "_origin": "ast",
-      "community": 4,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2545,7 +3161,7 @@
       "id": "tests_testa_ruido",
       "label": "testa-ruido.sh",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2559,7 +3175,7 @@
       "id": "tests_testa_ruido_agente_bin",
       "label": "AGENTE_BIN",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2573,7 +3189,7 @@
       "id": "tests_testa_ruido_agente_estado",
       "label": "AGENTE_ESTADO",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2587,7 +3203,7 @@
       "id": "tests_testa_ruido_agente_log",
       "label": "AGENTE_LOG",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2601,7 +3217,7 @@
       "id": "tests_testa_ruido_agente_raiz",
       "label": "AGENTE_RAIZ",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2615,7 +3231,7 @@
       "id": "tests_testa_ruido_agente_so_carregar",
       "label": "AGENTE_SO_CARREGAR",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2629,7 +3245,7 @@
       "id": "tests_testa_ruido_antes_de",
       "label": "antes_de()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2643,7 +3259,7 @@
       "id": "tests_testa_ruido_contem",
       "label": "contem()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2657,7 +3273,7 @@
       "id": "tests_testa_ruido_envelhece",
       "label": "envelhece()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2671,7 +3287,7 @@
       "id": "tests_testa_ruido_falha",
       "label": "falha()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2685,7 +3301,7 @@
       "id": "tests_testa_ruido_grupo",
       "label": "grupo()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2699,7 +3315,7 @@
       "id": "tests_testa_ruido_igual",
       "label": "igual()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2713,7 +3329,7 @@
       "id": "tests_testa_ruido_mentira",
       "label": "mentira()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2727,7 +3343,7 @@
       "id": "tests_testa_ruido_nao_contem",
       "label": "nao_contem()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2741,7 +3357,7 @@
       "id": "tests_testa_ruido_ok",
       "label": "ok()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2755,7 +3371,7 @@
       "id": "tests_testa_ruido_sh__entry",
       "label": "testa-ruido.sh script",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2769,7 +3385,7 @@
       "id": "tests_testa_ruido_verdade",
       "label": "verdade()",
       "_origin": "ast",
-      "community": 5,
+      "community": 6,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2783,7 +3399,7 @@
       "id": "tests_testa_envio_email",
       "label": "testa-envio-email.sh",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2797,7 +3413,7 @@
       "id": "tests_testa_envio_email_campo",
       "label": "campo()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2811,7 +3427,7 @@
       "id": "tests_testa_envio_email_chama",
       "label": "chama()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2825,7 +3441,7 @@
       "id": "tests_testa_envio_email_contem",
       "label": "contem()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2839,7 +3455,7 @@
       "id": "tests_testa_envio_email_envios_log",
       "label": "ENVIOS_LOG",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2853,7 +3469,7 @@
       "id": "tests_testa_envio_email_falha",
       "label": "falha()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2867,7 +3483,7 @@
       "id": "tests_testa_envio_email_grupo",
       "label": "grupo()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2881,7 +3497,7 @@
       "id": "tests_testa_envio_email_igual",
       "label": "igual()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2895,7 +3511,7 @@
       "id": "tests_testa_envio_email_linhas",
       "label": "linhas()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2909,7 +3525,7 @@
       "id": "tests_testa_envio_email_mentira",
       "label": "mentira()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2923,7 +3539,7 @@
       "id": "tests_testa_envio_email_nao_contem",
       "label": "nao_contem()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2937,7 +3553,7 @@
       "id": "tests_testa_envio_email_ok",
       "label": "ok()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2951,7 +3567,7 @@
       "id": "tests_testa_envio_email_path",
       "label": "PATH",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2965,7 +3581,7 @@
       "id": "tests_testa_envio_email_sh__entry",
       "label": "testa-envio-email.sh script",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2979,7 +3595,7 @@
       "id": "tests_testa_envio_email_so_ascii",
       "label": "so_ascii()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2993,7 +3609,7 @@
       "id": "tests_testa_envio_email_verdade",
       "label": "verdade()",
       "_origin": "ast",
-      "community": 6,
+      "community": 7,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3007,7 +3623,7 @@
       "id": "src_agent_30_medir",
       "label": "30-medir.sh",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3021,7 +3637,7 @@
       "id": "src_agent_30_medir_campo_meminfo",
       "label": "campo_meminfo()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3035,7 +3651,7 @@
       "id": "src_agent_30_medir_ignorar_montagem",
       "label": "ignorar_montagem()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3043,13 +3659,13 @@
       },
       "norm_label": "ignorar_montagem()",
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L170"
+      "source_location": "L218"
     },
     {
       "id": "src_agent_30_medir_le_cpu_bruto",
       "label": "le_cpu_bruto()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3063,7 +3679,7 @@
       "id": "src_agent_30_medir_maiores_diretorios",
       "label": "maiores_diretorios()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3071,13 +3687,13 @@
       },
       "norm_label": "maiores_diretorios()",
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L238"
+      "source_location": "L286"
     },
     {
       "id": "src_agent_30_medir_mede_cpu",
       "label": "mede_cpu()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3091,7 +3707,7 @@
       "id": "src_agent_30_medir_mede_disco",
       "label": "mede_disco()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3099,13 +3715,13 @@
       },
       "norm_label": "mede_disco()",
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L182"
+      "source_location": "L230"
     },
     {
       "id": "src_agent_30_medir_mede_load",
       "label": "mede_load()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3119,7 +3735,7 @@
       "id": "src_agent_30_medir_mede_memoria",
       "label": "mede_memoria()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3130,10 +3746,38 @@
       "source_location": "L107"
     },
     {
+      "id": "src_agent_30_medir_mede_threads",
+      "label": "mede_threads()",
+      "_origin": "ast",
+      "community": 8,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "mede_threads()",
+      "source_file": "src/agent/30-medir.sh",
+      "source_location": "L198"
+    },
+    {
+      "id": "src_agent_30_medir_mede_uptime",
+      "label": "mede_uptime()",
+      "_origin": "ast",
+      "community": 8,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "mede_uptime()",
+      "source_file": "src/agent/30-medir.sh",
+      "source_location": "L187"
+    },
+    {
       "id": "src_agent_30_medir_saida_df",
       "label": "_saida_df()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3141,13 +3785,13 @@
       },
       "norm_label": "_saida_df()",
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L179"
+      "source_location": "L227"
     },
     {
       "id": "src_agent_30_medir_saida_df_inodes",
       "label": "_saida_df_inodes()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3155,13 +3799,13 @@
       },
       "norm_label": "_saida_df_inodes()",
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L180"
+      "source_location": "L228"
     },
     {
       "id": "src_agent_30_medir_sh__entry",
       "label": "30-medir.sh script",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3175,7 +3819,7 @@
       "id": "src_agent_30_medir_top_processos",
       "label": "top_processos()",
       "_origin": "ast",
-      "community": 7,
+      "community": 8,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3183,13 +3827,13 @@
       },
       "norm_label": "top_processos()",
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L215"
+      "source_location": "L263"
     },
     {
       "id": "src_agent_90_main",
       "label": "90-main.sh",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3203,7 +3847,7 @@
       "id": "src_agent_90_main_autoteste",
       "label": "autoteste()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3211,13 +3855,13 @@
       },
       "norm_label": "autoteste()",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L271"
+      "source_location": "L279"
     },
     {
       "id": "src_agent_90_main_avalia_e_notifica",
       "label": "avalia_e_notifica()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3225,13 +3869,13 @@
       },
       "norm_label": "avalia_e_notifica()",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L136"
+      "source_location": "L140"
     },
     {
       "id": "src_agent_90_main_fail",
       "label": "_fail()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3239,13 +3883,13 @@
       },
       "norm_label": "_fail()",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L274"
+      "source_location": "L282"
     },
     {
       "id": "src_agent_90_main_grava_conf",
       "label": "_grava_conf()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3259,7 +3903,7 @@
       "id": "src_agent_90_main_ok",
       "label": "_ok()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3267,13 +3911,13 @@
       },
       "norm_label": "_ok()",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L273"
+      "source_location": "L281"
     },
     {
       "id": "src_agent_90_main_principal",
       "label": "principal()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3281,13 +3925,13 @@
       },
       "norm_label": "principal()",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L398"
+      "source_location": "L406"
     },
     {
       "id": "src_agent_90_main_registra_heartbeat",
       "label": "registra_heartbeat()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3295,13 +3939,13 @@
       },
       "norm_label": "registra_heartbeat()",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L263"
+      "source_location": "L271"
     },
     {
       "id": "src_agent_90_main_rodada",
       "label": "rodada()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3309,13 +3953,13 @@
       },
       "norm_label": "rodada()",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L160"
+      "source_location": "L164"
     },
     {
       "id": "src_agent_90_main_sh__entry",
       "label": "90-main.sh script",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3329,7 +3973,7 @@
       "id": "src_agent_90_main_sincroniza_config",
       "label": "sincroniza_config()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3343,7 +3987,7 @@
       "id": "src_agent_90_main_status",
       "label": "status()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3351,13 +3995,13 @@
       },
       "norm_label": "status()",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L318"
+      "source_location": "L326"
     },
     {
       "id": "src_agent_90_main_uso",
       "label": "uso()",
       "_origin": "ast",
-      "community": 8,
+      "community": 9,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -3365,180 +4009,12 @@
       },
       "norm_label": "uso()",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L376"
-    },
-    {
-      "id": "tests_testa_migracao",
-      "label": "testa-migracao.sh",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "testa-migracao.sh",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_testa_migracao_agente_bin",
-      "label": "AGENTE_BIN",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_bin",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L30"
-    },
-    {
-      "id": "tests_testa_migracao_agente_estado",
-      "label": "AGENTE_ESTADO",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_estado",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L28"
-    },
-    {
-      "id": "tests_testa_migracao_agente_log",
-      "label": "AGENTE_LOG",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_log",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L29"
-    },
-    {
-      "id": "tests_testa_migracao_agente_raiz",
-      "label": "AGENTE_RAIZ",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_raiz",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L27"
-    },
-    {
-      "id": "tests_testa_migracao_falha",
-      "label": "falha()",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "falha()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L18"
-    },
-    {
-      "id": "tests_testa_migracao_igual",
-      "label": "igual()",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "igual()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L20"
-    },
-    {
-      "id": "tests_testa_migracao_naotem",
-      "label": "naotem()",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "naotem()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L22"
-    },
-    {
-      "id": "tests_testa_migracao_ok",
-      "label": "ok()",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "ok()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L17"
-    },
-    {
-      "id": "tests_testa_migracao_path",
-      "label": "PATH",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "path",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L58"
-    },
-    {
-      "id": "tests_testa_migracao_sh__entry",
-      "label": "testa-migracao.sh script",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "testa-migracao.sh script",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_testa_migracao_tem",
-      "label": "tem()",
-      "_origin": "ast",
-      "community": 9,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "tem()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L21"
+      "source_location": "L384"
     },
     {
       "id": "json",
       "label": "json",
-      "community": 12,
+      "community": 14,
       "external": true,
       "file_type": "concept",
       "norm_label": "json",
@@ -3548,7 +4024,7 @@
     {
       "id": "pathlib",
       "label": "pathlib",
-      "community": 12,
+      "community": 14,
       "external": true,
       "file_type": "concept",
       "norm_label": "pathlib",
@@ -3558,7 +4034,7 @@
     {
       "id": "sys",
       "label": "sys",
-      "community": 12,
+      "community": 14,
       "external": true,
       "file_type": "concept",
       "norm_label": "sys",
@@ -3844,6 +4320,90 @@
       "weight": 1.0
     },
     {
+      "source": "src_agent_29_servicos_aplica_servico_email",
+      "target": "src_agent_29_servicos_le_do_arquivo",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos_aplica_servico_email",
+      "target": "src_agent_29_servicos_escreve_arquivo_de_credencial",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos_aplica_servico_telegram",
+      "target": "src_agent_29_servicos_le_do_arquivo",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos_aplica_servico_telegram",
+      "target": "src_agent_29_servicos_escreve_arquivo_de_credencial",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos_aplica_servicos_do_painel",
+      "target": "src_agent_29_servicos_bloco_json",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L159",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos_aplica_servicos_do_painel",
+      "target": "src_agent_29_servicos_aplica_servico_email",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L161",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos_aplica_servicos_do_painel",
+      "target": "src_agent_29_servicos_aplica_servico_telegram",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L173",
+      "weight": 1.0
+    },
+    {
       "source": "src_agent_30_medir_mede_cpu",
       "target": "src_agent_30_medir_le_cpu_bruto",
       "relation": "calls",
@@ -3864,7 +4424,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L191",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -3876,7 +4436,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L192",
+      "source_location": "L240",
       "weight": 1.0
     },
     {
@@ -3888,7 +4448,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L202",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -4152,7 +4712,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L413",
+      "source_location": "L421",
       "weight": 1.0
     },
     {
@@ -4164,7 +4724,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L424",
+      "source_location": "L432",
       "weight": 1.0
     },
     {
@@ -4176,7 +4736,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L425",
+      "source_location": "L433",
       "weight": 1.0
     },
     {
@@ -4188,7 +4748,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L431",
+      "source_location": "L439",
       "weight": 1.0
     },
     {
@@ -4200,7 +4760,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L185",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -4212,7 +4772,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L255",
+      "source_location": "L263",
       "weight": 1.0
     },
     {
@@ -4224,7 +4784,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L259",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -4236,7 +4796,43 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L439",
+      "source_location": "L447",
+      "weight": 1.0
+    },
+    {
+      "source": "src_envio_send_html_alert_sh__entry",
+      "target": "src_envio_send_html_alert_tem_smtp_do_painel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/envio/send_html_alert.sh",
+      "source_location": "L169",
+      "weight": 1.0
+    },
+    {
+      "source": "src_envio_send_html_alert_sh__entry",
+      "target": "src_envio_send_html_alert_monta_mime",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/envio/send_html_alert.sh",
+      "source_location": "L171",
+      "weight": 1.0
+    },
+    {
+      "source": "src_envio_send_html_alert_sh__entry",
+      "target": "src_envio_send_html_alert_envia_direto",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/envio/send_html_alert.sh",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -4248,7 +4844,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L74",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -5416,6 +6012,246 @@
       "weight": 1.0
     },
     {
+      "source": "tests_testa_servicos_contem",
+      "target": "tests_testa_servicos_falha",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_contem",
+      "target": "tests_testa_servicos_ok",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_igual",
+      "target": "tests_testa_servicos_falha",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_igual",
+      "target": "tests_testa_servicos_ok",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_mentira",
+      "target": "tests_testa_servicos_falha",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_mentira",
+      "target": "tests_testa_servicos_ok",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_nao_contem",
+      "target": "tests_testa_servicos_falha",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_nao_contem",
+      "target": "tests_testa_servicos_ok",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_permissao_600",
+      "target": "tests_testa_servicos_chmod_funciona",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_permissao_600",
+      "target": "tests_testa_servicos_pulado",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_permissao_600",
+      "target": "tests_testa_servicos_igual",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_sh__entry",
+      "target": "tests_testa_servicos_mentira",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_sh__entry",
+      "target": "tests_testa_servicos_contem",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L203",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_sh__entry",
+      "target": "tests_testa_servicos_nao_contem",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L241",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_sh__entry",
+      "target": "tests_testa_servicos_grupo",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_sh__entry",
+      "target": "tests_testa_servicos_verdade",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L89",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_sh__entry",
+      "target": "tests_testa_servicos_igual",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_sh__entry",
+      "target": "tests_testa_servicos_permissao_600",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L97",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_verdade",
+      "target": "tests_testa_servicos_falha",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos_verdade",
+      "target": "tests_testa_servicos_ok",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
       "source": "src_agent_70_autoupdate_atualiza_agente",
       "target": "src_agent_70_autoupdate_limpa_update",
       "relation": "defines",
@@ -5436,7 +6272,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L273",
+      "source_location": "L281",
       "weight": 1.0
     },
     {
@@ -5448,7 +6284,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L274",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -5633,6 +6469,17 @@
       "weight": 1.0
     },
     {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_sh__entry",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
       "source": "src_agent_30_medir",
       "target": "src_agent_30_medir_sh__entry",
       "relation": "contains",
@@ -5794,6 +6641,17 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/testa-ruido.sh",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_sh__entry",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
       "source_location": "L1",
       "weight": 1.0
     },
@@ -6304,6 +7162,105 @@
       "weight": 1.0
     },
     {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_aplica_servico_telegram",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_campo_json",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L129",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_campo_json_numero",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L134",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_campo_json_booleano",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L139",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_bloco_json",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L146",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_aplica_servicos_do_painel",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L156",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_le_do_arquivo",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_escreve_arquivo_de_credencial",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_29_servicos",
+      "target": "src_agent_29_servicos_aplica_servico_email",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/29-servicos.sh",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
       "source": "src_agent_30_medir",
       "target": "src_agent_30_medir_campo_meminfo",
       "relation": "defines",
@@ -6349,13 +7306,35 @@
     },
     {
       "source": "src_agent_30_medir",
+      "target": "src_agent_30_medir_mede_uptime",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/30-medir.sh",
+      "source_location": "L187",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_30_medir",
+      "target": "src_agent_30_medir_mede_threads",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/agent/30-medir.sh",
+      "source_location": "L198",
+      "weight": 1.0
+    },
+    {
+      "source": "src_agent_30_medir",
       "target": "src_agent_30_medir_ignorar_montagem",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L170",
+      "source_location": "L218",
       "weight": 1.0
     },
     {
@@ -6366,7 +7345,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L179",
+      "source_location": "L227",
       "weight": 1.0
     },
     {
@@ -6377,7 +7356,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L180",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -6388,7 +7367,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L182",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -6399,7 +7378,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L215",
+      "source_location": "L263",
       "weight": 1.0
     },
     {
@@ -6410,7 +7389,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/30-medir.sh",
-      "source_location": "L238",
+      "source_location": "L286",
       "weight": 1.0
     },
     {
@@ -6872,7 +7851,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L136",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -6883,7 +7862,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L160",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -6894,7 +7873,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L263",
+      "source_location": "L271",
       "weight": 1.0
     },
     {
@@ -6905,7 +7884,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L271",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -6916,7 +7895,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L318",
+      "source_location": "L326",
       "weight": 1.0
     },
     {
@@ -6927,7 +7906,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L376",
+      "source_location": "L384",
       "weight": 1.0
     },
     {
@@ -6938,7 +7917,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/agent/90-main.sh",
-      "source_location": "L398",
+      "source_location": "L406",
+      "weight": 1.0
+    },
+    {
+      "source": "src_envio_send_html_alert",
+      "target": "src_envio_send_html_alert_envia_direto",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/envio/send_html_alert.sh",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "src_envio_send_html_alert",
+      "target": "src_envio_send_html_alert_monta_mime",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/envio/send_html_alert.sh",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -6949,7 +7950,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L38",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "src_envio_send_html_alert",
+      "target": "src_envio_send_html_alert_tem_smtp_do_painel",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/envio/send_html_alert.sh",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -7987,6 +8999,182 @@
       "weight": 1.0
     },
     {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_grupo",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_ok",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_falha",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_igual",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_contem",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_nao_contem",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_verdade",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_mentira",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_pulado",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L43",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_chmod_funciona",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_permissao_600",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_agente_estado",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_agente_raiz",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_agente_bin",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_agente_log",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_servicos",
+      "target": "tests_testa_servicos_agente_so_carregar",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-servicos.sh",
+      "source_location": "L73",
+      "weight": 1.0
+    },
+    {
       "source": "scripts_gerar_grafo_rationale_2",
       "target": "scripts_gerar_grafo",
       "relation": "rationale_for",
@@ -7999,5 +9187,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "349a625a1963dd4325e92040ec6255bf2a1e0917"
+  "built_at_commit": "d0e71e707e86ff47b6d693af9067844efc400cc3"
 }
