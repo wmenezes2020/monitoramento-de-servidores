@@ -138,6 +138,20 @@ falhar.
 
 ## Histórico
 
+### 2.5.1, 2026-10-16: o serviço de e-mail que é nosso tem precedência
+
+A 2.5.0 passou a enviar direto pelo SMTP sempre que havia conta no painel. A
+regra ficou larga demais: em servidor onde o Postfix foi instalado por nós, o
+envio deixava de usar a máquina sem precisar.
+
+Agora o agente olha a marca do instalador no `main.cf`. Sendo nosso, a conta do
+painel é aplicada no próprio Postfix (relay, usuário e senha) e o e-mail
+continua saindo pela máquina. Não sendo nosso, ou não havendo serviço de e-mail
+nenhum, o envio vai direto ao SMTP, sem tocar em nada.
+
+A troca de conta também limpa do mapa a linha do relay anterior, que era nossa
+e guardava uma senha sem uso. Linha de outro destino é preservada.
+
 ### 2.5.0, 2026-10-16: conta de envio do painel e saúde da máquina
 
 **Servidor com serviço de e-mail já instalado voltou a avisar por e-mail.** O
