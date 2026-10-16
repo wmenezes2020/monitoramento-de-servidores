@@ -37,6 +37,13 @@ problema de verdade chega, a mensagem passa junto com as outras trinta.
 Uma execução por minuto. Sem `mpstat`, sem `bc`, sem dependência que possa
 faltar em servidor mínimo.
 
+### Avisa cada vez menos do mesmo
+
+A renotificação de um incidente que continua aberto dobra a cada repetição,
+de uma hora até um dia. Seis dias de problema rendem dez avisos, não cento e
+quarenta e oito. Piorar de atenção para crítico zera a conta, porque isso vale
+interromper alguém de novo.
+
 ### Decide
 
 Máquina de estado com histerese por métrica:
@@ -52,9 +59,16 @@ Um pico isolado nunca vira mensagem.
 ### Avisa
 
 Por e-mail (SMTP2Go via Postfix), Telegram e o painel de observabilidade.
-Cada alerta traz o valor, há quanto tempo está assim, o pico, o estado geral
-do servidor e uma frase dizendo por onde começar a investigação. Incidente
-resolvido gera aviso de recuperação com a duração e o pico.
+
+O aviso é escrito para ser entendido de olho batido, na ordem das perguntas de
+quem abre: o que houve, o que isso causa para quem usa o servidor, se precisa
+de alguém agora, o que fazer, e só então o número. O assunto já diz tudo isso
+em uma linha, por exemplo `[ATENÇÃO] loja-01: Memória quase cheia (98%)`.
+
+O valor, o limiar, o pico, há quanto tempo está assim, a tabela do servidor e
+os maiores processos continuam todos no e-mail, embaixo, para quem for
+investigar. Incidente resolvido gera aviso de recuperação com a duração e o
+pico.
 
 O e-mail sai pelo remetente cadastrado para aquele servidor no painel, e cada
 endereço da lista de destinatários recebe seu próprio envio: um endereço com
@@ -92,6 +106,9 @@ falhar.
 | RF-14 | Varrer com ClamAV diariamente e alertar sobre arquivo infectado |
 | RF-15 | Aplicar o remetente de e-mail definido no painel, inclusive no Postfix |
 | RF-16 | Entregar o alerta a todos os destinatários da lista, um envio por endereço |
+| RF-17 | Dizer em uma frase o que houve, o que causa e se precisa de alguém agora |
+| RF-18 | Espaçar a renotificação de incidente longo, dobrando até o teto de um dia |
+| RF-19 | Só alertar por fila (load) ou contenção (steal) com sintoma medido junto |
 
 ## Requisitos não funcionais
 
@@ -116,6 +133,44 @@ falhar.
 - Não monitora aplicação (endpoint HTTP, fila, latência). Só o servidor.
 
 ## Histórico
+
+### 2.4.0, 2026-10-15: aviso que se entende de olho batido, e só quando importa
+
+Um e-mail real abriu com `Load average en 1.56 en <servidor>` e a reação de
+quem recebeu foi: não dá para saber do que se trata. Ele estava certo, e o
+mesmo e-mail trazia cinco defeitos.
+
+**O incidente renotificava de hora em hora havia seis dias.** Perto de 148
+e-mails iguais, que é exatamente como se ensina alguém a ignorar o alerta. A
+espera passou a dobrar a cada repetição, de uma hora até um dia.
+
+**O load virava incidente sozinho.** O servidor tinha load 1.56 por núcleo,
+CPU em 67.9%, iowait em 1.0% e 18.6 GB de memória livre: estava trabalhando,
+não sofrendo. Load é medida de fila, e fila só dói acompanhada de CPU saturada
+ou de espera de disco. Agora ele exige sintoma medido no mesmo ciclo, como o
+steal já exigia desde a 2.1.0, e o limiar de fábrica subiu de 1.5 para 2.5 por
+núcleo.
+
+**O texto era jargão.** Um número e uma unidade não são um aviso. O e-mail
+passou a abrir pelo que o problema causa, seguido de uma linha que diz se
+precisa de alguém agora, depois o que fazer, e só então o número.
+
+**O bloco de processos saía em português dentro do e-mail em espanhol**,
+embora as chaves traduzidas existissem desde a 2.1.0.
+
+**E o incidente de load não tinha como se fechar.** Este foi o mais grave, e
+só apareceu ao conferir o fechamento. A banda de saída da histerese vinha em
+pontos percentuais para toda métrica, e descontar 8 pontos de um limiar 2.5 dá
+número negativo, que fica preso em zero: o incidente de load só se fecharia com
+o load exatamente zero, o que não acontece em servidor ligado. Ele abria e
+ficava aberto, renotificando. A banda passou a vir na unidade da métrica.
+
+**A lista de processos acusava o próprio medidor.** O primeiro lugar era do
+comando `ps` com 400%, porque o percentual dele é calculado sobre uma vida de
+milissegundos, e o agente vinha logo abaixo. Quem lia concluía que o
+monitoramento era o que estava consumindo o servidor.
+
+Detalhe em `docs/SDD_ALERTA_NO_BRAIN.md`.
 
 ### 2.3.0, 2026-10-14: o alerta de abertura voltou a chegar
 

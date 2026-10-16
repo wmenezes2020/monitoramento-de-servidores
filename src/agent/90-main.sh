@@ -140,18 +140,18 @@ avalia_e_notifica() {
   local lim_at lim_cr
   read -r lim_at lim_cr <<<"$(limiar_de "$metrica")"
 
-  avalia "$chave" "$valor" "$lim_at" "$lim_cr"
+  avalia "$chave" "$valor" "$lim_at" "$lim_cr" "$(banda_de "$metrica")"
 
   case "$AV_ACAO" in
     nada) return 0 ;;
     resolver)
       [[ "${ALERTA_RECUPERACAO:-1}" == "1" ]] || return 0
-      envia_alerta "$metrica" "$chave" "$valor" "$lim_at" "resolver" "$AV_DURACAO" "$AV_PICO" "$extra_html" "$extra_txt"
+      envia_alerta "$metrica" "$chave" "$valor" "$lim_at" "resolver" "$AV_DURACAO" "$AV_PICO" "$extra_html" "$extra_txt" "$AV_NIVEL"
       ;;
     *)
       local lim_usado="$lim_at"
       [[ "$AV_NIVEL" == "critico" ]] && lim_usado="$lim_cr"
-      envia_alerta "$metrica" "$chave" "$valor" "$lim_usado" "$AV_ACAO" "$AV_DURACAO" "$AV_PICO" "$extra_html" "$extra_txt"
+      envia_alerta "$metrica" "$chave" "$valor" "$lim_usado" "$AV_ACAO" "$AV_DURACAO" "$AV_PICO" "$extra_html" "$extra_txt" "$AV_NIVEL"
       ;;
   esac
   return 0
@@ -178,8 +178,8 @@ rodada() {
   local proc_cpu proc_mem html_cpu html_mem
   proc_cpu="$(top_processos cpu 12)"
   proc_mem="$(top_processos mem 12)"
-  html_cpu="<p style=\"margin:0 0 4px\"><strong>Processos por CPU</strong></p><pre style=\"font-size:12px;background:#f8fafc;padding:12px;overflow-x:auto\">$(printf '%s' "$proc_cpu" | escapa_html)</pre>"
-  html_mem="<p style=\"margin:0 0 4px\"><strong>Processos por memoria</strong></p><pre style=\"font-size:12px;background:#f8fafc;padding:12px;overflow-x:auto\">$(printf '%s' "$proc_mem" | escapa_html)</pre>"
+  html_cpu="<p style=\"margin:0 0 4px\"><strong>$(t corpo_proc_cpu)</strong></p><pre style=\"font-size:12px;background:#f8fafc;padding:12px;overflow-x:auto\">$(printf '%s' "$proc_cpu" | escapa_html)</pre>"
+  html_mem="<p style=\"margin:0 0 4px\"><strong>$(t corpo_proc_mem)</strong></p><pre style=\"font-size:12px;background:#f8fafc;padding:12px;overflow-x:auto\">$(printf '%s' "$proc_mem" | escapa_html)</pre>"
 
   [[ "${VIGIAR_CPU:-1}" == "1" ]] && \
     avalia_e_notifica cpu cpu "${MEDIDA_CPU:-}" "${html_cpu}${html_mem}" "$proc_cpu"
@@ -207,8 +207,21 @@ rodada() {
   [[ "${VIGIAR_SWAP:-1}" == "1" && "${MEDIDA_SWAP_TOTAL_KB:-0}" -gt 0 ]] && \
     avalia_e_notifica swap swap "${MEDIDA_SWAP:-}" "$html_mem" "$proc_mem"
 
-  [[ "${VIGIAR_LOAD:-1}" == "1" ]] && \
+  # Load sozinho nao abre incidente. Ele mede FILA, e fila so dói quando a CPU
+  # esta saturada ou quando a espera e de disco; nos dois casos ha sintoma
+  # medido junto. Sem essa condicao, servidor de build vivia em alerta: em
+  # 15/10/2026 um servidor de 8 nucleos com load 1.56 por nucleo, CPU em 67.9%
+  # e iowait em 1.0% renotificava havia seis dias, com tudo funcionando.
+  # O load continua medido, continua na tabela de contexto de todo alerta e
+  # continua indo para o painel.
+  if [[ "${VIGIAR_LOAD:-1}" == "1" ]] && load_vira_alerta; then
     avalia_e_notifica load load "${MEDIDA_LOAD:-}" "$html_cpu" "$proc_cpu"
+  elif [[ -f "$(caminho_estado load)" ]]; then
+    # Incidente de load aberto nao pode ficar pendurado quando o sintoma
+    # some: alimenta a maquina de estado em ordem para fechar pelo caminho
+    # normal, com aviso de recuperacao.
+    avalia_e_notifica load load "$(valor_para_fechar_load)"
+  fi
 
   if [[ "${VIGIAR_DISCO:-1}" == "1" || "${VIGIAR_INODE:-1}" == "1" ]]; then
     local mnt uso ino resto dirs html_dirs

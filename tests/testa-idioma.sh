@@ -119,12 +119,13 @@ IDIOMA="es-CO"; igual "critico em es"   "[CRÍTICO]"  "$(prefixo_assunto escalar
 IDIOMA="en-US"; igual "resolvido em en" "[RESOLVED]" "$(prefixo_assunto resolver)"
 IDIOMA="es-CO"; igual "continua em es"  "[CONTINÚA]" "$(prefixo_assunto repetir)"
 
-# O titulo leva o nome do servidor, nao o nivel: o nivel ja esta no assunto,
-# entre colchetes, e repetir gastava a linha mais visivel do e-mail.
+# O titulo leva a frase e o nome do servidor, nao o nivel nem o nome cru da
+# metrica: o nivel ja esta no assunto, entre colchetes, e "Load average em
+# 1.56" obrigava quem recebe a traduzir o numero antes de saber se e grave.
 IDIOMA="pt-BR"
-TIT="$(t titulo_alerta "CPU Steal" "16.6" "%" "Efamaa Fronts")"
-contem     "titulo tem a metrica"  "$TIT" "CPU Steal"
-contem     "titulo tem o servidor" "$TIT" "Efamaa Fronts"
+TIT="$(t titulo_frase "$(frase_problema memoria "98%")" "Servidor de teste")"
+contem     "titulo diz o que houve"  "$TIT" "Memória quase cheia"
+contem     "titulo tem o servidor"   "$TIT" "Servidor de teste"
 nao_contem "titulo nao repete o nivel" "$TIT" "atenção"
 
 # EN usa ano-mes-dia; PT e ES usam dia/mes/ano.

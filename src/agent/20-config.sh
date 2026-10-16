@@ -23,8 +23,16 @@ carrega_config() {
   INODE_ATENCAO="${INODE_ATENCAO:-85}"
   INODE_CRITICO="${INODE_CRITICO:-93}"
   # Load normalizado por nucleo. 1.0 = todos os nucleos ocupados sem fila.
-  LOAD_ATENCAO="${LOAD_ATENCAO:-1.5}"
-  LOAD_CRITICO="${LOAD_CRITICO:-3.0}"
+  # Load e medida de FILA, nao de dano, e so vira alerta acompanhado de CPU
+  # saturada ou de espera de disco (ver a condicao em 90-main.sh). Com 1.5 por
+  # nucleo, qualquer servidor de build vivia em alerta: medicao de 15/10/2026
+  # num servidor de 8 nucleos deu load 1.56 por nucleo com a CPU em 67.9%, o
+  # iowait em 1.0% e 18.6 GB de memoria livre, e aquilo renotificava de hora em
+  # hora havia seis dias.
+  LOAD_ATENCAO="${LOAD_ATENCAO:-2.5}"
+  LOAD_CRITICO="${LOAD_CRITICO:-4.0}"
+  # Acima disto a CPU esta esperando disco, e aí a fila importa.
+  IOWAIT_ATENCAO="${IOWAIT_ATENCAO:-25}"
   # Steal sozinho NAO e incidente. Em instancia burstable (EC2 t2/t3/t3a) ele
   # aparece toda vez que a maquina usa burst acima do baseline: e o mecanismo
   # funcionando. Medicao real de 09/10/2026 num t3a.xlarge: steal de 16,6% com
@@ -42,7 +50,18 @@ carrega_config() {
   CICLOS_CONFIRMACAO="${CICLOS_CONFIRMACAO:-3}"
   CICLOS_RECUPERACAO="${CICLOS_RECUPERACAO:-3}"
   BANDA_SAIDA="${BANDA_SAIDA:-8}"
+  # A banda do load e em fila por nucleo, nao em pontos percentuais. Com os 8
+  # pontos das demais metricas, o ponto de saida de um limiar 2.5 dava
+  # negativo, era preso em zero, e um incidente de load SO se fechava com o
+  # load exatamente zero: ou seja, nunca. Era isso que mantinha o incidente do
+  # e-mail de 15/10/2026 aberto havia seis dias, renotificando.
+  BANDA_SAIDA_LOAD="${BANDA_SAIDA_LOAD:-0.3}"
+  # A espera DOBRA a cada repeticao, do minimo ate o teto: 1h, 2h, 4h, 8h,
+  # 16h, 24h, 24h... Um incidente de seis dias deixa de render perto de 148
+  # e-mails iguais e passa a render dez. Zero em RENOTIFICAR_MIN continua
+  # desligando a renotificacao.
   RENOTIFICAR_MIN="${RENOTIFICAR_MIN:-60}"
+  RENOTIFICAR_MAX_MIN="${RENOTIFICAR_MAX_MIN:-1440}"
   MAX_ALERTAS_HORA="${MAX_ALERTAS_HORA:-12}"
   ALERTA_RECUPERACAO="${ALERTA_RECUPERACAO:-1}"
 

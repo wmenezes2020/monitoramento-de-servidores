@@ -22,47 +22,98 @@ template_de() {
   esac
 }
 
-# monta_corpo METRICA VALOR LIMIAR ACAO DURACAO PICO EXTRA_HTML
+# monta_corpo METRICA CHAVE VALOR LIMIAR ACAO NIVEL DURACAO PICO EXTRA_HTML
+#
+# Ordem do e-mail, de cima para baixo, e a ordem das perguntas de quem abre:
+# o que houve (no titulo), o que isso causa, se precisa de alguem agora, o que
+# fazer, e so entao o numero. Antes o e-mail abria com "Load average em 1.56",
+# que obriga a pessoa a traduzir o numero para saber se precisa levantar.
 monta_corpo() {
-  local metrica="$1" valor="$2" limiar="$3" acao="$4" dur="$5" pico="$6" extra="${7:-}"
-  local rot uni diag
+  local metrica="$1" chave="$2" valor="$3" limiar="$4" acao="$5" nivel="$6"
+  local dur="$7" pico="$8" extra="${9:-}"
+  local rot uni corpo=""
   rot="$(rotulo_metrica "$metrica")"
   uni="$(unidade_metrica "$metrica")"
-  diag="$(diagnostico "$metrica" "$valor")"
 
-  local linha_estado
+  # 1. O que isso causa para quem usa o servidor.
   if [[ "$acao" == "resolver" ]]; then
-    linha_estado="<p style=\"margin:0 0 18px\">$(t corpo_normalizou "$rot" "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")</p>"
+    corpo+="<p style=\"font-size:15px;line-height:1.5;margin:0 0 14px\">$(t corpo_normalizou "$rot" "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")</p>"
   else
-    linha_estado="<p style=\"margin:0 0 6px\">$(t corpo_valor "$rot" "$valor" "$uni" "$limiar" "$uni")</p>"
-    linha_estado+="<p style=\"margin:0 0 18px;color:#6b7280\">$(t corpo_desde "$(duracao_humana "$dur")" "$pico" "$uni" "$CICLOS_CONFIRMACAO")</p>"
+    corpo+="<p style=\"font-size:15px;line-height:1.5;margin:0 0 14px\">$(impacto_metrica "$metrica")</p>"
   fi
 
-  local contexto="" td_rot="padding:3px 14px 3px 0;color:#6b7280"
-  contexto+="<p style=\"margin:0 0 4px\"><strong>$(t corpo_estado)</strong></p>"
-  contexto+="<table style=\"border-collapse:collapse;font-size:13px;margin:0 0 18px\">"
-  [[ -n "${MEDIDA_CPU:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">CPU</td><td>${MEDIDA_CPU}% ($(t corpo_media_de "$(duracao_humana "${MEDIDA_CPU_JANELA:-0}")"))</td></tr>"
-  [[ -n "${MEDIDA_IOWAIT:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">iowait</td><td>${MEDIDA_IOWAIT}%</td></tr>"
-  [[ -n "${MEDIDA_STEAL:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t tabela_steal)</td><td>${MEDIDA_STEAL}%</td></tr>"
-  [[ -n "${MEDIDA_MEM:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t rotulo_memoria)</td><td>${MEDIDA_MEM}% ($(t corpo_disponiveis "$(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.1f", k/1048576}')"))</td></tr>"
+  # 2. Precisa de alguem agora? Sem numero: e esta linha que decide se a
+  #    pessoa levanta da cama ou le amanha.
+  local fundo borda texto
+  case "$acao|$nivel" in
+    resolver*)   fundo="#ecfdf5"; borda="#15803d"; texto="#14532d" ;;  # verde
+    *\|critico)  fundo="#fef2f2"; borda="#b91c1c"; texto="#7f1d1d" ;;  # vermelho
+    *)           fundo="#fffbeb"; borda="#b45309"; texto="#7c2d12" ;;  # laranja escuro
+  esac
+  local linha_urg
+  linha_urg="$(urgencia "$acao" "$nivel")"
+  [[ "$acao" != "resolver" && "${dur:-0}" -gt 0 ]] && \
+    linha_urg="${linha_urg} $(t urgencia_desde "$(duracao_humana "$dur")")"
+  corpo+="<p style=\"margin:0 0 20px;padding:11px 15px;background:${fundo};border-left:3px solid ${borda};color:${texto};font-size:14px;font-weight:bold\">${linha_urg}</p>"
+
+  # 3. O que fazer. Nao existe em alerta de recuperacao: nao ha o que fazer.
+  if [[ "$acao" != "resolver" ]]; then
+    corpo+="<div style=\"background:#f8fafc;border-left:3px solid #64748b;padding:12px 16px;margin:0 0 22px;font-size:13px;line-height:1.5\"><strong>$(t rotulo_fazer)</strong><br/>$(diagnostico "$metrica" "$valor")</div>"
+  fi
+
+  # 4. O numero, o limiar e a tabela. Quem chegou ate aqui vai investigar.
+  corpo+="<p style=\"margin:0 0 10px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8\"><strong>$(t rotulo_tecnico)</strong></p>"
+  if [[ "$acao" != "resolver" ]]; then
+    corpo+="<p style=\"margin:0 0 4px\">$(t corpo_valor "$rot" "$valor" "$uni" "$limiar" "$uni")</p>"
+    corpo+="<p style=\"margin:0 0 16px;color:#6b7280;font-size:13px\">$(t corpo_desde "$(duracao_humana "$dur")" "$pico" "$uni" "$CICLOS_CONFIRMACAO")</p>"
+  fi
+
+  local td_rot="padding:3px 14px 3px 0;color:#6b7280"
+  corpo+="<p style=\"margin:0 0 4px\"><strong>$(t corpo_estado)</strong></p>"
+  corpo+="<table style=\"border-collapse:collapse;font-size:13px;margin:0 0 18px\">"
+  [[ -n "${MEDIDA_CPU:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">CPU</td><td>${MEDIDA_CPU}% ($(t corpo_media_de "$(duracao_humana "${MEDIDA_CPU_JANELA:-0}")"))</td></tr>"
+  [[ -n "${MEDIDA_IOWAIT:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">iowait</td><td>${MEDIDA_IOWAIT}%</td></tr>"
+  [[ -n "${MEDIDA_STEAL:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">$(t tabela_steal)</td><td>${MEDIDA_STEAL}%</td></tr>"
+  [[ -n "${MEDIDA_MEM:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">$(t rotulo_memoria)</td><td>${MEDIDA_MEM}% ($(t corpo_disponiveis "$(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.1f", k/1048576}')"))</td></tr>"
   if [[ "${MEDIDA_SWAP_TOTAL_KB:-0}" -gt 0 ]]; then
-    contexto+="<tr><td style=\"${td_rot}\">Swap</td><td>${MEDIDA_SWAP:-0}%</td></tr>"
+    corpo+="<tr><td style=\"${td_rot}\">Swap</td><td>${MEDIDA_SWAP:-0}%</td></tr>"
   else
-    contexto+="<tr><td style=\"${td_rot}\">Swap</td><td>$(t corpo_sem_swap)</td></tr>"
+    corpo+="<tr><td style=\"${td_rot}\">Swap</td><td>$(t corpo_sem_swap)</td></tr>"
   fi
-  [[ -n "${MEDIDA_LOAD:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t rotulo_load)</td><td>${MEDIDA_LOAD_BRUTO} ($(t corpo_por_nucleo "$MEDIDA_LOAD" "${MEDIDA_NUCLEOS:-?}"))</td></tr>"
-  contexto+="</table>"
+  [[ -n "${MEDIDA_LOAD:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">$(t rotulo_load)</td><td>${MEDIDA_LOAD_BRUTO} ($(t corpo_por_nucleo "$MEDIDA_LOAD" "${MEDIDA_NUCLEOS:-?}"))</td></tr>"
+  corpo+="</table>"
 
-  local bloco_diag
-  bloco_diag="<div style=\"background:#f8fafc;border-left:3px solid #64748b;padding:12px 16px;margin:0 0 18px;font-size:13px\"><strong>$(t corpo_comecar)</strong><br/>${diag}</div>"
-
-  printf '%s%s%s%s' "$linha_estado" "$bloco_diag" "$contexto" "$extra"
+  printf '%s%s' "$corpo" "$extra"
 }
 
-# envia_alerta METRICA ROTULO_CHAVE VALOR LIMIAR ACAO DURACAO PICO EXTRA_HTML EXTRA_TEXTO
+# A mesma coisa em texto corrido, para o Telegram. Montado das mesmas pecas:
+# dois catalogos para o mesmo alerta davam duas verdades, e a que ficava para
+# tras chegava ao cliente.
+monta_texto_tg() {
+  local metrica="$1" frase="$2" acao="$3" nivel="$4" valor="$5" uni="$6"
+  local limiar="$7" dur="$8" pico="$9"
+  local linha_urg
+  linha_urg="$(urgencia "$acao" "$nivel")"
+  [[ "$acao" != "resolver" && "${dur:-0}" -gt 0 ]] && \
+    linha_urg="${linha_urg} $(t urgencia_desde "$(duracao_humana "$dur")")"
+
+  printf '%s %s: %s\n\n' "$(prefixo_assunto "$acao")" "$SERVER_ID" "$frase"
+  if [[ "$acao" != "resolver" ]]; then
+    printf '%s\n%s\n\n%s: %s\n\n%s: %s%s (%s %s%s, %s %s%s)\n' \
+      "$(impacto_metrica "$metrica")" "$linha_urg" \
+      "$(t rotulo_fazer)" "$(diagnostico "$metrica" "$valor")" \
+      "$(rotulo_metrica "$metrica")" "$valor" "$uni" \
+      "$(t tg_limiar)" "$limiar" "$uni" "$(t tg_pico)" "$pico" "$uni"
+  else
+    printf '%s\n\n%s %s | %s %s%s\n' "$linha_urg" \
+      "$(t tg_durou)" "$(duracao_humana "$dur")" "$(t tg_pico)" "$pico" "$uni"
+  fi
+}
+
+# envia_alerta METRICA CHAVE VALOR LIMIAR ACAO DURACAO PICO EXTRA_HTML EXTRA_TEXTO NIVEL
 envia_alerta() {
   local metrica="$1" chave="$2" valor="$3" limiar="$4" acao="$5"
-  local dur="$6" pico="$7" extra_html="${8:-}" extra_txt="${9:-}"
+  local dur="$6" pico="$7" extra_html="${8:-}" extra_txt="${9:-}" nivel="${10:-atencao}"
 
   if silencio_ativo; then
     log_info "alerta ${chave} suprimido: silencio ativo ($(duracao_humana "$SILENCIO_RESTA") restantes, ${SILENCIO_MOTIVO:-sem motivo})"
@@ -75,23 +126,20 @@ envia_alerta() {
     return 0
   fi
 
-  local rot uni assunto titulo corpo
-  rot="$(rotulo_metrica "$metrica")"
+  local uni frase assunto titulo corpo
   uni="$(unidade_metrica "$metrica")"
-  assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} - ${SERVER_ID}"
-  # Em disco e inode o ponto de montagem entra no assunto: sem ele, dois
-  # alertas do mesmo servidor ficam identicos na caixa de entrada.
-  [[ "$metrica" == "disco" || "$metrica" == "inode" ]] &&     assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} ${chave#*:} - ${SERVER_ID}"
+  # A frase diz o que houve em palavras que dispensam saber o que e load
+  # average. Em disco e inode ela ja carrega o ponto de montagem: sem isso,
+  # dois alertas do mesmo servidor ficam identicos na caixa de entrada.
   if [[ "$acao" == "resolver" ]]; then
-    titulo="$(t titulo_normalizou "$rot" "$SERVER_ID")"
+    frase="$(frase_recuperacao "$metrica" "${valor}${uni}")"
   else
-    # O nivel ja aparece no assunto, entre colchetes. Repetir no titulo gastava
-    # a linha mais visivel do e-mail com informacao duplicada; o nome do
-    # servidor serve melhor, principalmente quando o alerta e encaminhado.
-    titulo="$(t titulo_alerta "$rot" "$valor" "$uni" "$SERVER_ID")"
+    frase="$(frase_problema "$metrica" "${valor}${uni}" "$chave")"
   fi
+  assunto="$(prefixo_assunto "$acao") ${SERVER_ID}: ${frase}"
+  titulo="$(t titulo_frase "$frase" "$SERVER_ID")"
 
-  corpo="$(monta_corpo "$metrica" "$valor" "$limiar" "$acao" "$dur" "$pico" "$extra_html")"
+  corpo="$(monta_corpo "$metrica" "$chave" "$valor" "$limiar" "$acao" "$nivel" "$dur" "$pico" "$extra_html")"
 
   if [[ "${CANAL_EMAIL:-1}" == "1" && -n "${RECIPIENTS:-}" && -x "${AGENTE_BIN}/send_html_alert.sh" ]]; then
     "${AGENTE_BIN}/send_html_alert.sh" "$(template_de "$metrica")" "$RECIPIENTS" "$assunto" "$titulo" "$corpo" \
@@ -102,14 +150,8 @@ envia_alerta() {
   [[ "$acao" == "resolver" && "${RECUPERACAO_TELEGRAM:-0}" != "1" ]] && manda_tg=0
   if [[ "${CANAL_TELEGRAM:-1}" == "1" && "$manda_tg" == "1" && -x "${AGENTE_BIN}/send_telegram_alert.sh" ]]; then
     local txt
-    if [[ "$acao" == "resolver" ]]; then
-      txt="$(t tg_normalizou "$(prefixo_assunto "$acao")" "$rot" "$SERVER_ID"         "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")"
-    else
-      txt="$(t tg_alerta "$(prefixo_assunto "$acao")" "$rot" "$valor" "$uni" "$SERVER_ID"         "$(duracao_humana "$dur")" "$pico" "$uni" "$limiar" "$uni"         "$(diagnostico "$metrica" "$valor")")"
-      [[ -n "$extra_txt" ]] && txt="${txt}"$'
-
-'"${extra_txt}"
-    fi
+    txt="$(monta_texto_tg "$metrica" "$frase" "$acao" "$nivel" "$valor" "$uni" "$limiar" "$dur" "$pico")"
+    [[ -n "$extra_txt" && "$acao" != "resolver" ]] && txt="${txt}"$'\n'"${extra_txt}"
     "${AGENTE_BIN}/send_telegram_alert.sh" "$txt" >/dev/null 2>&1 || log_erro "envio ao Telegram falhou para ${chave}"
   fi
 
@@ -117,7 +159,7 @@ envia_alerta() {
     envia_incidente_dashboard "$metrica" "$chave" "$valor" "$limiar" "$acao" "$dur" "$pico" "$assunto"
   fi
 
-  log_info "alerta enviado: ${chave} acao=${acao} valor=${valor} limiar=${limiar}"
+  log_info "alerta enviado: ${chave} acao=${acao} nivel=${nivel} valor=${valor} limiar=${limiar}"
   return 0
 }
 
