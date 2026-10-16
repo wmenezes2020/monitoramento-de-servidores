@@ -15,7 +15,7 @@ set -uo pipefail
 # A versao e o unico carimbo. Carimbar o commit tornaria o bundle diferente a
 # cada commit mesmo sem mudanca em src/, o checksum do manifesto mudaria
 # sozinho, e o "build --check" do CI reprovaria sempre.
-AGENTE_VERSAO="2.3.0"
+AGENTE_VERSAO="2.4.0"
 
 
 # ---------------------------------------------------------------------------
@@ -191,8 +191,16 @@ carrega_config() {
   INODE_ATENCAO="${INODE_ATENCAO:-85}"
   INODE_CRITICO="${INODE_CRITICO:-93}"
   # Load normalizado por nucleo. 1.0 = todos os nucleos ocupados sem fila.
-  LOAD_ATENCAO="${LOAD_ATENCAO:-1.5}"
-  LOAD_CRITICO="${LOAD_CRITICO:-3.0}"
+  # Load e medida de FILA, nao de dano, e so vira alerta acompanhado de CPU
+  # saturada ou de espera de disco (ver a condicao em 90-main.sh). Com 1.5 por
+  # nucleo, qualquer servidor de build vivia em alerta: medicao de 15/10/2026
+  # num servidor de 8 nucleos deu load 1.56 por nucleo com a CPU em 67.9%, o
+  # iowait em 1.0% e 18.6 GB de memoria livre, e aquilo renotificava de hora em
+  # hora havia seis dias.
+  LOAD_ATENCAO="${LOAD_ATENCAO:-2.5}"
+  LOAD_CRITICO="${LOAD_CRITICO:-4.0}"
+  # Acima disto a CPU esta esperando disco, e aí a fila importa.
+  IOWAIT_ATENCAO="${IOWAIT_ATENCAO:-25}"
   # Steal sozinho NAO e incidente. Em instancia burstable (EC2 t2/t3/t3a) ele
   # aparece toda vez que a maquina usa burst acima do baseline: e o mecanismo
   # funcionando. Medicao real de 09/10/2026 num t3a.xlarge: steal de 16,6% com
@@ -210,7 +218,18 @@ carrega_config() {
   CICLOS_CONFIRMACAO="${CICLOS_CONFIRMACAO:-3}"
   CICLOS_RECUPERACAO="${CICLOS_RECUPERACAO:-3}"
   BANDA_SAIDA="${BANDA_SAIDA:-8}"
+  # A banda do load e em fila por nucleo, nao em pontos percentuais. Com os 8
+  # pontos das demais metricas, o ponto de saida de um limiar 2.5 dava
+  # negativo, era preso em zero, e um incidente de load SO se fechava com o
+  # load exatamente zero: ou seja, nunca. Era isso que mantinha o incidente do
+  # e-mail de 15/10/2026 aberto havia seis dias, renotificando.
+  BANDA_SAIDA_LOAD="${BANDA_SAIDA_LOAD:-0.3}"
+  # A espera DOBRA a cada repeticao, do minimo ate o teto: 1h, 2h, 4h, 8h,
+  # 16h, 24h, 24h... Um incidente de seis dias deixa de render perto de 148
+  # e-mails iguais e passa a render dez. Zero em RENOTIFICAR_MIN continua
+  # desligando a renotificacao.
   RENOTIFICAR_MIN="${RENOTIFICAR_MIN:-60}"
+  RENOTIFICAR_MAX_MIN="${RENOTIFICAR_MAX_MIN:-1440}"
   MAX_ALERTAS_HORA="${MAX_ALERTAS_HORA:-12}"
   ALERTA_RECUPERACAO="${ALERTA_RECUPERACAO:-1}"
 
@@ -430,6 +449,67 @@ duracao_humana() {
   }'
 }
 
+# --- A frase que a pessoa le primeiro ---------------------------------------
+#
+# Um alerta que abre com "Load average em 1.56" obriga quem recebe a traduzir o
+# numero antes de saber se precisa levantar da cama. A frase diz o que houve; o
+# numero fica nos detalhes tecnicos, para quem for investigar.
+
+frase_problema() {
+  # As duas linhas sao separadas de proposito: "${3#*:}" na mesma linha do
+  # local estoura com "unbound variable" quando a chave nao vem, e so quem
+  # chama com ponto de montagem a manda.
+  local metrica="$1" valor="$2" chave="${3:-}"
+  local mnt="${chave#*:}"
+  case "$metrica" in
+    cpu)     t frase_cpu "$valor" ;;
+    memoria) t frase_memoria "$valor" ;;
+    disco)   t frase_disco "$mnt" "$valor" ;;
+    inode)   t frase_inode "$mnt" ;;
+    swap)    t frase_swap "$valor" ;;
+    load)    t frase_load ;;
+    steal)   t frase_steal ;;
+    *)       t frase_padrao "$(rotulo_metrica "$metrica")" "$valor" ;;
+  esac
+}
+
+sujeito_metrica() {
+  case "$1" in
+    cpu)     t sujeito_cpu ;;
+    memoria) t sujeito_memoria ;;
+    disco)   t sujeito_disco ;;
+    inode)   t sujeito_inode ;;
+    swap)    t sujeito_swap ;;
+    load)    t sujeito_load ;;
+    steal)   t sujeito_steal ;;
+    *)       t sujeito_padrao "$(rotulo_metrica "$1")" ;;
+  esac
+}
+
+frase_recuperacao() { t frase_normal "$(sujeito_metrica "$1")" "$2"; }
+
+impacto_metrica() {
+  case "$1" in
+    cpu)     t impacto_cpu ;;
+    memoria) t impacto_memoria ;;
+    disco)   t impacto_disco ;;
+    inode)   t impacto_inode ;;
+    swap)    t impacto_swap ;;
+    load)    t impacto_load ;;
+    steal)   t impacto_steal ;;
+    *)       t impacto_padrao ;;
+  esac
+}
+
+# urgencia ACAO NIVEL: dita sem numero nenhum, porque e esta linha que decide
+# se alguem levanta agora ou le amanha de manha.
+urgencia() {
+  case "$1" in
+    resolver) t urgencia_resolvido ;;
+    *) if [[ "$2" == "critico" ]]; then t urgencia_critico; else t urgencia_atencao; fi ;;
+  esac
+}
+
 # --- Catalogos ------------------------------------------------------------
 #
 # Um "case" por idioma. Bash associativo com "set -u" explode em chave que nao
@@ -459,8 +539,6 @@ msg_pt() {
     dur_horas)    printf 'h' ;;
     dur_dias)     printf 'd' ;;
 
-    titulo_normalizou) printf '%%s normalizou em %%s' ;;
-    titulo_alerta)     printf '%%s em %%s%%s no %%s' ;;
     corpo_normalizou)  printf '<strong>%%s normalizou.</strong> Valor atual: %%s%%s. O problema durou %%s e chegou a %%s%%s.' ;;
     corpo_valor)       printf '<strong>%%s: %%s%%s</strong> (limiar %%s%%s)' ;;
     corpo_desde)       printf 'Assim há %%s, pico de %%s%%s. Confirmado em %%s leituras seguidas.' ;;
@@ -474,8 +552,10 @@ msg_pt() {
     corpo_disponiveis) printf '%%s GB disponíveis' ;;
     corpo_por_nucleo)  printf '%%s por núcleo, %%s núcleos' ;;
 
-    tg_normalizou) printf '%%s %%s normalizou em %%s\n\nAtual: %%s%%s | durou %%s | pico %%s%%s' ;;
-    tg_alerta)     printf '%%s %%s em %%s%%s - %%s\n\nAssim há %%s (pico %%s%%s, limiar %%s%%s)\n\n%%s' ;;
+
+    tg_limiar)    printf 'limiar' ;;
+    tg_pico)      printf 'pico' ;;
+    tg_durou)     printf 'durou' ;;
 
     resumo_assunto) printf '%%s alertas na última hora' ;;
     resumo_titulo)  printf 'Várias métricas fora do normal' ;;
@@ -494,6 +574,47 @@ msg_pt() {
     diag_load_m)  printf 'Load average em %%s por núcleo: há processo esperando a vez. Load alto com CPU baixa costuma ser espera de disco ou de rede.' ;;
     diag_steal_m) printf 'A instância está pedindo mais CPU do que o provedor entrega neste momento. Em EC2 burstable, isso é crédito esgotado. Trocar de família ou ligar o modo unlimited resolve; ajuste dentro do servidor não.' ;;
     diag_padrao)  printf 'Conferir os processos abaixo.' ;;
+
+
+    # O aviso em linguagem de gente. A frase e o que a pessoa le primeiro, no
+    # assunto e no titulo: ela precisa dizer o que houve sem exigir que
+    # ninguem saiba o que e load average.
+    frase_cpu)     printf 'CPU no limite (%%s)' ;;
+    frase_memoria) printf 'Memória quase cheia (%%s)' ;;
+    frase_disco)   printf 'Disco quase cheio em %%s (%%s)' ;;
+    frase_inode)   printf 'Sem espaço para arquivo novo em %%s' ;;
+    frase_swap)    printf 'Swap em uso alto (%%s)' ;;
+    frase_load)    printf 'Fila de processos esperando CPU' ;;
+    frase_steal)   printf 'O provedor está limitando a CPU' ;;
+    frase_padrao)  printf '%%s em %%s' ;;
+    frase_normal)  printf '%%s voltou ao normal (%%s)' ;;
+
+    sujeito_cpu)     printf 'A CPU' ;;
+    sujeito_memoria) printf 'A memória' ;;
+    sujeito_disco)   printf 'O disco' ;;
+    sujeito_inode)   printf 'O espaço para arquivos' ;;
+    sujeito_swap)    printf 'O swap' ;;
+    sujeito_load)    printf 'A fila de processos' ;;
+    sujeito_steal)   printf 'A CPU entregue pelo provedor' ;;
+    sujeito_padrao)  printf '%%s' ;;
+
+    impacto_cpu)     printf 'Os sistemas deste servidor podem estar lentos para responder.' ;;
+    impacto_memoria) printf 'Se a memória acabar, o servidor derruba processos sem avisar, e a aplicação cai sem deixar erro no log.' ;;
+    impacto_disco)   printf 'Quando o disco enche, o site para de gravar e o banco de dados pode corromper.' ;;
+    impacto_inode)   printf 'Ainda há espaço no disco, mas o servidor não consegue criar arquivo novo: upload, log e sessão param.' ;;
+    impacto_swap)    printf 'O servidor está usando disco no lugar de memória, e isso deixa tudo lento sem derrubar nada.' ;;
+    impacto_load)    printf 'Está chegando mais trabalho do que o servidor dá conta agora, então as respostas demoram mais.' ;;
+    impacto_steal)   printf 'A máquina está pedindo mais CPU do que o provedor entrega, então tudo fica mais lento mesmo com o servidor sadio.' ;;
+    impacto_padrao)  printf 'A medida passou do limite configurado para este servidor.' ;;
+
+    urgencia_critico)   printf 'Precisa de alguém agora.' ;;
+    urgencia_atencao)   printf 'Não é emergência. Dá para resolver hoje.' ;;
+    urgencia_resolvido) printf 'Nada a fazer. É só para registro.' ;;
+    urgencia_desde)     printf 'Está assim há %%s.' ;;
+
+    rotulo_fazer)   printf 'O que fazer' ;;
+    rotulo_tecnico) printf 'Detalhes técnicos' ;;
+    titulo_frase)   printf '%%s em %%s' ;;
 
     tpl_data)     printf 'Data' ;;
     tpl_servidor) printf 'Servidor' ;;
@@ -524,8 +645,6 @@ msg_en() {
     dur_horas)    printf 'h' ;;
     dur_dias)     printf 'd' ;;
 
-    titulo_normalizou) printf '%%s back to normal on %%s' ;;
-    titulo_alerta)     printf '%%s at %%s%%s on %%s' ;;
     corpo_normalizou)  printf '<strong>%%s is back to normal.</strong> Current value: %%s%%s. It lasted %%s and peaked at %%s%%s.' ;;
     corpo_valor)       printf '<strong>%%s: %%s%%s</strong> (threshold %%s%%s)' ;;
     corpo_desde)       printf 'Like this for %%s, peaked at %%s%%s. Confirmed over %%s consecutive readings.' ;;
@@ -539,8 +658,10 @@ msg_en() {
     corpo_disponiveis) printf '%%s GB available' ;;
     corpo_por_nucleo)  printf '%%s per core, %%s cores' ;;
 
-    tg_normalizou) printf '%%s %%s back to normal on %%s\n\nCurrent: %%s%%s | lasted %%s | peak %%s%%s' ;;
-    tg_alerta)     printf '%%s %%s at %%s%%s - %%s\n\nLike this for %%s (peak %%s%%s, threshold %%s%%s)\n\n%%s' ;;
+
+    tg_limiar)    printf 'threshold' ;;
+    tg_pico)      printf 'peak' ;;
+    tg_durou)     printf 'lasted' ;;
 
     resumo_assunto) printf '%%s alerts in the last hour' ;;
     resumo_titulo)  printf 'Several metrics out of range' ;;
@@ -559,6 +680,44 @@ msg_en() {
     diag_load_m)  printf 'Load average at %%s per core: processes are waiting their turn. High load with low CPU usually means waiting on disk or network.' ;;
     diag_steal_m) printf 'This instance is asking for more CPU than the provider is delivering right now. On EC2 burstable, that means credits ran out. Switching instance family or enabling unlimited mode fixes it; tuning inside the server does not.' ;;
     diag_padrao)  printf 'Check the processes below.' ;;
+
+
+    frase_cpu)     printf 'CPU at its limit (%%s)' ;;
+    frase_memoria) printf 'Memory almost full (%%s)' ;;
+    frase_disco)   printf 'Disk almost full on %%s (%%s)' ;;
+    frase_inode)   printf 'No room for new files on %%s' ;;
+    frase_swap)    printf 'Swap heavily used (%%s)' ;;
+    frase_load)    printf 'Processes queuing for CPU' ;;
+    frase_steal)   printf 'The provider is capping this CPU' ;;
+    frase_padrao)  printf '%%s at %%s' ;;
+    frase_normal)  printf '%%s is back to normal (%%s)' ;;
+
+    sujeito_cpu)     printf 'CPU' ;;
+    sujeito_memoria) printf 'Memory' ;;
+    sujeito_disco)   printf 'Disk' ;;
+    sujeito_inode)   printf 'File capacity' ;;
+    sujeito_swap)    printf 'Swap' ;;
+    sujeito_load)    printf 'The process queue' ;;
+    sujeito_steal)   printf 'The CPU delivered by the provider' ;;
+    sujeito_padrao)  printf '%%s' ;;
+
+    impacto_cpu)     printf 'Anything running on this server may be slow to respond.' ;;
+    impacto_memoria) printf 'If memory runs out, the server kills processes without warning, and the app goes down leaving no error in its log.' ;;
+    impacto_disco)   printf 'Once the disk is full, the site stops writing and the database can corrupt.' ;;
+    impacto_inode)   printf 'There is still disk space, but no new file can be created: uploads, logs and sessions stop.' ;;
+    impacto_swap)    printf 'The server is using disk instead of memory, which makes everything slow without taking anything down.' ;;
+    impacto_load)    printf 'More work is arriving than the server can handle right now, so responses take longer.' ;;
+    impacto_steal)   printf 'The machine is asking for more CPU than the provider delivers, so everything slows down even with a healthy server.' ;;
+    impacto_padrao)  printf 'The reading went past the threshold configured for this server.' ;;
+
+    urgencia_critico)   printf 'Someone needs to look at this now.' ;;
+    urgencia_atencao)   printf 'Not an emergency. It can be handled today.' ;;
+    urgencia_resolvido) printf 'Nothing to do. This is just for the record.' ;;
+    urgencia_desde)     printf 'It has been like this for %%s.' ;;
+
+    rotulo_fazer)   printf 'What to do' ;;
+    rotulo_tecnico) printf 'Technical details' ;;
+    titulo_frase)   printf '%%s on %%s' ;;
 
     tpl_data)     printf 'Date' ;;
     tpl_servidor) printf 'Server' ;;
@@ -589,8 +748,6 @@ msg_es() {
     dur_horas)    printf 'h' ;;
     dur_dias)     printf 'd' ;;
 
-    titulo_normalizou) printf '%%s se normalizó en %%s' ;;
-    titulo_alerta)     printf '%%s en %%s%%s en %%s' ;;
     corpo_normalizou)  printf '<strong>%%s se normalizó.</strong> Valor actual: %%s%%s. El problema duró %%s y llegó a %%s%%s.' ;;
     corpo_valor)       printf '<strong>%%s: %%s%%s</strong> (umbral %%s%%s)' ;;
     corpo_desde)       printf 'Así desde hace %%s, pico de %%s%%s. Confirmado en %%s lecturas seguidas.' ;;
@@ -604,8 +761,10 @@ msg_es() {
     corpo_disponiveis) printf '%%s GB disponibles' ;;
     corpo_por_nucleo)  printf '%%s por núcleo, %%s núcleos' ;;
 
-    tg_normalizou) printf '%%s %%s se normalizó en %%s\n\nActual: %%s%%s | duró %%s | pico %%s%%s' ;;
-    tg_alerta)     printf '%%s %%s en %%s%%s - %%s\n\nAsí desde hace %%s (pico %%s%%s, umbral %%s%%s)\n\n%%s' ;;
+
+    tg_limiar)    printf 'umbral' ;;
+    tg_pico)      printf 'pico' ;;
+    tg_durou)     printf 'duró' ;;
 
     resumo_assunto) printf '%%s alertas en la última hora' ;;
     resumo_titulo)  printf 'Varias métricas fuera de rango' ;;
@@ -624,6 +783,44 @@ msg_es() {
     diag_load_m)  printf 'Load average en %%s por núcleo: hay procesos esperando su turno. Load alto con CPU baja suele ser espera de disco o de red.' ;;
     diag_steal_m) printf 'La instancia está pidiendo más CPU de la que el proveedor entrega en este momento. En EC2 burstable, eso significa que se agotaron los créditos. Cambiar de familia o activar el modo unlimited lo resuelve; ajustar dentro del servidor no.' ;;
     diag_padrao)  printf 'Revisar los procesos abajo.' ;;
+
+
+    frase_cpu)     printf 'CPU al límite (%%s)' ;;
+    frase_memoria) printf 'Memoria casi llena (%%s)' ;;
+    frase_disco)   printf 'Disco casi lleno en %%s (%%s)' ;;
+    frase_inode)   printf 'Sin espacio para archivos nuevos en %%s' ;;
+    frase_swap)    printf 'Swap muy usado (%%s)' ;;
+    frase_load)    printf 'Procesos haciendo fila por CPU' ;;
+    frase_steal)   printf 'El proveedor está limitando la CPU' ;;
+    frase_padrao)  printf '%%s en %%s' ;;
+    frase_normal)  printf '%%s volvió a la normalidad (%%s)' ;;
+
+    sujeito_cpu)     printf 'La CPU' ;;
+    sujeito_memoria) printf 'La memoria' ;;
+    sujeito_disco)   printf 'El disco' ;;
+    sujeito_inode)   printf 'El espacio para archivos' ;;
+    sujeito_swap)    printf 'El swap' ;;
+    sujeito_load)    printf 'La fila de procesos' ;;
+    sujeito_steal)   printf 'La CPU entregada por el proveedor' ;;
+    sujeito_padrao)  printf '%%s' ;;
+
+    impacto_cpu)     printf 'Lo que corre en este servidor puede responder lento.' ;;
+    impacto_memoria) printf 'Si la memoria se acaba, el servidor mata procesos sin avisar y la aplicación se cae sin dejar error en el log.' ;;
+    impacto_disco)   printf 'Cuando el disco se llena, el sitio deja de guardar y la base de datos se puede corromper.' ;;
+    impacto_inode)   printf 'Todavía hay espacio en el disco, pero no se puede crear ningún archivo nuevo: cargas, logs y sesiones se detienen.' ;;
+    impacto_swap)    printf 'El servidor está usando disco en lugar de memoria, y eso pone todo lento sin tumbar nada.' ;;
+    impacto_load)    printf 'Está llegando más trabajo del que el servidor alcanza a atender, así que las respuestas tardan más.' ;;
+    impacto_steal)   printf 'La máquina pide más CPU de la que el proveedor entrega, entonces todo va más lento aunque el servidor esté sano.' ;;
+    impacto_padrao)  printf 'La medida pasó el umbral configurado para este servidor.' ;;
+
+    urgencia_critico)   printf 'Necesita a alguien ahora.' ;;
+    urgencia_atencao)   printf 'No es una emergencia. Se puede resolver hoy.' ;;
+    urgencia_resolvido) printf 'Nada que hacer. Es solo para registro.' ;;
+    urgencia_desde)     printf 'Lleva así %%s.' ;;
+
+    rotulo_fazer)   printf 'Qué hacer' ;;
+    rotulo_tecnico) printf 'Detalles técnicos' ;;
+    titulo_frase)   printf '%%s en %%s' ;;
 
     tpl_data)     printf 'Fecha' ;;
     tpl_servidor) printf 'Servidor' ;;
@@ -1113,13 +1310,23 @@ top_processos() {
   local por="${1:-cpu}" n="${2:-12}"
   local chave="-%cpu"
   [[ "$por" == "mem" ]] && chave="-%mem"
+  # O proprio medidor fica de fora. O "ps" aparecia em PRIMEIRO lugar com 400%,
+  # porque o percentual dele e calculado sobre uma vida de milissegundos, e o
+  # agente vinha logo abaixo: quem lia o alerta concluia que o monitoramento
+  # era o que estava consumindo o servidor. O corte vem antes do head, senao
+  # sobrariam dez linhas onde foram pedidas doze.
   ps -eo pid,user,pcpu,pmem,comm,args --sort="$chave" --no-headers 2>/dev/null \
+    | awk -v me="$$" '
+        $1 == me { next }
+        $5 == "ps" || $5 == "awk" { next }
+        /monitoring-agent\.sh/ { next }
+        {
+          cmd=""
+          for (i=6; i<=NF; i++) cmd = cmd $i " "
+          printf "%-7s %-10s %5s%% %5s%% %.60s\n", $1, $2, $3, $4, substr(cmd,1,60)
+        }' 2>/dev/null \
     | head -n "$n" \
-    | awk '{
-        cmd=""
-        for (i=6; i<=NF; i++) cmd = cmd $i " "
-        printf "%-7s %-10s %5s%% %5s%% %.60s\n", $1, $2, $3, $4, substr(cmd,1,60)
-      }' 2>/dev/null || printf 'ps indisponivel\n'
+    | grep . || printf 'ps indisponivel\n'
 }
 
 maiores_diretorios() {
@@ -1148,7 +1355,7 @@ le_estado() {
   local chave="$1" arq
   arq="$(caminho_estado "$chave")"
   E_NIVEL="ok"; E_ACIMA=0; E_ACIMA_CRIT=0; E_ABAIXO=0; E_DESDE=0
-  E_ULTIMO_ALERTA=0; E_VALOR_PICO=0; E_NOTIFICADO="ok"
+  E_ULTIMO_ALERTA=0; E_VALOR_PICO=0; E_NOTIFICADO="ok"; E_REPETICOES=0
   [[ -f "$arq" ]] || return 0
   local k v
   while IFS='=' read -r k v; do
@@ -1161,18 +1368,20 @@ le_estado() {
       ULTIMO_ALERTA)  E_ULTIMO_ALERTA="${v:-0}" ;;
       VALOR_PICO)     E_VALOR_PICO="${v:-0}" ;;
       NOTIFICADO)     E_NOTIFICADO="${v:-ok}" ;;
+      REPETICOES)     E_REPETICOES="${v:-0}" ;;
     esac
   done <"$arq" 2>/dev/null
   [[ "$E_ACIMA" =~ ^[0-9]+$ ]] || E_ACIMA=0
   [[ "$E_ACIMA_CRIT" =~ ^[0-9]+$ ]] || E_ACIMA_CRIT=0
   [[ "$E_ABAIXO" =~ ^[0-9]+$ ]] || E_ABAIXO=0
+  [[ "$E_REPETICOES" =~ ^[0-9]+$ ]] || E_REPETICOES=0
   return 0
 }
 
 grava_estado() {
   local chave="$1"
-  printf 'NIVEL=%s\nACIMA=%s\nACIMA_CRIT=%s\nABAIXO=%s\nDESDE=%s\nULTIMO_ALERTA=%s\nVALOR_PICO=%s\nNOTIFICADO=%s\n' \
-    "$E_NIVEL" "$E_ACIMA" "$E_ACIMA_CRIT" "$E_ABAIXO" "$E_DESDE" "$E_ULTIMO_ALERTA" "$E_VALOR_PICO" "$E_NOTIFICADO" \
+  printf 'NIVEL=%s\nACIMA=%s\nACIMA_CRIT=%s\nABAIXO=%s\nDESDE=%s\nULTIMO_ALERTA=%s\nVALOR_PICO=%s\nNOTIFICADO=%s\nREPETICOES=%s\n' \
+    "$E_NIVEL" "$E_ACIMA" "$E_ACIMA_CRIT" "$E_ABAIXO" "$E_DESDE" "$E_ULTIMO_ALERTA" "$E_VALOR_PICO" "$E_NOTIFICADO" "$E_REPETICOES" \
     | escreve_atomico "$(caminho_estado "$chave")"
 }
 
@@ -1260,11 +1469,76 @@ orcamento_estourado() {
 # alerta e recuperacao alternados para sempre. Com BANDA_SAIDA=8 e limiar 85, a
 # saida so acontece abaixo de 77.
 #
+# Ela vem na UNIDADE da metrica, por banda_de(). Percentual em pontos
+# percentuais, load em fila por nucleo: oito pontos descontados de um limiar de
+# 2.5 davam um ponto de saida negativo, preso em zero, e o incidente de load
+# ficava aberto para sempre.
+#
 # Resultado em: AV_ACAO (nada|abrir|escalar|repetir|resolver), AV_NIVEL,
 # AV_DURACAO, AV_PICO.
 
+# O valor que fecha um incidente de load quando o sintoma que o justificava
+# sumiu. Usa a fila real quando ela ja esta em ordem, para o aviso de
+# recuperacao sair com o numero de verdade; so forca zero quando a fila
+# continua alta, porque aí o que mudou foi o criterio, e deixar o incidente
+# pendurado seria pior do que fecha-lo.
+valor_para_fechar_load() {
+  local saida
+  saida="$(awk -v l="${LOAD_ATENCAO:-2.5}" -v b="$(banda_de load)" 'BEGIN{v=l-b; if (v<0) v=0; printf "%.2f", v}')"
+  if [[ -n "${MEDIDA_LOAD:-}" ]] && ! maior "$MEDIDA_LOAD" "$saida"; then
+    printf '%s' "$MEDIDA_LOAD"
+  else
+    printf '0'
+  fi
+}
+
+# Espera ate o proximo aviso do MESMO incidente, em segundos. Dobra a cada
+# repeticao ate o teto: 1h, 2h, 4h, 8h, 16h, 24h, 24h...
+#
+# Intervalo fixo foi o que transformou um incidente de seis dias em perto de
+# 148 e-mails identicos, e e assim que se ensina alguem a ignorar o alerta.
+# Zero em RENOTIFICAR_MIN continua desligando a renotificacao por completo.
+# Load sozinho nao abre incidente. Ele mede FILA, e fila so dói quando a CPU
+# esta saturada ou quando a espera e de disco: nos dois casos existe sintoma
+# medido no mesmo ciclo. A decisao fica aqui, fora do fluxo da rodada, para
+# poder ser conferida com os numeros do caso real que a motivou.
+#
+# Medicao de 15/10/2026, servidor de 8 nucleos: load 1.56 por nucleo, CPU em
+# 67.9%, iowait em 1.0%, 18.6 GB de memoria livre. Nada doendo, e aquilo
+# renotificava de hora em hora havia seis dias.
+load_vira_alerta() {
+  [[ -n "${MEDIDA_LOAD:-}" ]] || return 1
+  maior "${MEDIDA_CPU:-0}" "${CPU_ATENCAO:-85}" && return 0
+  maior "${MEDIDA_IOWAIT:-0}" "${IOWAIT_ATENCAO:-25}" && return 0
+  return 1
+}
+
+espera_renotificacao() {
+  local repeticoes="${1:-0}"
+  local base=$(( ${RENOTIFICAR_MIN:-60} * 60 ))
+  local teto=$(( ${RENOTIFICAR_MAX_MIN:-1440} * 60 ))
+  [[ "$base" -le 0 ]] && { printf '0'; return 0; }
+  [[ "$teto" -lt "$base" ]] && teto="$base"
+  local espera="$base" i=0
+  while [[ "$i" -lt "$repeticoes" ]] && [[ "$espera" -lt "$teto" ]]; do
+    espera=$(( espera * 2 )); i=$(( i + 1 ))
+  done
+  [[ "$espera" -gt "$teto" ]] && espera="$teto"
+  printf '%s' "$espera"
+}
+
+# A banda de saida na unidade da metrica. Percentual usa pontos percentuais;
+# load usa fila por nucleo. Misturar as duas escalas deixava incidente de load
+# sem saida nenhuma.
+banda_de() {
+  case "$1" in
+    load) printf '%s' "${BANDA_SAIDA_LOAD:-0.3}" ;;
+    *)    printf '%s' "${BANDA_SAIDA:-8}" ;;
+  esac
+}
+
 avalia() {
-  local chave="$1" valor="$2" lim_at="$3" lim_cr="$4"
+  local chave="$1" valor="$2" lim_at="$3" lim_cr="$4" banda="${5:-${BANDA_SAIDA:-8}}"
 
   AV_ACAO="nada"; AV_NIVEL="ok"; AV_DURACAO=0; AV_PICO="$valor"
 
@@ -1283,7 +1557,7 @@ avalia() {
   fi
 
   local saida
-  saida="$(awk -v l="$lim_at" -v b="${BANDA_SAIDA:-8}" 'BEGIN{v=l-b; if (v<0) v=0; printf "%.2f", v}')"
+  saida="$(awk -v l="$lim_at" -v b="$banda" 'BEGIN{v=l-b; if (v<0) v=0; printf "%.2f", v}')"
 
   if [[ "$nivel_agora" == "ok" ]]; then
     # Abaixo do limiar, mas ainda dentro da banda: nao conta como recuperacao.
@@ -1304,7 +1578,7 @@ avalia() {
         AV_DURACAO=$(( n - E_DESDE ))
         AV_PICO="$E_VALOR_PICO"
         E_NIVEL="ok"; E_ABAIXO=0; E_DESDE=0
-        E_ULTIMO_ALERTA=0; E_VALOR_PICO=0; E_NOTIFICADO="ok"
+        E_ULTIMO_ALERTA=0; E_VALOR_PICO=0; E_NOTIFICADO="ok"; E_REPETICOES=0
       fi
     fi
     grava_estado "$chave"
@@ -1344,7 +1618,8 @@ avalia() {
     # Piorou de verdade e se manteve: vale interromper alguem de novo.
     AV_ACAO="escalar"
   else
-    local espera=$(( ${RENOTIFICAR_MIN:-60} * 60 ))
+    local espera
+    espera="$(espera_renotificacao "$E_REPETICOES")"
     if [[ "$espera" -gt 0 ]] && [[ $(( n - E_ULTIMO_ALERTA )) -ge "$espera" ]]; then
       AV_ACAO="repetir"
     fi
@@ -1353,6 +1628,13 @@ avalia() {
   if [[ "$AV_ACAO" != "nada" ]]; then
     E_ULTIMO_ALERTA="$n"
     E_NOTIFICADO="$nivel_agora"
+    # Abrir e escalar zeram a conta: piorar de verdade merece a atencao
+    # inteira de novo. Repetir afasta o proximo aviso.
+    if [[ "$AV_ACAO" == "repetir" ]]; then
+      E_REPETICOES=$(( E_REPETICOES + 1 ))
+    else
+      E_REPETICOES=0
+    fi
   fi
   E_NIVEL="$nivel_agora"
   grava_estado "$chave"
@@ -1368,11 +1650,14 @@ diagnostico() {
   local metrica="$1" valor="$2"
   case "$metrica" in
     cpu)
-      if maior "${MEDIDA_STEAL:-0}" "${STEAL_ATENCAO:-10}"; then
+      # Os limiares vem da configuracao, nao cravados aqui. Com 1.5 cravado, um
+      # alerta de CPU em 97% abria o bloco "o que fazer" falando de load
+      # average, que e justamente o jargao que ninguem precisa ler primeiro.
+      if maior "${MEDIDA_STEAL:-0}" "${STEAL_ATENCAO:-25}"; then
         t diag_steal "$MEDIDA_STEAL"
-      elif maior "${MEDIDA_IOWAIT:-0}" "25"; then
+      elif maior "${MEDIDA_IOWAIT:-0}" "${IOWAIT_ATENCAO:-25}"; then
         t diag_iowait "$MEDIDA_IOWAIT"
-      elif maior "${MEDIDA_LOAD:-0}" "1.5"; then
+      elif maior "${MEDIDA_LOAD:-0}" "${LOAD_ATENCAO:-2.5}"; then
         t diag_load "$MEDIDA_LOAD"
       else
         t diag_cpu
@@ -1420,47 +1705,98 @@ template_de() {
   esac
 }
 
-# monta_corpo METRICA VALOR LIMIAR ACAO DURACAO PICO EXTRA_HTML
+# monta_corpo METRICA CHAVE VALOR LIMIAR ACAO NIVEL DURACAO PICO EXTRA_HTML
+#
+# Ordem do e-mail, de cima para baixo, e a ordem das perguntas de quem abre:
+# o que houve (no titulo), o que isso causa, se precisa de alguem agora, o que
+# fazer, e so entao o numero. Antes o e-mail abria com "Load average em 1.56",
+# que obriga a pessoa a traduzir o numero para saber se precisa levantar.
 monta_corpo() {
-  local metrica="$1" valor="$2" limiar="$3" acao="$4" dur="$5" pico="$6" extra="${7:-}"
-  local rot uni diag
+  local metrica="$1" chave="$2" valor="$3" limiar="$4" acao="$5" nivel="$6"
+  local dur="$7" pico="$8" extra="${9:-}"
+  local rot uni corpo=""
   rot="$(rotulo_metrica "$metrica")"
   uni="$(unidade_metrica "$metrica")"
-  diag="$(diagnostico "$metrica" "$valor")"
 
-  local linha_estado
+  # 1. O que isso causa para quem usa o servidor.
   if [[ "$acao" == "resolver" ]]; then
-    linha_estado="<p style=\"margin:0 0 18px\">$(t corpo_normalizou "$rot" "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")</p>"
+    corpo+="<p style=\"font-size:15px;line-height:1.5;margin:0 0 14px\">$(t corpo_normalizou "$rot" "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")</p>"
   else
-    linha_estado="<p style=\"margin:0 0 6px\">$(t corpo_valor "$rot" "$valor" "$uni" "$limiar" "$uni")</p>"
-    linha_estado+="<p style=\"margin:0 0 18px;color:#6b7280\">$(t corpo_desde "$(duracao_humana "$dur")" "$pico" "$uni" "$CICLOS_CONFIRMACAO")</p>"
+    corpo+="<p style=\"font-size:15px;line-height:1.5;margin:0 0 14px\">$(impacto_metrica "$metrica")</p>"
   fi
 
-  local contexto="" td_rot="padding:3px 14px 3px 0;color:#6b7280"
-  contexto+="<p style=\"margin:0 0 4px\"><strong>$(t corpo_estado)</strong></p>"
-  contexto+="<table style=\"border-collapse:collapse;font-size:13px;margin:0 0 18px\">"
-  [[ -n "${MEDIDA_CPU:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">CPU</td><td>${MEDIDA_CPU}% ($(t corpo_media_de "$(duracao_humana "${MEDIDA_CPU_JANELA:-0}")"))</td></tr>"
-  [[ -n "${MEDIDA_IOWAIT:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">iowait</td><td>${MEDIDA_IOWAIT}%</td></tr>"
-  [[ -n "${MEDIDA_STEAL:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t tabela_steal)</td><td>${MEDIDA_STEAL}%</td></tr>"
-  [[ -n "${MEDIDA_MEM:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t rotulo_memoria)</td><td>${MEDIDA_MEM}% ($(t corpo_disponiveis "$(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.1f", k/1048576}')"))</td></tr>"
+  # 2. Precisa de alguem agora? Sem numero: e esta linha que decide se a
+  #    pessoa levanta da cama ou le amanha.
+  local fundo borda texto
+  case "$acao|$nivel" in
+    resolver*)   fundo="#ecfdf5"; borda="#15803d"; texto="#14532d" ;;  # verde
+    *\|critico)  fundo="#fef2f2"; borda="#b91c1c"; texto="#7f1d1d" ;;  # vermelho
+    *)           fundo="#fffbeb"; borda="#b45309"; texto="#7c2d12" ;;  # laranja escuro
+  esac
+  local linha_urg
+  linha_urg="$(urgencia "$acao" "$nivel")"
+  [[ "$acao" != "resolver" && "${dur:-0}" -gt 0 ]] && \
+    linha_urg="${linha_urg} $(t urgencia_desde "$(duracao_humana "$dur")")"
+  corpo+="<p style=\"margin:0 0 20px;padding:11px 15px;background:${fundo};border-left:3px solid ${borda};color:${texto};font-size:14px;font-weight:bold\">${linha_urg}</p>"
+
+  # 3. O que fazer. Nao existe em alerta de recuperacao: nao ha o que fazer.
+  if [[ "$acao" != "resolver" ]]; then
+    corpo+="<div style=\"background:#f8fafc;border-left:3px solid #64748b;padding:12px 16px;margin:0 0 22px;font-size:13px;line-height:1.5\"><strong>$(t rotulo_fazer)</strong><br/>$(diagnostico "$metrica" "$valor")</div>"
+  fi
+
+  # 4. O numero, o limiar e a tabela. Quem chegou ate aqui vai investigar.
+  corpo+="<p style=\"margin:0 0 10px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#94a3b8\"><strong>$(t rotulo_tecnico)</strong></p>"
+  if [[ "$acao" != "resolver" ]]; then
+    corpo+="<p style=\"margin:0 0 4px\">$(t corpo_valor "$rot" "$valor" "$uni" "$limiar" "$uni")</p>"
+    corpo+="<p style=\"margin:0 0 16px;color:#6b7280;font-size:13px\">$(t corpo_desde "$(duracao_humana "$dur")" "$pico" "$uni" "$CICLOS_CONFIRMACAO")</p>"
+  fi
+
+  local td_rot="padding:3px 14px 3px 0;color:#6b7280"
+  corpo+="<p style=\"margin:0 0 4px\"><strong>$(t corpo_estado)</strong></p>"
+  corpo+="<table style=\"border-collapse:collapse;font-size:13px;margin:0 0 18px\">"
+  [[ -n "${MEDIDA_CPU:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">CPU</td><td>${MEDIDA_CPU}% ($(t corpo_media_de "$(duracao_humana "${MEDIDA_CPU_JANELA:-0}")"))</td></tr>"
+  [[ -n "${MEDIDA_IOWAIT:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">iowait</td><td>${MEDIDA_IOWAIT}%</td></tr>"
+  [[ -n "${MEDIDA_STEAL:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">$(t tabela_steal)</td><td>${MEDIDA_STEAL}%</td></tr>"
+  [[ -n "${MEDIDA_MEM:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">$(t rotulo_memoria)</td><td>${MEDIDA_MEM}% ($(t corpo_disponiveis "$(awk -v k="${MEDIDA_MEM_DISP_KB:-0}" 'BEGIN{printf "%.1f", k/1048576}')"))</td></tr>"
   if [[ "${MEDIDA_SWAP_TOTAL_KB:-0}" -gt 0 ]]; then
-    contexto+="<tr><td style=\"${td_rot}\">Swap</td><td>${MEDIDA_SWAP:-0}%</td></tr>"
+    corpo+="<tr><td style=\"${td_rot}\">Swap</td><td>${MEDIDA_SWAP:-0}%</td></tr>"
   else
-    contexto+="<tr><td style=\"${td_rot}\">Swap</td><td>$(t corpo_sem_swap)</td></tr>"
+    corpo+="<tr><td style=\"${td_rot}\">Swap</td><td>$(t corpo_sem_swap)</td></tr>"
   fi
-  [[ -n "${MEDIDA_LOAD:-}" ]] && contexto+="<tr><td style=\"${td_rot}\">$(t rotulo_load)</td><td>${MEDIDA_LOAD_BRUTO} ($(t corpo_por_nucleo "$MEDIDA_LOAD" "${MEDIDA_NUCLEOS:-?}"))</td></tr>"
-  contexto+="</table>"
+  [[ -n "${MEDIDA_LOAD:-}" ]] && corpo+="<tr><td style=\"${td_rot}\">$(t rotulo_load)</td><td>${MEDIDA_LOAD_BRUTO} ($(t corpo_por_nucleo "$MEDIDA_LOAD" "${MEDIDA_NUCLEOS:-?}"))</td></tr>"
+  corpo+="</table>"
 
-  local bloco_diag
-  bloco_diag="<div style=\"background:#f8fafc;border-left:3px solid #64748b;padding:12px 16px;margin:0 0 18px;font-size:13px\"><strong>$(t corpo_comecar)</strong><br/>${diag}</div>"
-
-  printf '%s%s%s%s' "$linha_estado" "$bloco_diag" "$contexto" "$extra"
+  printf '%s%s' "$corpo" "$extra"
 }
 
-# envia_alerta METRICA ROTULO_CHAVE VALOR LIMIAR ACAO DURACAO PICO EXTRA_HTML EXTRA_TEXTO
+# A mesma coisa em texto corrido, para o Telegram. Montado das mesmas pecas:
+# dois catalogos para o mesmo alerta davam duas verdades, e a que ficava para
+# tras chegava ao cliente.
+monta_texto_tg() {
+  local metrica="$1" frase="$2" acao="$3" nivel="$4" valor="$5" uni="$6"
+  local limiar="$7" dur="$8" pico="$9"
+  local linha_urg
+  linha_urg="$(urgencia "$acao" "$nivel")"
+  [[ "$acao" != "resolver" && "${dur:-0}" -gt 0 ]] && \
+    linha_urg="${linha_urg} $(t urgencia_desde "$(duracao_humana "$dur")")"
+
+  printf '%s %s: %s\n\n' "$(prefixo_assunto "$acao")" "$SERVER_ID" "$frase"
+  if [[ "$acao" != "resolver" ]]; then
+    printf '%s\n%s\n\n%s: %s\n\n%s: %s%s (%s %s%s, %s %s%s)\n' \
+      "$(impacto_metrica "$metrica")" "$linha_urg" \
+      "$(t rotulo_fazer)" "$(diagnostico "$metrica" "$valor")" \
+      "$(rotulo_metrica "$metrica")" "$valor" "$uni" \
+      "$(t tg_limiar)" "$limiar" "$uni" "$(t tg_pico)" "$pico" "$uni"
+  else
+    printf '%s\n\n%s %s | %s %s%s\n' "$linha_urg" \
+      "$(t tg_durou)" "$(duracao_humana "$dur")" "$(t tg_pico)" "$pico" "$uni"
+  fi
+}
+
+# envia_alerta METRICA CHAVE VALOR LIMIAR ACAO DURACAO PICO EXTRA_HTML EXTRA_TEXTO NIVEL
 envia_alerta() {
   local metrica="$1" chave="$2" valor="$3" limiar="$4" acao="$5"
-  local dur="$6" pico="$7" extra_html="${8:-}" extra_txt="${9:-}"
+  local dur="$6" pico="$7" extra_html="${8:-}" extra_txt="${9:-}" nivel="${10:-atencao}"
 
   if silencio_ativo; then
     log_info "alerta ${chave} suprimido: silencio ativo ($(duracao_humana "$SILENCIO_RESTA") restantes, ${SILENCIO_MOTIVO:-sem motivo})"
@@ -1473,23 +1809,20 @@ envia_alerta() {
     return 0
   fi
 
-  local rot uni assunto titulo corpo
-  rot="$(rotulo_metrica "$metrica")"
+  local uni frase assunto titulo corpo
   uni="$(unidade_metrica "$metrica")"
-  assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} - ${SERVER_ID}"
-  # Em disco e inode o ponto de montagem entra no assunto: sem ele, dois
-  # alertas do mesmo servidor ficam identicos na caixa de entrada.
-  [[ "$metrica" == "disco" || "$metrica" == "inode" ]] &&     assunto="$(prefixo_assunto "$acao") ${rot} ${valor}${uni} ${chave#*:} - ${SERVER_ID}"
+  # A frase diz o que houve em palavras que dispensam saber o que e load
+  # average. Em disco e inode ela ja carrega o ponto de montagem: sem isso,
+  # dois alertas do mesmo servidor ficam identicos na caixa de entrada.
   if [[ "$acao" == "resolver" ]]; then
-    titulo="$(t titulo_normalizou "$rot" "$SERVER_ID")"
+    frase="$(frase_recuperacao "$metrica" "${valor}${uni}")"
   else
-    # O nivel ja aparece no assunto, entre colchetes. Repetir no titulo gastava
-    # a linha mais visivel do e-mail com informacao duplicada; o nome do
-    # servidor serve melhor, principalmente quando o alerta e encaminhado.
-    titulo="$(t titulo_alerta "$rot" "$valor" "$uni" "$SERVER_ID")"
+    frase="$(frase_problema "$metrica" "${valor}${uni}" "$chave")"
   fi
+  assunto="$(prefixo_assunto "$acao") ${SERVER_ID}: ${frase}"
+  titulo="$(t titulo_frase "$frase" "$SERVER_ID")"
 
-  corpo="$(monta_corpo "$metrica" "$valor" "$limiar" "$acao" "$dur" "$pico" "$extra_html")"
+  corpo="$(monta_corpo "$metrica" "$chave" "$valor" "$limiar" "$acao" "$nivel" "$dur" "$pico" "$extra_html")"
 
   if [[ "${CANAL_EMAIL:-1}" == "1" && -n "${RECIPIENTS:-}" && -x "${AGENTE_BIN}/send_html_alert.sh" ]]; then
     "${AGENTE_BIN}/send_html_alert.sh" "$(template_de "$metrica")" "$RECIPIENTS" "$assunto" "$titulo" "$corpo" \
@@ -1500,14 +1833,8 @@ envia_alerta() {
   [[ "$acao" == "resolver" && "${RECUPERACAO_TELEGRAM:-0}" != "1" ]] && manda_tg=0
   if [[ "${CANAL_TELEGRAM:-1}" == "1" && "$manda_tg" == "1" && -x "${AGENTE_BIN}/send_telegram_alert.sh" ]]; then
     local txt
-    if [[ "$acao" == "resolver" ]]; then
-      txt="$(t tg_normalizou "$(prefixo_assunto "$acao")" "$rot" "$SERVER_ID"         "$valor" "$uni" "$(duracao_humana "$dur")" "$pico" "$uni")"
-    else
-      txt="$(t tg_alerta "$(prefixo_assunto "$acao")" "$rot" "$valor" "$uni" "$SERVER_ID"         "$(duracao_humana "$dur")" "$pico" "$uni" "$limiar" "$uni"         "$(diagnostico "$metrica" "$valor")")"
-      [[ -n "$extra_txt" ]] && txt="${txt}"$'
-
-'"${extra_txt}"
-    fi
+    txt="$(monta_texto_tg "$metrica" "$frase" "$acao" "$nivel" "$valor" "$uni" "$limiar" "$dur" "$pico")"
+    [[ -n "$extra_txt" && "$acao" != "resolver" ]] && txt="${txt}"$'\n'"${extra_txt}"
     "${AGENTE_BIN}/send_telegram_alert.sh" "$txt" >/dev/null 2>&1 || log_erro "envio ao Telegram falhou para ${chave}"
   fi
 
@@ -1515,7 +1842,7 @@ envia_alerta() {
     envia_incidente_dashboard "$metrica" "$chave" "$valor" "$limiar" "$acao" "$dur" "$pico" "$assunto"
   fi
 
-  log_info "alerta enviado: ${chave} acao=${acao} valor=${valor} limiar=${limiar}"
+  log_info "alerta enviado: ${chave} acao=${acao} nivel=${nivel} valor=${valor} limiar=${limiar}"
   return 0
 }
 
@@ -2173,18 +2500,18 @@ avalia_e_notifica() {
   local lim_at lim_cr
   read -r lim_at lim_cr <<<"$(limiar_de "$metrica")"
 
-  avalia "$chave" "$valor" "$lim_at" "$lim_cr"
+  avalia "$chave" "$valor" "$lim_at" "$lim_cr" "$(banda_de "$metrica")"
 
   case "$AV_ACAO" in
     nada) return 0 ;;
     resolver)
       [[ "${ALERTA_RECUPERACAO:-1}" == "1" ]] || return 0
-      envia_alerta "$metrica" "$chave" "$valor" "$lim_at" "resolver" "$AV_DURACAO" "$AV_PICO" "$extra_html" "$extra_txt"
+      envia_alerta "$metrica" "$chave" "$valor" "$lim_at" "resolver" "$AV_DURACAO" "$AV_PICO" "$extra_html" "$extra_txt" "$AV_NIVEL"
       ;;
     *)
       local lim_usado="$lim_at"
       [[ "$AV_NIVEL" == "critico" ]] && lim_usado="$lim_cr"
-      envia_alerta "$metrica" "$chave" "$valor" "$lim_usado" "$AV_ACAO" "$AV_DURACAO" "$AV_PICO" "$extra_html" "$extra_txt"
+      envia_alerta "$metrica" "$chave" "$valor" "$lim_usado" "$AV_ACAO" "$AV_DURACAO" "$AV_PICO" "$extra_html" "$extra_txt" "$AV_NIVEL"
       ;;
   esac
   return 0
@@ -2211,8 +2538,8 @@ rodada() {
   local proc_cpu proc_mem html_cpu html_mem
   proc_cpu="$(top_processos cpu 12)"
   proc_mem="$(top_processos mem 12)"
-  html_cpu="<p style=\"margin:0 0 4px\"><strong>Processos por CPU</strong></p><pre style=\"font-size:12px;background:#f8fafc;padding:12px;overflow-x:auto\">$(printf '%s' "$proc_cpu" | escapa_html)</pre>"
-  html_mem="<p style=\"margin:0 0 4px\"><strong>Processos por memoria</strong></p><pre style=\"font-size:12px;background:#f8fafc;padding:12px;overflow-x:auto\">$(printf '%s' "$proc_mem" | escapa_html)</pre>"
+  html_cpu="<p style=\"margin:0 0 4px\"><strong>$(t corpo_proc_cpu)</strong></p><pre style=\"font-size:12px;background:#f8fafc;padding:12px;overflow-x:auto\">$(printf '%s' "$proc_cpu" | escapa_html)</pre>"
+  html_mem="<p style=\"margin:0 0 4px\"><strong>$(t corpo_proc_mem)</strong></p><pre style=\"font-size:12px;background:#f8fafc;padding:12px;overflow-x:auto\">$(printf '%s' "$proc_mem" | escapa_html)</pre>"
 
   [[ "${VIGIAR_CPU:-1}" == "1" ]] && \
     avalia_e_notifica cpu cpu "${MEDIDA_CPU:-}" "${html_cpu}${html_mem}" "$proc_cpu"
@@ -2240,8 +2567,21 @@ rodada() {
   [[ "${VIGIAR_SWAP:-1}" == "1" && "${MEDIDA_SWAP_TOTAL_KB:-0}" -gt 0 ]] && \
     avalia_e_notifica swap swap "${MEDIDA_SWAP:-}" "$html_mem" "$proc_mem"
 
-  [[ "${VIGIAR_LOAD:-1}" == "1" ]] && \
+  # Load sozinho nao abre incidente. Ele mede FILA, e fila so dói quando a CPU
+  # esta saturada ou quando a espera e de disco; nos dois casos ha sintoma
+  # medido junto. Sem essa condicao, servidor de build vivia em alerta: em
+  # 15/10/2026 um servidor de 8 nucleos com load 1.56 por nucleo, CPU em 67.9%
+  # e iowait em 1.0% renotificava havia seis dias, com tudo funcionando.
+  # O load continua medido, continua na tabela de contexto de todo alerta e
+  # continua indo para o painel.
+  if [[ "${VIGIAR_LOAD:-1}" == "1" ]] && load_vira_alerta; then
     avalia_e_notifica load load "${MEDIDA_LOAD:-}" "$html_cpu" "$proc_cpu"
+  elif [[ -f "$(caminho_estado load)" ]]; then
+    # Incidente de load aberto nao pode ficar pendurado quando o sintoma
+    # some: alimenta a maquina de estado em ordem para fechar pelo caminho
+    # normal, com aviso de recuperacao.
+    avalia_e_notifica load load "$(valor_para_fechar_load)"
+  fi
 
   if [[ "${VIGIAR_DISCO:-1}" == "1" || "${VIGIAR_INODE:-1}" == "1" ]]; then
     local mnt uso ino resto dirs html_dirs

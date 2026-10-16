@@ -216,13 +216,23 @@ top_processos() {
   local por="${1:-cpu}" n="${2:-12}"
   local chave="-%cpu"
   [[ "$por" == "mem" ]] && chave="-%mem"
+  # O proprio medidor fica de fora. O "ps" aparecia em PRIMEIRO lugar com 400%,
+  # porque o percentual dele e calculado sobre uma vida de milissegundos, e o
+  # agente vinha logo abaixo: quem lia o alerta concluia que o monitoramento
+  # era o que estava consumindo o servidor. O corte vem antes do head, senao
+  # sobrariam dez linhas onde foram pedidas doze.
   ps -eo pid,user,pcpu,pmem,comm,args --sort="$chave" --no-headers 2>/dev/null \
+    | awk -v me="$$" '
+        $1 == me { next }
+        $5 == "ps" || $5 == "awk" { next }
+        /monitoring-agent\.sh/ { next }
+        {
+          cmd=""
+          for (i=6; i<=NF; i++) cmd = cmd $i " "
+          printf "%-7s %-10s %5s%% %5s%% %.60s\n", $1, $2, $3, $4, substr(cmd,1,60)
+        }' 2>/dev/null \
     | head -n "$n" \
-    | awk '{
-        cmd=""
-        for (i=6; i<=NF; i++) cmd = cmd $i " "
-        printf "%-7s %-10s %5s%% %5s%% %.60s\n", $1, $2, $3, $4, substr(cmd,1,60)
-      }' 2>/dev/null || printf 'ps indisponivel\n'
+    | grep . || printf 'ps indisponivel\n'
 }
 
 maiores_diretorios() {

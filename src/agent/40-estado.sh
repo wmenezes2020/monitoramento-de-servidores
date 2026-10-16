@@ -18,7 +18,7 @@ le_estado() {
   local chave="$1" arq
   arq="$(caminho_estado "$chave")"
   E_NIVEL="ok"; E_ACIMA=0; E_ACIMA_CRIT=0; E_ABAIXO=0; E_DESDE=0
-  E_ULTIMO_ALERTA=0; E_VALOR_PICO=0; E_NOTIFICADO="ok"
+  E_ULTIMO_ALERTA=0; E_VALOR_PICO=0; E_NOTIFICADO="ok"; E_REPETICOES=0
   [[ -f "$arq" ]] || return 0
   local k v
   while IFS='=' read -r k v; do
@@ -31,18 +31,20 @@ le_estado() {
       ULTIMO_ALERTA)  E_ULTIMO_ALERTA="${v:-0}" ;;
       VALOR_PICO)     E_VALOR_PICO="${v:-0}" ;;
       NOTIFICADO)     E_NOTIFICADO="${v:-ok}" ;;
+      REPETICOES)     E_REPETICOES="${v:-0}" ;;
     esac
   done <"$arq" 2>/dev/null
   [[ "$E_ACIMA" =~ ^[0-9]+$ ]] || E_ACIMA=0
   [[ "$E_ACIMA_CRIT" =~ ^[0-9]+$ ]] || E_ACIMA_CRIT=0
   [[ "$E_ABAIXO" =~ ^[0-9]+$ ]] || E_ABAIXO=0
+  [[ "$E_REPETICOES" =~ ^[0-9]+$ ]] || E_REPETICOES=0
   return 0
 }
 
 grava_estado() {
   local chave="$1"
-  printf 'NIVEL=%s\nACIMA=%s\nACIMA_CRIT=%s\nABAIXO=%s\nDESDE=%s\nULTIMO_ALERTA=%s\nVALOR_PICO=%s\nNOTIFICADO=%s\n' \
-    "$E_NIVEL" "$E_ACIMA" "$E_ACIMA_CRIT" "$E_ABAIXO" "$E_DESDE" "$E_ULTIMO_ALERTA" "$E_VALOR_PICO" "$E_NOTIFICADO" \
+  printf 'NIVEL=%s\nACIMA=%s\nACIMA_CRIT=%s\nABAIXO=%s\nDESDE=%s\nULTIMO_ALERTA=%s\nVALOR_PICO=%s\nNOTIFICADO=%s\nREPETICOES=%s\n' \
+    "$E_NIVEL" "$E_ACIMA" "$E_ACIMA_CRIT" "$E_ABAIXO" "$E_DESDE" "$E_ULTIMO_ALERTA" "$E_VALOR_PICO" "$E_NOTIFICADO" "$E_REPETICOES" \
     | escreve_atomico "$(caminho_estado "$chave")"
 }
 

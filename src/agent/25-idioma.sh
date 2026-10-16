@@ -96,6 +96,67 @@ duracao_humana() {
   }'
 }
 
+# --- A frase que a pessoa le primeiro ---------------------------------------
+#
+# Um alerta que abre com "Load average em 1.56" obriga quem recebe a traduzir o
+# numero antes de saber se precisa levantar da cama. A frase diz o que houve; o
+# numero fica nos detalhes tecnicos, para quem for investigar.
+
+frase_problema() {
+  # As duas linhas sao separadas de proposito: "${3#*:}" na mesma linha do
+  # local estoura com "unbound variable" quando a chave nao vem, e so quem
+  # chama com ponto de montagem a manda.
+  local metrica="$1" valor="$2" chave="${3:-}"
+  local mnt="${chave#*:}"
+  case "$metrica" in
+    cpu)     t frase_cpu "$valor" ;;
+    memoria) t frase_memoria "$valor" ;;
+    disco)   t frase_disco "$mnt" "$valor" ;;
+    inode)   t frase_inode "$mnt" ;;
+    swap)    t frase_swap "$valor" ;;
+    load)    t frase_load ;;
+    steal)   t frase_steal ;;
+    *)       t frase_padrao "$(rotulo_metrica "$metrica")" "$valor" ;;
+  esac
+}
+
+sujeito_metrica() {
+  case "$1" in
+    cpu)     t sujeito_cpu ;;
+    memoria) t sujeito_memoria ;;
+    disco)   t sujeito_disco ;;
+    inode)   t sujeito_inode ;;
+    swap)    t sujeito_swap ;;
+    load)    t sujeito_load ;;
+    steal)   t sujeito_steal ;;
+    *)       t sujeito_padrao "$(rotulo_metrica "$1")" ;;
+  esac
+}
+
+frase_recuperacao() { t frase_normal "$(sujeito_metrica "$1")" "$2"; }
+
+impacto_metrica() {
+  case "$1" in
+    cpu)     t impacto_cpu ;;
+    memoria) t impacto_memoria ;;
+    disco)   t impacto_disco ;;
+    inode)   t impacto_inode ;;
+    swap)    t impacto_swap ;;
+    load)    t impacto_load ;;
+    steal)   t impacto_steal ;;
+    *)       t impacto_padrao ;;
+  esac
+}
+
+# urgencia ACAO NIVEL: dita sem numero nenhum, porque e esta linha que decide
+# se alguem levanta agora ou le amanha de manha.
+urgencia() {
+  case "$1" in
+    resolver) t urgencia_resolvido ;;
+    *) if [[ "$2" == "critico" ]]; then t urgencia_critico; else t urgencia_atencao; fi ;;
+  esac
+}
+
 # --- Catalogos ------------------------------------------------------------
 #
 # Um "case" por idioma. Bash associativo com "set -u" explode em chave que nao
@@ -125,8 +186,6 @@ msg_pt() {
     dur_horas)    printf 'h' ;;
     dur_dias)     printf 'd' ;;
 
-    titulo_normalizou) printf '%%s normalizou em %%s' ;;
-    titulo_alerta)     printf '%%s em %%s%%s no %%s' ;;
     corpo_normalizou)  printf '<strong>%%s normalizou.</strong> Valor atual: %%s%%s. O problema durou %%s e chegou a %%s%%s.' ;;
     corpo_valor)       printf '<strong>%%s: %%s%%s</strong> (limiar %%s%%s)' ;;
     corpo_desde)       printf 'Assim há %%s, pico de %%s%%s. Confirmado em %%s leituras seguidas.' ;;
@@ -140,8 +199,10 @@ msg_pt() {
     corpo_disponiveis) printf '%%s GB disponíveis' ;;
     corpo_por_nucleo)  printf '%%s por núcleo, %%s núcleos' ;;
 
-    tg_normalizou) printf '%%s %%s normalizou em %%s\n\nAtual: %%s%%s | durou %%s | pico %%s%%s' ;;
-    tg_alerta)     printf '%%s %%s em %%s%%s - %%s\n\nAssim há %%s (pico %%s%%s, limiar %%s%%s)\n\n%%s' ;;
+
+    tg_limiar)    printf 'limiar' ;;
+    tg_pico)      printf 'pico' ;;
+    tg_durou)     printf 'durou' ;;
 
     resumo_assunto) printf '%%s alertas na última hora' ;;
     resumo_titulo)  printf 'Várias métricas fora do normal' ;;
@@ -160,6 +221,47 @@ msg_pt() {
     diag_load_m)  printf 'Load average em %%s por núcleo: há processo esperando a vez. Load alto com CPU baixa costuma ser espera de disco ou de rede.' ;;
     diag_steal_m) printf 'A instância está pedindo mais CPU do que o provedor entrega neste momento. Em EC2 burstable, isso é crédito esgotado. Trocar de família ou ligar o modo unlimited resolve; ajuste dentro do servidor não.' ;;
     diag_padrao)  printf 'Conferir os processos abaixo.' ;;
+
+
+    # O aviso em linguagem de gente. A frase e o que a pessoa le primeiro, no
+    # assunto e no titulo: ela precisa dizer o que houve sem exigir que
+    # ninguem saiba o que e load average.
+    frase_cpu)     printf 'CPU no limite (%%s)' ;;
+    frase_memoria) printf 'Memória quase cheia (%%s)' ;;
+    frase_disco)   printf 'Disco quase cheio em %%s (%%s)' ;;
+    frase_inode)   printf 'Sem espaço para arquivo novo em %%s' ;;
+    frase_swap)    printf 'Swap em uso alto (%%s)' ;;
+    frase_load)    printf 'Fila de processos esperando CPU' ;;
+    frase_steal)   printf 'O provedor está limitando a CPU' ;;
+    frase_padrao)  printf '%%s em %%s' ;;
+    frase_normal)  printf '%%s voltou ao normal (%%s)' ;;
+
+    sujeito_cpu)     printf 'A CPU' ;;
+    sujeito_memoria) printf 'A memória' ;;
+    sujeito_disco)   printf 'O disco' ;;
+    sujeito_inode)   printf 'O espaço para arquivos' ;;
+    sujeito_swap)    printf 'O swap' ;;
+    sujeito_load)    printf 'A fila de processos' ;;
+    sujeito_steal)   printf 'A CPU entregue pelo provedor' ;;
+    sujeito_padrao)  printf '%%s' ;;
+
+    impacto_cpu)     printf 'Os sistemas deste servidor podem estar lentos para responder.' ;;
+    impacto_memoria) printf 'Se a memória acabar, o servidor derruba processos sem avisar, e a aplicação cai sem deixar erro no log.' ;;
+    impacto_disco)   printf 'Quando o disco enche, o site para de gravar e o banco de dados pode corromper.' ;;
+    impacto_inode)   printf 'Ainda há espaço no disco, mas o servidor não consegue criar arquivo novo: upload, log e sessão param.' ;;
+    impacto_swap)    printf 'O servidor está usando disco no lugar de memória, e isso deixa tudo lento sem derrubar nada.' ;;
+    impacto_load)    printf 'Está chegando mais trabalho do que o servidor dá conta agora, então as respostas demoram mais.' ;;
+    impacto_steal)   printf 'A máquina está pedindo mais CPU do que o provedor entrega, então tudo fica mais lento mesmo com o servidor sadio.' ;;
+    impacto_padrao)  printf 'A medida passou do limite configurado para este servidor.' ;;
+
+    urgencia_critico)   printf 'Precisa de alguém agora.' ;;
+    urgencia_atencao)   printf 'Não é emergência. Dá para resolver hoje.' ;;
+    urgencia_resolvido) printf 'Nada a fazer. É só para registro.' ;;
+    urgencia_desde)     printf 'Está assim há %%s.' ;;
+
+    rotulo_fazer)   printf 'O que fazer' ;;
+    rotulo_tecnico) printf 'Detalhes técnicos' ;;
+    titulo_frase)   printf '%%s em %%s' ;;
 
     tpl_data)     printf 'Data' ;;
     tpl_servidor) printf 'Servidor' ;;
@@ -190,8 +292,6 @@ msg_en() {
     dur_horas)    printf 'h' ;;
     dur_dias)     printf 'd' ;;
 
-    titulo_normalizou) printf '%%s back to normal on %%s' ;;
-    titulo_alerta)     printf '%%s at %%s%%s on %%s' ;;
     corpo_normalizou)  printf '<strong>%%s is back to normal.</strong> Current value: %%s%%s. It lasted %%s and peaked at %%s%%s.' ;;
     corpo_valor)       printf '<strong>%%s: %%s%%s</strong> (threshold %%s%%s)' ;;
     corpo_desde)       printf 'Like this for %%s, peaked at %%s%%s. Confirmed over %%s consecutive readings.' ;;
@@ -205,8 +305,10 @@ msg_en() {
     corpo_disponiveis) printf '%%s GB available' ;;
     corpo_por_nucleo)  printf '%%s per core, %%s cores' ;;
 
-    tg_normalizou) printf '%%s %%s back to normal on %%s\n\nCurrent: %%s%%s | lasted %%s | peak %%s%%s' ;;
-    tg_alerta)     printf '%%s %%s at %%s%%s - %%s\n\nLike this for %%s (peak %%s%%s, threshold %%s%%s)\n\n%%s' ;;
+
+    tg_limiar)    printf 'threshold' ;;
+    tg_pico)      printf 'peak' ;;
+    tg_durou)     printf 'lasted' ;;
 
     resumo_assunto) printf '%%s alerts in the last hour' ;;
     resumo_titulo)  printf 'Several metrics out of range' ;;
@@ -225,6 +327,44 @@ msg_en() {
     diag_load_m)  printf 'Load average at %%s per core: processes are waiting their turn. High load with low CPU usually means waiting on disk or network.' ;;
     diag_steal_m) printf 'This instance is asking for more CPU than the provider is delivering right now. On EC2 burstable, that means credits ran out. Switching instance family or enabling unlimited mode fixes it; tuning inside the server does not.' ;;
     diag_padrao)  printf 'Check the processes below.' ;;
+
+
+    frase_cpu)     printf 'CPU at its limit (%%s)' ;;
+    frase_memoria) printf 'Memory almost full (%%s)' ;;
+    frase_disco)   printf 'Disk almost full on %%s (%%s)' ;;
+    frase_inode)   printf 'No room for new files on %%s' ;;
+    frase_swap)    printf 'Swap heavily used (%%s)' ;;
+    frase_load)    printf 'Processes queuing for CPU' ;;
+    frase_steal)   printf 'The provider is capping this CPU' ;;
+    frase_padrao)  printf '%%s at %%s' ;;
+    frase_normal)  printf '%%s is back to normal (%%s)' ;;
+
+    sujeito_cpu)     printf 'CPU' ;;
+    sujeito_memoria) printf 'Memory' ;;
+    sujeito_disco)   printf 'Disk' ;;
+    sujeito_inode)   printf 'File capacity' ;;
+    sujeito_swap)    printf 'Swap' ;;
+    sujeito_load)    printf 'The process queue' ;;
+    sujeito_steal)   printf 'The CPU delivered by the provider' ;;
+    sujeito_padrao)  printf '%%s' ;;
+
+    impacto_cpu)     printf 'Anything running on this server may be slow to respond.' ;;
+    impacto_memoria) printf 'If memory runs out, the server kills processes without warning, and the app goes down leaving no error in its log.' ;;
+    impacto_disco)   printf 'Once the disk is full, the site stops writing and the database can corrupt.' ;;
+    impacto_inode)   printf 'There is still disk space, but no new file can be created: uploads, logs and sessions stop.' ;;
+    impacto_swap)    printf 'The server is using disk instead of memory, which makes everything slow without taking anything down.' ;;
+    impacto_load)    printf 'More work is arriving than the server can handle right now, so responses take longer.' ;;
+    impacto_steal)   printf 'The machine is asking for more CPU than the provider delivers, so everything slows down even with a healthy server.' ;;
+    impacto_padrao)  printf 'The reading went past the threshold configured for this server.' ;;
+
+    urgencia_critico)   printf 'Someone needs to look at this now.' ;;
+    urgencia_atencao)   printf 'Not an emergency. It can be handled today.' ;;
+    urgencia_resolvido) printf 'Nothing to do. This is just for the record.' ;;
+    urgencia_desde)     printf 'It has been like this for %%s.' ;;
+
+    rotulo_fazer)   printf 'What to do' ;;
+    rotulo_tecnico) printf 'Technical details' ;;
+    titulo_frase)   printf '%%s on %%s' ;;
 
     tpl_data)     printf 'Date' ;;
     tpl_servidor) printf 'Server' ;;
@@ -255,8 +395,6 @@ msg_es() {
     dur_horas)    printf 'h' ;;
     dur_dias)     printf 'd' ;;
 
-    titulo_normalizou) printf '%%s se normalizó en %%s' ;;
-    titulo_alerta)     printf '%%s en %%s%%s en %%s' ;;
     corpo_normalizou)  printf '<strong>%%s se normalizó.</strong> Valor actual: %%s%%s. El problema duró %%s y llegó a %%s%%s.' ;;
     corpo_valor)       printf '<strong>%%s: %%s%%s</strong> (umbral %%s%%s)' ;;
     corpo_desde)       printf 'Así desde hace %%s, pico de %%s%%s. Confirmado en %%s lecturas seguidas.' ;;
@@ -270,8 +408,10 @@ msg_es() {
     corpo_disponiveis) printf '%%s GB disponibles' ;;
     corpo_por_nucleo)  printf '%%s por núcleo, %%s núcleos' ;;
 
-    tg_normalizou) printf '%%s %%s se normalizó en %%s\n\nActual: %%s%%s | duró %%s | pico %%s%%s' ;;
-    tg_alerta)     printf '%%s %%s en %%s%%s - %%s\n\nAsí desde hace %%s (pico %%s%%s, umbral %%s%%s)\n\n%%s' ;;
+
+    tg_limiar)    printf 'umbral' ;;
+    tg_pico)      printf 'pico' ;;
+    tg_durou)     printf 'duró' ;;
 
     resumo_assunto) printf '%%s alertas en la última hora' ;;
     resumo_titulo)  printf 'Varias métricas fuera de rango' ;;
@@ -290,6 +430,44 @@ msg_es() {
     diag_load_m)  printf 'Load average en %%s por núcleo: hay procesos esperando su turno. Load alto con CPU baja suele ser espera de disco o de red.' ;;
     diag_steal_m) printf 'La instancia está pidiendo más CPU de la que el proveedor entrega en este momento. En EC2 burstable, eso significa que se agotaron los créditos. Cambiar de familia o activar el modo unlimited lo resuelve; ajustar dentro del servidor no.' ;;
     diag_padrao)  printf 'Revisar los procesos abajo.' ;;
+
+
+    frase_cpu)     printf 'CPU al límite (%%s)' ;;
+    frase_memoria) printf 'Memoria casi llena (%%s)' ;;
+    frase_disco)   printf 'Disco casi lleno en %%s (%%s)' ;;
+    frase_inode)   printf 'Sin espacio para archivos nuevos en %%s' ;;
+    frase_swap)    printf 'Swap muy usado (%%s)' ;;
+    frase_load)    printf 'Procesos haciendo fila por CPU' ;;
+    frase_steal)   printf 'El proveedor está limitando la CPU' ;;
+    frase_padrao)  printf '%%s en %%s' ;;
+    frase_normal)  printf '%%s volvió a la normalidad (%%s)' ;;
+
+    sujeito_cpu)     printf 'La CPU' ;;
+    sujeito_memoria) printf 'La memoria' ;;
+    sujeito_disco)   printf 'El disco' ;;
+    sujeito_inode)   printf 'El espacio para archivos' ;;
+    sujeito_swap)    printf 'El swap' ;;
+    sujeito_load)    printf 'La fila de procesos' ;;
+    sujeito_steal)   printf 'La CPU entregada por el proveedor' ;;
+    sujeito_padrao)  printf '%%s' ;;
+
+    impacto_cpu)     printf 'Lo que corre en este servidor puede responder lento.' ;;
+    impacto_memoria) printf 'Si la memoria se acaba, el servidor mata procesos sin avisar y la aplicación se cae sin dejar error en el log.' ;;
+    impacto_disco)   printf 'Cuando el disco se llena, el sitio deja de guardar y la base de datos se puede corromper.' ;;
+    impacto_inode)   printf 'Todavía hay espacio en el disco, pero no se puede crear ningún archivo nuevo: cargas, logs y sesiones se detienen.' ;;
+    impacto_swap)    printf 'El servidor está usando disco en lugar de memoria, y eso pone todo lento sin tumbar nada.' ;;
+    impacto_load)    printf 'Está llegando más trabajo del que el servidor alcanza a atender, así que las respuestas tardan más.' ;;
+    impacto_steal)   printf 'La máquina pide más CPU de la que el proveedor entrega, entonces todo va más lento aunque el servidor esté sano.' ;;
+    impacto_padrao)  printf 'La medida pasó el umbral configurado para este servidor.' ;;
+
+    urgencia_critico)   printf 'Necesita a alguien ahora.' ;;
+    urgencia_atencao)   printf 'No es una emergencia. Se puede resolver hoy.' ;;
+    urgencia_resolvido) printf 'Nada que hacer. Es solo para registro.' ;;
+    urgencia_desde)     printf 'Lleva así %%s.' ;;
+
+    rotulo_fazer)   printf 'Qué hacer' ;;
+    rotulo_tecnico) printf 'Detalles técnicos' ;;
+    titulo_frase)   printf '%%s en %%s' ;;
 
     tpl_data)     printf 'Fecha' ;;
     tpl_servidor) printf 'Servidor' ;;

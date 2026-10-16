@@ -104,6 +104,7 @@ receber aviso nenhum.
 ./tests/testa-migracao.sh     #  31 verificações de migração ponta a ponta
 ./tests/testa-remetente.sh    #  28 verificações do remetente e do Postfix
 ./tests/testa-envio-email.sh  #  25 verificações do envio de e-mail
+./tests/testa-ruido.sh        #  77 verificações do que NÃO deve virar alerta
 ```
 
 Todas precisam estar verdes. Elas rodam em qualquer máquina com
@@ -213,7 +214,7 @@ reescrita é o único caminho para traduzi-los. As quatro variáveis
 `${TITLE} ${MESSAGE} ${DATE} ${HOST}` precisam continuar literais no arquivo:
 quem substitui é o `envsubst` dentro do `send_html_alert.sh`, no envio.
 
-## Steal não é alerta sozinho
+## Steal e load não são alerta sozinhos
 
 Em instância burstable, steal aparece toda vez que a máquina usa burst acima
 do baseline: é o mecanismo funcionando. Medição de 09/10/2026 num `t3a.xlarge`
@@ -224,6 +225,69 @@ Hoje o limiar é 25 **e** a avaliação exige CPU acima do limiar de atenção n
 mesmo ciclo. Steal só é problema quando o servidor quer CPU e o provedor não
 dá. Com a CPU baixa ele continua aparecendo no corpo e no diagnóstico, que é
 onde serve.
+
+**O load caiu na mesma regra em 15/10/2026**, pelo mesmo motivo e com medição
+própria: um servidor de 8 núcleos com load 1.56 por núcleo, CPU em 67.9%,
+iowait em 1.0% e 18.6 GB livres renotificava de hora em hora havia seis dias.
+Estava trabalhando, não sofrendo.
+
+Load é medida de fila, não de dano. A decisão vive em `load_vira_alerta()`, em
+`50-avaliar.sh`, fora do fluxo da rodada, justamente para poder ser conferida
+com os números do caso real. Ela exige CPU acima do limiar de atenção **ou**
+iowait acima de `IOWAIT_ATENCAO`. O limiar de fábrica subiu de 1.5 para 2.5 por
+núcleo, e o load continua medido, continua na tabela de contexto de todo alerta
+e continua indo para o painel.
+
+## A banda de saída vem na unidade da métrica
+
+`banda_de()` devolve pontos percentuais para as métricas percentuais e fila por
+núcleo para o load. O ponto de saída da histerese é `limiar - banda`, preso em
+zero quando dá negativo.
+
+Com os 8 pontos percentuais aplicados ao load, o ponto de saída de um limiar
+2.5 dava `-5.5`, virava zero, e **o incidente de load só se fecharia com o load
+exatamente zero**. Load zero não existe em servidor ligado: o incidente abria e
+nunca mais saía, renotificando para sempre.
+
+Foi o pior dos defeitos do e-mail de 15/10/2026 e o único que não aparece
+olhando para limiar nenhum. Métrica nova que não seja percentual precisa da
+própria banda aqui.
+
+## A renotificação dobra, e isso não é detalhe
+
+`espera_renotificacao()` dobra a espera a cada repetição do mesmo incidente, de
+`RENOTIFICAR_MIN` até `RENOTIFICAR_MAX_MIN`: 1h, 2h, 4h, 8h, 16h, 24h, 24h.
+
+Intervalo fixo foi o que transformou um incidente de seis dias em perto de 148
+e-mails idênticos. Alerta que chega sempre igual vira filtro de caixa de
+entrada, e aí o alerta que importa também morre lá.
+
+Abrir e escalar zeram o contador: piorar de verdade merece a atenção inteira de
+novo. `RENOTIFICAR_MIN=0` continua desligando a renotificação.
+
+## O alerta é escrito para ser entendido de olho batido
+
+A ordem é a das perguntas de quem abre o e-mail:
+
+1. **O que houve**, em uma frase, no assunto e no título. Nunca o nome cru da
+   métrica com o número do lado.
+2. **O que isso causa** para quem usa o servidor (`impacto_metrica`).
+3. **Se precisa de alguém agora** (`urgencia`), dito sem número nenhum.
+4. **O que fazer**, que é o diagnóstico de sempre.
+5. **Detalhes técnicos**: valor, limiar, há quanto tempo, tabela, processos.
+
+O assunto fica `[ATENÇÃO] nome-do-servidor: CPU no limite (97%)`. O que motivou
+isso foi um e-mail de produção que abria com `Load average en 1.56`, sobre o
+qual a reação foi: não dá para saber do que se trata.
+
+**Frase nova de métrica entra nos três catálogos**, com `frase_<metrica>`,
+`sujeito_<metrica>` e `impacto_<metrica>`. A bateria `testa-ruido.sh` confere a
+ordem dos blocos no corpo e que nenhum idioma vazou para dentro do outro.
+
+**O medidor não entra na lista de processos.** O `ps` aparecia em primeiro
+lugar com 400%, porque o percentual dele é calculado sobre uma vida de
+milissegundos, e o agente logo abaixo: o alerta parecia acusar o próprio
+monitoramento.
 
 ## Texto que a pessoa lê
 

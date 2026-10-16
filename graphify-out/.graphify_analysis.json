@@ -88,6 +88,44 @@
       "tests_testa_idioma_verdade"
     ],
     "4": [
+      "src_agent_25_idioma",
+      "src_agent_25_idioma_data_local",
+      "src_agent_25_idioma_duracao_humana",
+      "src_agent_25_idioma_frase_problema",
+      "src_agent_25_idioma_frase_recuperacao",
+      "src_agent_25_idioma_idioma_normalizado",
+      "src_agent_25_idioma_impacto_metrica",
+      "src_agent_25_idioma_msg_en",
+      "src_agent_25_idioma_msg_es",
+      "src_agent_25_idioma_msg_pt",
+      "src_agent_25_idioma_prefixo_assunto",
+      "src_agent_25_idioma_rotulo_metrica",
+      "src_agent_25_idioma_sh__entry",
+      "src_agent_25_idioma_sujeito_metrica",
+      "src_agent_25_idioma_t",
+      "src_agent_25_idioma_unidade_metrica",
+      "src_agent_25_idioma_urgencia"
+    ],
+    "5": [
+      "tests_testa_ruido",
+      "tests_testa_ruido_agente_bin",
+      "tests_testa_ruido_agente_estado",
+      "tests_testa_ruido_agente_log",
+      "tests_testa_ruido_agente_raiz",
+      "tests_testa_ruido_agente_so_carregar",
+      "tests_testa_ruido_antes_de",
+      "tests_testa_ruido_contem",
+      "tests_testa_ruido_envelhece",
+      "tests_testa_ruido_falha",
+      "tests_testa_ruido_grupo",
+      "tests_testa_ruido_igual",
+      "tests_testa_ruido_mentira",
+      "tests_testa_ruido_nao_contem",
+      "tests_testa_ruido_ok",
+      "tests_testa_ruido_sh__entry",
+      "tests_testa_ruido_verdade"
+    ],
+    "6": [
       "tests_testa_envio_email",
       "tests_testa_envio_email_campo",
       "tests_testa_envio_email_chama",
@@ -105,7 +143,7 @@
       "tests_testa_envio_email_so_ascii",
       "tests_testa_envio_email_verdade"
     ],
-    "5": [
+    "7": [
       "src_agent_30_medir",
       "src_agent_30_medir_campo_meminfo",
       "src_agent_30_medir_ignorar_montagem",
@@ -120,7 +158,7 @@
       "src_agent_30_medir_sh__entry",
       "src_agent_30_medir_top_processos"
     ],
-    "6": [
+    "8": [
       "src_agent_90_main",
       "src_agent_90_main_autoteste",
       "src_agent_90_main_avalia_e_notifica",
@@ -135,21 +173,7 @@
       "src_agent_90_main_status",
       "src_agent_90_main_uso"
     ],
-    "7": [
-      "src_agent_25_idioma",
-      "src_agent_25_idioma_data_local",
-      "src_agent_25_idioma_duracao_humana",
-      "src_agent_25_idioma_idioma_normalizado",
-      "src_agent_25_idioma_msg_en",
-      "src_agent_25_idioma_msg_es",
-      "src_agent_25_idioma_msg_pt",
-      "src_agent_25_idioma_prefixo_assunto",
-      "src_agent_25_idioma_rotulo_metrica",
-      "src_agent_25_idioma_sh__entry",
-      "src_agent_25_idioma_t",
-      "src_agent_25_idioma_unidade_metrica"
-    ],
-    "8": [
+    "9": [
       "tests_testa_migracao",
       "tests_testa_migracao_agente_bin",
       "tests_testa_migracao_agente_estado",
@@ -163,7 +187,7 @@
       "tests_testa_migracao_sh__entry",
       "tests_testa_migracao_tem"
     ],
-    "9": [
+    "10": [
       "src_agent_40_estado",
       "src_agent_40_estado_caminho_estado",
       "src_agent_40_estado_consome_orcamento",
@@ -176,7 +200,7 @@
       "src_agent_40_estado_sh__entry",
       "src_agent_40_estado_silencio_ativo"
     ],
-    "10": [
+    "11": [
       "src_agent_80_bootstrap",
       "src_agent_80_bootstrap_escreve_config_inicial",
       "src_agent_80_bootstrap_instala_binarios",
@@ -189,7 +213,7 @@
       "src_agent_80_bootstrap_sh__entry",
       "src_agent_80_bootstrap_sou_root"
     ],
-    "11": [
+    "12": [
       "json",
       "path",
       "pathlib",
@@ -201,7 +225,19 @@
       "scripts_gerar_grafo_rationale_2",
       "sys"
     ],
-    "12": [
+    "13": [
+      "src_agent_60_notificar",
+      "src_agent_60_notificar_despacha_agregado",
+      "src_agent_60_notificar_envia_alerta",
+      "src_agent_60_notificar_envia_incidente_dashboard",
+      "src_agent_60_notificar_envia_metricas_dashboard",
+      "src_agent_60_notificar_monta_corpo",
+      "src_agent_60_notificar_monta_texto_tg",
+      "src_agent_60_notificar_registra_agregado",
+      "src_agent_60_notificar_sh__entry",
+      "src_agent_60_notificar_template_de"
+    ],
+    "14": [
       "src_agent_70_autoupdate",
       "src_agent_70_autoupdate_atualiza_agente",
       "src_agent_70_autoupdate_baixa",
@@ -213,18 +249,7 @@
       "src_agent_70_autoupdate_versao_instalada",
       "src_agent_70_autoupdate_versao_maior"
     ],
-    "13": [
-      "src_agent_60_notificar",
-      "src_agent_60_notificar_despacha_agregado",
-      "src_agent_60_notificar_envia_alerta",
-      "src_agent_60_notificar_envia_incidente_dashboard",
-      "src_agent_60_notificar_envia_metricas_dashboard",
-      "src_agent_60_notificar_monta_corpo",
-      "src_agent_60_notificar_registra_agregado",
-      "src_agent_60_notificar_sh__entry",
-      "src_agent_60_notificar_template_de"
-    ],
-    "14": [
+    "15": [
       "src_agent_28_remetente",
       "src_agent_28_remetente_aplica_remetente",
       "src_agent_28_remetente_atualiza_generic_do_postfix",
@@ -234,7 +259,17 @@
       "src_agent_28_remetente_le_do_email_conf",
       "src_agent_28_remetente_sh__entry"
     ],
-    "15": [
+    "16": [
+      "src_agent_50_avaliar",
+      "src_agent_50_avaliar_avalia",
+      "src_agent_50_avaliar_banda_de",
+      "src_agent_50_avaliar_diagnostico",
+      "src_agent_50_avaliar_espera_renotificacao",
+      "src_agent_50_avaliar_load_vira_alerta",
+      "src_agent_50_avaliar_sh__entry",
+      "src_agent_50_avaliar_valor_para_fechar_load"
+    ],
+    "17": [
       "src_agent_20_config",
       "src_agent_20_config_carrega_config",
       "src_agent_20_config_limiar_de",
@@ -242,7 +277,7 @@
       "src_agent_20_config_sh__entry",
       "src_agent_20_config_valida_config"
     ],
-    "16": [
+    "18": [
       "src_agent_27_templates",
       "src_agent_27_templates_escreve_template",
       "src_agent_27_templates_idioma_html",
@@ -250,27 +285,21 @@
       "src_agent_27_templates_sincroniza_templates",
       "src_agent_27_templates_templates_lista"
     ],
-    "17": [
-      "src_agent_50_avaliar",
-      "src_agent_50_avaliar_avalia",
-      "src_agent_50_avaliar_diagnostico",
-      "src_agent_50_avaliar_sh__entry"
-    ],
-    "18": [
+    "19": [
       "scripts_build",
       "scripts_build_sh__entry",
       "scripts_build_sha"
     ],
-    "19": [
+    "20": [
       "src_envio_send_html_alert",
       "src_envio_send_html_alert_codifica_cabecalho",
       "src_envio_send_html_alert_sh__entry"
     ],
-    "20": [
+    "21": [
       "src_agent_00_cabecalho",
       "src_agent_00_cabecalho_sh__entry"
     ],
-    "21": [
+    "22": [
       "src_envio_send_telegram_alert",
       "src_envio_send_telegram_alert_sh__entry"
     ]
@@ -280,30 +309,41 @@
     "1": 0.1871345029239766,
     "2": 0.1437908496732026,
     "3": 0.23529411764705882,
-    "4": 0.3,
-    "5": 0.21794871794871795,
-    "6": 0.2564102564102564,
-    "7": 0.21212121212121213,
-    "8": 0.3333333333333333,
-    "9": 0.2,
-    "10": 0.3090909090909091,
-    "11": 0.26666666666666666,
-    "12": 0.3333333333333333,
-    "13": 0.3055555555555556,
-    "14": 0.42857142857142855,
-    "15": 0.4,
-    "16": 0.4,
-    "17": 0.5,
-    "18": 0.6666666666666666,
-    "19": 1.0,
+    "4": 0.17647058823529413,
+    "5": 0.2647058823529412,
+    "6": 0.3,
+    "7": 0.21794871794871795,
+    "8": 0.2564102564102564,
+    "9": 0.3333333333333333,
+    "10": 0.2,
+    "11": 0.3090909090909091,
+    "12": 0.26666666666666666,
+    "13": 0.28888888888888886,
+    "14": 0.3333333333333333,
+    "15": 0.42857142857142855,
+    "16": 0.32142857142857145,
+    "17": 0.4,
+    "18": 0.4,
+    "19": 0.6666666666666666,
     "20": 1.0,
-    "21": 1.0
+    "21": 1.0,
+    "22": 1.0
   },
   "gods": [
     {
       "id": "tests_testa_envio_email_sh__entry",
       "label": "testa-envio-email.sh script",
       "degree": 10
+    },
+    {
+      "id": "src_agent_25_idioma_t",
+      "label": "t()",
+      "degree": 9
+    },
+    {
+      "id": "tests_testa_ruido_sh__entry",
+      "label": "testa-ruido.sh script",
+      "degree": 9
     },
     {
       "id": "src_agent_70_autoupdate_atualiza_agente",
@@ -339,16 +379,6 @@
       "id": "tests_testa_idioma_falha",
       "label": "falha()",
       "degree": 7
-    },
-    {
-      "id": "tests_testa_remetente_sh__entry",
-      "label": "testa-remetente.sh script",
-      "degree": 7
-    },
-    {
-      "id": "src_agent_28_remetente_aplica_remetente",
-      "label": "aplica_remetente()",
-      "degree": 6
     }
   ],
   "surprises": [],
@@ -356,7 +386,7 @@
     {
       "type": "isolated_nodes",
       "question": "What connects `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script` to the rest of the system?",
-      "why": "46 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "why": "51 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
       "type": "low_cohesion",

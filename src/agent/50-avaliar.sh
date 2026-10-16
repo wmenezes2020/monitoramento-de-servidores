@@ -11,11 +11,76 @@
 # alerta e recuperacao alternados para sempre. Com BANDA_SAIDA=8 e limiar 85, a
 # saida so acontece abaixo de 77.
 #
+# Ela vem na UNIDADE da metrica, por banda_de(). Percentual em pontos
+# percentuais, load em fila por nucleo: oito pontos descontados de um limiar de
+# 2.5 davam um ponto de saida negativo, preso em zero, e o incidente de load
+# ficava aberto para sempre.
+#
 # Resultado em: AV_ACAO (nada|abrir|escalar|repetir|resolver), AV_NIVEL,
 # AV_DURACAO, AV_PICO.
 
+# O valor que fecha um incidente de load quando o sintoma que o justificava
+# sumiu. Usa a fila real quando ela ja esta em ordem, para o aviso de
+# recuperacao sair com o numero de verdade; so forca zero quando a fila
+# continua alta, porque aí o que mudou foi o criterio, e deixar o incidente
+# pendurado seria pior do que fecha-lo.
+valor_para_fechar_load() {
+  local saida
+  saida="$(awk -v l="${LOAD_ATENCAO:-2.5}" -v b="$(banda_de load)" 'BEGIN{v=l-b; if (v<0) v=0; printf "%.2f", v}')"
+  if [[ -n "${MEDIDA_LOAD:-}" ]] && ! maior "$MEDIDA_LOAD" "$saida"; then
+    printf '%s' "$MEDIDA_LOAD"
+  else
+    printf '0'
+  fi
+}
+
+# Espera ate o proximo aviso do MESMO incidente, em segundos. Dobra a cada
+# repeticao ate o teto: 1h, 2h, 4h, 8h, 16h, 24h, 24h...
+#
+# Intervalo fixo foi o que transformou um incidente de seis dias em perto de
+# 148 e-mails identicos, e e assim que se ensina alguem a ignorar o alerta.
+# Zero em RENOTIFICAR_MIN continua desligando a renotificacao por completo.
+# Load sozinho nao abre incidente. Ele mede FILA, e fila so dói quando a CPU
+# esta saturada ou quando a espera e de disco: nos dois casos existe sintoma
+# medido no mesmo ciclo. A decisao fica aqui, fora do fluxo da rodada, para
+# poder ser conferida com os numeros do caso real que a motivou.
+#
+# Medicao de 15/10/2026, servidor de 8 nucleos: load 1.56 por nucleo, CPU em
+# 67.9%, iowait em 1.0%, 18.6 GB de memoria livre. Nada doendo, e aquilo
+# renotificava de hora em hora havia seis dias.
+load_vira_alerta() {
+  [[ -n "${MEDIDA_LOAD:-}" ]] || return 1
+  maior "${MEDIDA_CPU:-0}" "${CPU_ATENCAO:-85}" && return 0
+  maior "${MEDIDA_IOWAIT:-0}" "${IOWAIT_ATENCAO:-25}" && return 0
+  return 1
+}
+
+espera_renotificacao() {
+  local repeticoes="${1:-0}"
+  local base=$(( ${RENOTIFICAR_MIN:-60} * 60 ))
+  local teto=$(( ${RENOTIFICAR_MAX_MIN:-1440} * 60 ))
+  [[ "$base" -le 0 ]] && { printf '0'; return 0; }
+  [[ "$teto" -lt "$base" ]] && teto="$base"
+  local espera="$base" i=0
+  while [[ "$i" -lt "$repeticoes" ]] && [[ "$espera" -lt "$teto" ]]; do
+    espera=$(( espera * 2 )); i=$(( i + 1 ))
+  done
+  [[ "$espera" -gt "$teto" ]] && espera="$teto"
+  printf '%s' "$espera"
+}
+
+# A banda de saida na unidade da metrica. Percentual usa pontos percentuais;
+# load usa fila por nucleo. Misturar as duas escalas deixava incidente de load
+# sem saida nenhuma.
+banda_de() {
+  case "$1" in
+    load) printf '%s' "${BANDA_SAIDA_LOAD:-0.3}" ;;
+    *)    printf '%s' "${BANDA_SAIDA:-8}" ;;
+  esac
+}
+
 avalia() {
-  local chave="$1" valor="$2" lim_at="$3" lim_cr="$4"
+  local chave="$1" valor="$2" lim_at="$3" lim_cr="$4" banda="${5:-${BANDA_SAIDA:-8}}"
 
   AV_ACAO="nada"; AV_NIVEL="ok"; AV_DURACAO=0; AV_PICO="$valor"
 
@@ -34,7 +99,7 @@ avalia() {
   fi
 
   local saida
-  saida="$(awk -v l="$lim_at" -v b="${BANDA_SAIDA:-8}" 'BEGIN{v=l-b; if (v<0) v=0; printf "%.2f", v}')"
+  saida="$(awk -v l="$lim_at" -v b="$banda" 'BEGIN{v=l-b; if (v<0) v=0; printf "%.2f", v}')"
 
   if [[ "$nivel_agora" == "ok" ]]; then
     # Abaixo do limiar, mas ainda dentro da banda: nao conta como recuperacao.
@@ -55,7 +120,7 @@ avalia() {
         AV_DURACAO=$(( n - E_DESDE ))
         AV_PICO="$E_VALOR_PICO"
         E_NIVEL="ok"; E_ABAIXO=0; E_DESDE=0
-        E_ULTIMO_ALERTA=0; E_VALOR_PICO=0; E_NOTIFICADO="ok"
+        E_ULTIMO_ALERTA=0; E_VALOR_PICO=0; E_NOTIFICADO="ok"; E_REPETICOES=0
       fi
     fi
     grava_estado "$chave"
@@ -95,7 +160,8 @@ avalia() {
     # Piorou de verdade e se manteve: vale interromper alguem de novo.
     AV_ACAO="escalar"
   else
-    local espera=$(( ${RENOTIFICAR_MIN:-60} * 60 ))
+    local espera
+    espera="$(espera_renotificacao "$E_REPETICOES")"
     if [[ "$espera" -gt 0 ]] && [[ $(( n - E_ULTIMO_ALERTA )) -ge "$espera" ]]; then
       AV_ACAO="repetir"
     fi
@@ -104,6 +170,13 @@ avalia() {
   if [[ "$AV_ACAO" != "nada" ]]; then
     E_ULTIMO_ALERTA="$n"
     E_NOTIFICADO="$nivel_agora"
+    # Abrir e escalar zeram a conta: piorar de verdade merece a atencao
+    # inteira de novo. Repetir afasta o proximo aviso.
+    if [[ "$AV_ACAO" == "repetir" ]]; then
+      E_REPETICOES=$(( E_REPETICOES + 1 ))
+    else
+      E_REPETICOES=0
+    fi
   fi
   E_NIVEL="$nivel_agora"
   grava_estado "$chave"
@@ -119,11 +192,14 @@ diagnostico() {
   local metrica="$1" valor="$2"
   case "$metrica" in
     cpu)
-      if maior "${MEDIDA_STEAL:-0}" "${STEAL_ATENCAO:-10}"; then
+      # Os limiares vem da configuracao, nao cravados aqui. Com 1.5 cravado, um
+      # alerta de CPU em 97% abria o bloco "o que fazer" falando de load
+      # average, que e justamente o jargao que ninguem precisa ler primeiro.
+      if maior "${MEDIDA_STEAL:-0}" "${STEAL_ATENCAO:-25}"; then
         t diag_steal "$MEDIDA_STEAL"
-      elif maior "${MEDIDA_IOWAIT:-0}" "25"; then
+      elif maior "${MEDIDA_IOWAIT:-0}" "${IOWAIT_ATENCAO:-25}"; then
         t diag_iowait "$MEDIDA_IOWAIT"
-      elif maior "${MEDIDA_LOAD:-0}" "1.5"; then
+      elif maior "${MEDIDA_LOAD:-0}" "${LOAD_ATENCAO:-2.5}"; then
         t diag_load "$MEDIDA_LOAD"
       else
         t diag_cpu
