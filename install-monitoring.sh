@@ -187,6 +187,11 @@ echo "" >&2
 
 # --- Dashboard de Observabilidade (pergunta PRIMEIRO - se conectado, dados virao do painel) ---
 DASHBOARD_ENABLED=0
+# Conta de envio vinda do painel: quando existe, nao instalamos nem
+# configuramos servico de e-mail nenhum neste servidor.
+SERVICO_EMAIL_DO_PAINEL=0
+SVC_HOST=""; SVC_PORTA=""; SVC_USUARIO=""; SVC_SENHA=""
+SVC_REMETENTE=""; SVC_NOME=""; SVC_SEGURO=0
 DASHBOARD_SERVER_UUID=""
 DASHBOARD_API_URL="${DASHBOARD_API_URL:-https://api-observabilidade.edeniva.com.br/v1}"
 RECIPIENTS=""
@@ -224,6 +229,44 @@ if [[ "$USE_DASHBOARD" == "s" || "$USE_DASHBOARD" == "sim" || "$USE_DASHBOARD" =
       [[ -n "$SMTP_DOMAIN" ]] && log_ok "Nome do servidor: $SMTP_DOMAIN"
       [[ -n "$RECIPIENTS" ]] && log_ok "Destinatarios de e-mail obtidos do Dashboard"
       [[ -n "$TELEGRAM_BOT_TOKEN" ]] && [[ -n "$TELEGRAM_CHAT_ID" ]] && log_ok "Telegram obtido do Dashboard"
+
+      # --- Conta de envio escolhida no painel -----------------------------
+      #
+      # Tendo conta cadastrada, a instalacao para de perguntar dados de SMTP e
+      # para de instalar servico de e-mail nenhum: o agente fala direto com o
+      # servidor de e-mail, por curl.
+      #
+      # E isso que faz a instalacao conviver com o Exim de um painel de
+      # hospedagem, com um cPanel ou com o Postfix de outra pessoa. Antes, o
+      # instalador detectava qualquer um deles e DESISTIA do e-mail, deixando
+      # o servidor sem alerta nenhum por essa via.
+      BLOCO_EMAIL=$(echo "$DASH_RESP" | grep -o '"email_service":{[^}]*}' | head -1)
+      if [[ -n "$BLOCO_EMAIL" ]]; then
+        SVC_HOST=$(echo "$BLOCO_EMAIL" | sed -n 's/.*"host":"\([^"]*\)".*/\1/p')
+        SVC_PORTA=$(echo "$BLOCO_EMAIL" | grep -o '"port":[0-9]\+' | head -1 | cut -d: -f2)
+        SVC_USUARIO=$(echo "$BLOCO_EMAIL" | sed -n 's/.*"username":"\([^"]*\)".*/\1/p')
+        SVC_SENHA=$(echo "$BLOCO_EMAIL" | sed -n 's/.*"password":"\([^"]*\)".*/\1/p')
+        SVC_REMETENTE=$(echo "$BLOCO_EMAIL" | sed -n 's/.*"sender_email":"\([^"]*\)".*/\1/p')
+        SVC_NOME=$(echo "$BLOCO_EMAIL" | sed -n 's/.*"sender_name":"\([^"]*\)".*/\1/p')
+        if echo "$BLOCO_EMAIL" | grep -q '"secure":true'; then SVC_SEGURO=1; else SVC_SEGURO=0; fi
+        if [[ -n "$SVC_HOST" && -n "$SVC_USUARIO" && -n "$SVC_SENHA" && -n "$SVC_REMETENTE" ]]; then
+          SERVICO_EMAIL_DO_PAINEL=1
+          log_ok "Conta de envio de e-mail obtida do Dashboard: ${SVC_USUARIO} em ${SVC_HOST}:${SVC_PORTA:-587}"
+        else
+          log_warn "A conta de e-mail do Dashboard veio incompleta. Seguindo pelo fluxo normal."
+        fi
+      fi
+
+      BLOCO_TG=$(echo "$DASH_RESP" | grep -o '"telegram_service":{[^}]*}' | head -1)
+      if [[ -n "$BLOCO_TG" ]]; then
+        SVC_TG_TOKEN=$(echo "$BLOCO_TG" | sed -n 's/.*"bot_token":"\([^"]*\)".*/\1/p')
+        SVC_TG_CHAT=$(echo "$BLOCO_TG" | sed -n 's/.*"chat_id":"\([^"]*\)".*/\1/p')
+        if [[ -n "$SVC_TG_TOKEN" && -n "$SVC_TG_CHAT" ]]; then
+          TELEGRAM_BOT_TOKEN="$SVC_TG_TOKEN"
+          TELEGRAM_CHAT_ID="$SVC_TG_CHAT"
+          log_ok "Bot do Telegram obtido do Dashboard"
+        fi
+      fi
     else
       log_warn "Nao foi possivel obter config do Dashboard (servidor inexistente ou API inacessivel). Fluxo normal."
       DASHBOARD_ENABLED=0
@@ -232,8 +275,16 @@ if [[ "$USE_DASHBOARD" == "s" || "$USE_DASHBOARD" == "sim" || "$USE_DASHBOARD" =
 fi
 echo "" >&2
 
-# --- Ativacao de notificacoes por e-mail (servico Postfix) ---
+# --- Ativacao de notificacoes por e-mail ---
 EMAIL_ENABLED=0
+if [[ $SERVICO_EMAIL_DO_PAINEL -eq 1 ]]; then
+  # Nada a perguntar: a conta veio do painel e o envio nao depende de
+  # servico de e-mail instalado aqui.
+  EMAIL_ENABLED=1
+  SENDER_EMAIL="$SVC_REMETENTE"
+  log_ok "E-mail ligado com a conta do Dashboard. Nenhum servico de e-mail sera instalado neste servidor."
+  echo "" >&2
+else
 printf 'Deseja ativar notificacoes por e-mail? (s/N): ' >&2
 read -r r </dev/tty || true
 r="${r:-n}"
@@ -253,6 +304,7 @@ if [[ "${r,,}" == "s" || "${r,,}" == "sim" ]]; then
     EMAIL_ENABLED=1
   fi
 fi
+fi
 echo "" >&2
 
 # --- Coleta de dados ( Dashboard conectado = menos perguntas; senao = fluxo completo ) ---
@@ -260,7 +312,16 @@ log_info "Informe os dados solicitados (Enter para padrao quando indicado)."
 echo "" >&2
 
 # --- Dados SMTP e destinatarios (se e-mail ativado) ---
-if [[ $EMAIL_ENABLED -eq 1 ]]; then
+if [[ $EMAIL_ENABLED -eq 1 && $SERVICO_EMAIL_DO_PAINEL -eq 1 ]]; then
+  # A conta inteira veio do painel: servidor, porta, usuario, senha e
+  # remetente. Perguntar de novo seria pedir ao dono o que ele ja digitou.
+  SMTP_HOST="$SVC_HOST"
+  SMTP_PORT="${SVC_PORTA:-587}"
+  SMTP_USER="$SVC_USUARIO"
+  SMTP_PASS="$SVC_SENHA"
+  SENDER_EMAIL="$SVC_REMETENTE"
+  [[ -z "$SMTP_DOMAIN" ]] && SMTP_DOMAIN="$(hostname -f 2>/dev/null || hostname)"
+elif [[ $EMAIL_ENABLED -eq 1 ]]; then
   printf 'Porta do servidor SMTP (ex: 587 ou 2525) [587]: ' >&2
   read -r SMTP_PORT </dev/tty || true
   SMTP_PORT="${SMTP_PORT:-587}"
@@ -347,7 +408,10 @@ echo "" >&2
 
 # --- 1. Pacotes do sistema ---
 PACKS="gettext-base clamav clamav-daemon sysstat bc"
-[[ $EMAIL_ENABLED -eq 1 ]] && PACKS="postfix libsasl2-modules mailutils $PACKS"
+# O Postfix so entra quando NOS vamos cuidar do envio. Com conta do painel, o
+# agente fala direto com o servidor de e-mail e instalar um MTA aqui seria
+# mexer no que ja existe na maquina sem precisar.
+[[ $EMAIL_ENABLED -eq 1 && $SERVICO_EMAIL_DO_PAINEL -eq 0 ]] && PACKS="postfix libsasl2-modules mailutils $PACKS"
 log_step "Pacotes do sistema ($PACKS)"
 export DEBIAN_FRONTEND=noninteractive
 if [[ $EMAIL_ENABLED -eq 1 ]]; then
@@ -360,8 +424,13 @@ else
   INSTALL_ERRORS+=("Falha ao instalar pacotes. Execute: sudo apt-get update && sudo apt-get install -y $PACKS")
 fi
 
-# --- 2. Configuração Postfix (somente se e-mail ativado) ---
-if [[ $EMAIL_ENABLED -eq 1 ]]; then
+# --- 2. Configuracao Postfix (so quando NOS cuidamos do envio) ---
+#
+# Com conta de envio vinda do painel, nada aqui roda: o agente fala direto com
+# o servidor de e-mail. Isso deixa intactos o main.cf, o sasl_passwd e o
+# generic de quem ja tinha Postfix, e evita instalar um MTA ao lado do Exim de
+# um painel de hospedagem.
+if [[ $EMAIL_ENABLED -eq 1 && $SERVICO_EMAIL_DO_PAINEL -eq 0 ]]; then
 log_step "Postfix (SMTP2Go)"
 SMTP_HOST="mail.smtp2go.com"
 # Auto-correcao: se porta 587 falhar, tentar 2525
@@ -509,6 +578,36 @@ else
   printf 'SENDER_EMAIL=""\nSERVER_ID="%s"\n' "$(hostname 2>/dev/null || echo 'localhost')" > /opt/monitoring/email.conf
 fi
 chmod 644 /opt/monitoring/email.conf
+
+# Conta de envio do painel: o agente le este arquivo e fala direto com o
+# servidor de e-mail. Criado com 600 ANTES de receber a senha, porque um
+# arquivo aberto por um instante ja e tempo suficiente para outro usuario da
+# maquina ler.
+if [[ $SERVICO_EMAIL_DO_PAINEL -eq 1 ]]; then
+  : > /opt/monitoring/smtp.conf
+  chmod 600 /opt/monitoring/smtp.conf
+  {
+    printf '# Conta de envio escolhida no painel. Gerado na instalacao;
+'
+    printf '# a proxima sincronia do agente sobrescreve este arquivo.
+'
+    printf 'SMTP_HOST="%s"
+'    "$SVC_HOST"
+    printf 'SMTP_PORTA="%s"
+'   "${SVC_PORTA:-587}"
+    printf 'SMTP_SEGURO="%s"
+'  "$SVC_SEGURO"
+    printf 'SMTP_USUARIO="%s"
+' "$SVC_USUARIO"
+    printf 'SMTP_SENHA="%s"
+'   "$SVC_SENHA"
+  } >> /opt/monitoring/smtp.conf
+  if [[ -n "$SVC_NOME" ]]; then
+    printf 'SENDER_NAME="%s"
+' "$SVC_NOME" >> /opt/monitoring/email.conf
+  fi
+  log_ok "Conta de envio do painel gravada. Nenhum servico de e-mail foi instalado ou alterado neste servidor."
+fi
 
 # --- 4c. Telegram: config e scripts de notificacao ---
 log_step "Telegram (send_telegram_alert.sh, telegram-get-chat-id.sh)"

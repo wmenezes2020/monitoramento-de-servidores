@@ -151,13 +151,61 @@ mede_memoria() {
 
 mede_load() {
   MEDIDA_LOAD="" ; MEDIDA_LOAD_BRUTO=""
-  local l1 n
-  l1="$(awk '{print $1; exit}' "$PROC_LOADAVG" 2>/dev/null)"
+  MEDIDA_LOAD5="" ; MEDIDA_LOAD15=""
+  MEDIDA_PROCS_TOTAL="" ; MEDIDA_PROCS_RODANDO=""
+  local l1 l5 l15 rodando total n
+  # O /proc/loadavg traz tudo numa linha: as tres janelas, "rodando/total" de
+  # processos e o ultimo PID criado.
+  read -r l1 l5 l15 rodando _ <<<"$(awk '{print $1, $2, $3, $4}' "$PROC_LOADAVG" 2>/dev/null)"
   [[ -z "$l1" ]] && return 1
   n="$(nucleos)"
   MEDIDA_LOAD_BRUTO="$l1"
   MEDIDA_LOAD="$(awk -v l="$l1" -v n="$n" 'BEGIN{printf "%.2f", l/n}')"
   MEDIDA_NUCLEOS="$n"
+
+  # As outras duas janelas dizem se o aperto esta passando ou veio para ficar.
+  # Tambem normalizadas por nucleo, para serem comparaveis entre si.
+  [[ -n "${l5:-}" ]]  && MEDIDA_LOAD5="$(awk -v l="$l5" -v n="$n" 'BEGIN{printf "%.2f", l/n}')"
+  [[ -n "${l15:-}" ]] && MEDIDA_LOAD15="$(awk -v l="$l15" -v n="$n" 'BEGIN{printf "%.2f", l/n}')"
+
+  # "5/265": cinco de fato usando o processador, 265 carregados. O primeiro e
+  # o numero que importa; o segundo cresce com qualquer servidor ocupado e
+  # assusta sem motivo.
+  if [[ "${rodando:-}" == */* ]]; then
+    MEDIDA_PROCS_RODANDO="${rodando%%/*}"
+    MEDIDA_PROCS_TOTAL="${rodando##*/}"
+  fi
+  return 0
+}
+
+# --- Saude da maquina: linhas de execucao e tempo ligado -------------------
+#
+# Vai junto das metricas a cada rodada, entao fica na serie temporal e o filtro
+# de data do painel alcanca. Guardar so o valor de agora daria o numero da tela
+# e nenhum historico: nao daria para ver que a fila subiu na madrugada.
+
+mede_uptime() {
+  MEDIDA_UPTIME=""
+  local arq="${PROC_UPTIME:-/proc/uptime}"
+  [[ -r "$arq" ]] || return 1
+  MEDIDA_UPTIME="$(awk '{printf "%d", $1; exit}' "$arq" 2>/dev/null)"
+  [[ -n "$MEDIDA_UPTIME" ]] || return 1
+  return 0
+}
+
+# Linhas de execucao somadas. Um processo pode ter varias, e e por isso que o
+# numero chega perto de mil num servidor comum sem nada errado acontecendo.
+mede_threads() {
+  MEDIDA_THREADS=""
+  if [[ -n "${FIXTURE_THREADS:-}" ]]; then
+    MEDIDA_THREADS="$(cat "$FIXTURE_THREADS" 2>/dev/null)"
+    [[ -n "$MEDIDA_THREADS" ]] && return 0
+    return 1
+  fi
+  # Soma o campo Threads de cada processo. O 2>/dev/null cobre o processo que
+  # morre entre listar e ler, que e o caso comum e nao e erro.
+  MEDIDA_THREADS="$(awk '/^Threads:/{s+=$2} END{if (s>0) print s}' /proc/[0-9]*/status 2>/dev/null)"
+  [[ -n "$MEDIDA_THREADS" ]] || return 1
   return 0
 }
 

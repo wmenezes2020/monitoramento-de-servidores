@@ -234,11 +234,22 @@ envia_metricas_dashboard() {
   done <<<"${MEDIDA_DISCO_LINHAS:-}"
   disco_json="${disco_json%,}"
 
-  printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","agent_version":"%s","metrics":{"cpu":%s,"memory":%s,"disk":[%s],"iowait":%s,"steal":%s,"load":%s,"swap":%s}}\n' \
+  # Saude da maquina. Campo so entra quando foi medido: mandar zero no lugar
+  # de "nao medi" desenha uma queda no grafico que nunca aconteceu.
+  local saude=""
+  [[ -n "${MEDIDA_LOAD5:-}" ]]        && saude+=",\"load5\":$(num "$MEDIDA_LOAD5" 2)"
+  [[ -n "${MEDIDA_LOAD15:-}" ]]       && saude+=",\"load15\":$(num "$MEDIDA_LOAD15" 2)"
+  [[ -n "${MEDIDA_NUCLEOS:-}" ]]      && saude+=",\"cpu_cores\":${MEDIDA_NUCLEOS}"
+  [[ -n "${MEDIDA_PROCS_TOTAL:-}" ]]  && saude+=",\"procs_total\":${MEDIDA_PROCS_TOTAL}"
+  [[ -n "${MEDIDA_PROCS_RODANDO:-}" ]] && saude+=",\"procs_running\":${MEDIDA_PROCS_RODANDO}"
+  [[ -n "${MEDIDA_THREADS:-}" ]]      && saude+=",\"threads_total\":${MEDIDA_THREADS}"
+  [[ -n "${MEDIDA_UPTIME:-}" ]]       && saude+=",\"uptime_seconds\":${MEDIDA_UPTIME}"
+
+  printf '{"server_uuid":"%s","timestamp":"%s","server_id":"%s","agent_version":"%s","metrics":{"cpu":%s,"memory":%s,"disk":[%s],"iowait":%s,"steal":%s,"load":%s,"swap":%s%s}}\n' \
     "$DASHBOARD_SERVER_UUID" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SERVER_ID" "$AGENTE_VERSAO" \
     "$(num "${MEDIDA_CPU:-0}" 2)" "$(num "${MEDIDA_MEM:-0}" 2)" "$disco_json" \
     "$(num "${MEDIDA_IOWAIT:-0}" 2)" "$(num "${MEDIDA_STEAL:-0}" 2)" \
-    "$(num "${MEDIDA_LOAD:-0}" 2)" "$(num "${MEDIDA_SWAP:-0}" 2)" \
+    "$(num "${MEDIDA_LOAD:-0}" 2)" "$(num "${MEDIDA_SWAP:-0}" 2)" "$saude" \
     | "${AGENTE_BIN}/send_dashboard_metrics.sh" metrics >/dev/null 2>&1 \
     || log_erro "envio de metricas ao painel falhou"
 }
