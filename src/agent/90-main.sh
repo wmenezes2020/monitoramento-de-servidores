@@ -35,18 +35,43 @@ sincroniza_config() {
     return 0
   }
 
+  # O numero pode ser decimal: a fila por nucleo chega como 2.5, e o parser
+  # antigo so lia inteiro, entao o valor do painel era descartado em silencio e
+  # o agent.conf local continuava mandando. Era por isso que um limiar velho
+  # gravado na instalacao ficava valendo para sempre.
   local v
   for par in \
     "cpu_warning:CPU_ATENCAO" "cpu_critical:CPU_CRITICO" \
     "memory_warning:MEM_ATENCAO" "memory_critical:MEM_CRITICO" \
     "disk_warning:DISCO_ATENCAO" "disk_critical:DISCO_CRITICO" \
+    "swap_warning:SWAP_ATENCAO" "swap_critical:SWAP_CRITICO" \
+    "inode_warning:INODE_ATENCAO" "inode_critical:INODE_CRITICO" \
+    "load_warning:LOAD_ATENCAO" "load_critical:LOAD_CRITICO" \
+    "steal_warning:STEAL_ATENCAO" "steal_critical:STEAL_CRITICO" \
+    "iowait_warning:IOWAIT_ATENCAO" \
     "confirm_cycles:CICLOS_CONFIRMACAO" "recover_cycles:CICLOS_RECUPERACAO" \
-    "renotify_minutes:RENOTIFICAR_MIN" "max_alerts_hour:MAX_ALERTAS_HORA" \
-    "exit_band:BANDA_SAIDA"
+    "renotify_minutes:RENOTIFICAR_MIN" "renotify_max_minutes:RENOTIFICAR_MAX_MIN" \
+    "max_alerts_hour:MAX_ALERTAS_HORA" \
+    "exit_band:BANDA_SAIDA" "exit_band_load:BANDA_SAIDA_LOAD" \
+    "recovery_alert:ALERTA_RECUPERACAO" \
+    "watch_cpu:VIGIAR_CPU" "watch_memory:VIGIAR_MEMORIA" \
+    "watch_disk:VIGIAR_DISCO" "watch_swap:VIGIAR_SWAP" \
+    "watch_load:VIGIAR_LOAD" "watch_steal:VIGIAR_STEAL" \
+    "watch_inode:VIGIAR_INODE" \
+    "channel_email:CANAL_EMAIL" "channel_telegram:CANAL_TELEGRAM" \
+    "recovery_telegram:RECUPERACAO_TELEGRAM"
   do
-    v="$(printf '%s' "$resp" | grep -o "\"${par%%:*}\":[0-9]\+" | head -1 | cut -d: -f2)"
+    v="$(printf '%s' "$resp" | grep -o "\"${par%%:*}\":[0-9]\+\(\.[0-9]\+\)\?" | head -1 | cut -d: -f2)"
     _grava_conf "${par#*:}" "$v"
   done
+
+  # A lista de pontos de montagem ignorados vem como texto. Ausente quer dizer
+  # "mantem a que esta no servidor": mandar vazio apagaria o filtro inteiro e
+  # faria voltar o alerta de volume de container, que nao e problema de
+  # ninguem.
+  local ignorar
+  ignorar="$(printf '%s' "$resp" | sed -n 's/.*"disk_ignore":"\([^"]*\)".*/\1/p' | head -1)"
+  [[ -n "$ignorar" ]] && _grava_conf DISCO_IGNORAR "$ignorar"
 
   # Compatibilidade com o painel antes da migracao do backend, que devolve um
   # limiar unico por metrica dentro de "thresholds".

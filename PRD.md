@@ -138,6 +138,22 @@ falhar.
 
 ## Histórico
 
+### 2.6.0, 2026-10-16: o servidor é gerido inteiro pelo painel
+
+Tudo que o agente sabe aplicar passou a chegar do painel: limiares de fila,
+contenção de CPU, swap, inodes e espera de disco, teto da renotificação, banda
+de saída da fila, quais métricas vigiar, por onde avisar e a lista de pontos de
+montagem ignorados.
+
+Antes, metade disso só existia no `agent.conf` da máquina, e esse arquivo vence
+o padrão do código: valor gravado na instalação valia para sempre. Dois
+servidores instalados nesse dia nasceram com o limiar de fila em 1.5 e o de
+contenção em 10, desfazendo em silêncio a correção da 2.4.
+
+Junto, um defeito que não deixava rastro: o leitor de configuração só aceitava
+número inteiro. A fila por núcleo chega como 2.5, então o valor do painel era
+descartado e o local continuava mandando.
+
 ### 2.5.2, 2026-10-16: o instalador parou de apagar as correções
 
 Dois servidores foram reinstalados e nenhum e-mail chegou, nem o de boas-vindas.

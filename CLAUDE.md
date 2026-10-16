@@ -132,6 +132,7 @@ receber aviso nenhum.
 ./tests/testa-ruido.sh        #  77 verificações do que NÃO deve virar alerta
 ./tests/testa-servicos.sh     #  56 verificações dos serviços vindos do painel
 ./tests/testa-instalador.sh   #  33 verificações do instalador
+./tests/testa-config-do-painel.sh  # 29 verificações do que chega do painel
 ```
 
 Todas precisam estar verdes. Elas rodam em qualquer máquina com
@@ -294,6 +295,32 @@ o idioma muda. Eles vêm do instalador com rótulo fixo em português, e a
 reescrita é o único caminho para traduzi-los. As quatro variáveis
 `${TITLE} ${MESSAGE} ${DATE} ${HOST}` precisam continuar literais no arquivo:
 quem substitui é o `envsubst` dentro do `send_html_alert.sh`, no envio.
+
+## O agent.conf vence o padrão do código
+
+Quem escreve no `agent.conf` manda, porque `20-config.sh` só preenche o que
+ainda não está lá. Isso tem uma consequência que custou caro: **valor gravado
+na instalação vale para sempre**, e correção feita no padrão do agente não
+alcança quem já está instalado.
+
+Foi assim que dois servidores instalados em 16/10/2026 nasceram com
+`LOAD_ATENCAO=1.5` e `STEAL_ATENCAO=10`, desfazendo em silêncio a correção da
+2.4.
+
+Por isso **tudo que o agente sabe aplicar chega do painel** desde a 2.6.0:
+limiares de fila, contenção, swap, inodes e espera de disco, teto da
+renotificação, banda de saída da fila, o que vigiar, por onde avisar e a lista
+de montagens ignoradas.
+
+**O número do painel pode ser decimal.** O parser lia só `[0-9]+`: a fila por
+núcleo chega como `2.5` e era descartada sem deixar rastro, então o valor local
+continuava mandando. Parâmetro novo entra na mesma lista de pares em
+`sincroniza_config`, e a bateria `testa-config-do-painel.sh` confere o caminho
+inteiro com um `curl` de mentira.
+
+**Campo ausente mantém o que está no servidor.** Vale para a lista de montagens
+ignoradas em especial: mandar vazio apagaria o filtro e faria voltar o alerta
+de volume de container, que não é problema de ninguém.
 
 ## Steal e load não são alerta sozinhos
 
