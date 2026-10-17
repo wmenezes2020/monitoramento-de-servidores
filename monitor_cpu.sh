@@ -15,7 +15,7 @@ set -uo pipefail
 # A versao e o unico carimbo. Carimbar o commit tornaria o bundle diferente a
 # cada commit mesmo sem mudanca em src/, o checksum do manifesto mudaria
 # sozinho, e o "build --check" do CI reprovaria sempre.
-AGENTE_VERSAO="2.6.0"
+AGENTE_VERSAO="2.6.1"
 
 
 # ---------------------------------------------------------------------------
@@ -2131,9 +2131,18 @@ envia_alerta() {
 
   corpo="$(monta_corpo "$metrica" "$chave" "$valor" "$limiar" "$acao" "$nivel" "$dur" "$pico" "$extra_html")"
 
-  if [[ "${CANAL_EMAIL:-1}" == "1" && -n "${RECIPIENTS:-}" && -x "${AGENTE_BIN}/send_html_alert.sh" ]]; then
-    "${AGENTE_BIN}/send_html_alert.sh" "$(template_de "$metrica")" "$RECIPIENTS" "$assunto" "$titulo" "$corpo" \
-      >/dev/null 2>&1 || log_erro "envio de e-mail falhou para ${chave}"
+  # Canal ligado e nenhum destinatario e o modo de falha mais silencioso que
+  # este agente tem: nada sai, nada e registrado, e o painel continua verde.
+  # Em 16/10/2026 dois servidores ficaram exatamente assim depois de uma
+  # reinstalacao, com o Telegram saindo normalmente, e o unico jeito de
+  # descobrir foi ler o email.conf dentro da maquina.
+  if [[ "${CANAL_EMAIL:-1}" == "1" && -x "${AGENTE_BIN}/send_html_alert.sh" ]]; then
+    if [[ -z "${RECIPIENTS:-}" ]]; then
+      log_erro "alerta de ${chave} nao saiu por e-mail: canal ligado e nenhum destinatario em ${AGENTE_RAIZ}/email.conf"
+    else
+      "${AGENTE_BIN}/send_html_alert.sh" "$(template_de "$metrica")" "$RECIPIENTS" "$assunto" "$titulo" "$corpo" \
+        >/dev/null 2>&1 || log_erro "envio de e-mail falhou para ${chave}"
+    fi
   fi
 
   local manda_tg=1
@@ -2788,9 +2797,14 @@ sincroniza_config() {
   # Remetente dos e-mails, por servidor. Campo vazio no painel NAO apaga o
   # remetente local: servidor ja instalado tem um valor que funciona, e uma
   # tela aberta so para olhar nao pode deixa-lo sem conseguir enviar.
+  #
+  # A parte de troca deste sed estava VAZIA: `.*//p` em vez de `.*/\1/p`. O
+  # casamento dava certo, a linha era substituida por nada, e o remetente
+  # chegava sempre em branco. O campo da tela do servidor nunca saiu do painel
+  # desde que foi criado, e nao havia erro nenhum para notar.
   local remetente nome_remetente
-  remetente="$(printf '%s' "$resp" | sed -n 's/.*"sender_email":"\([^"]*\)".*//p' | head -1)"
-  nome_remetente="$(printf '%s' "$resp" | sed -n 's/.*"sender_name":"\([^"]*\)".*//p' | head -1)"
+  remetente="$(printf '%s' "$resp" | sed -n 's/.*"sender_email":"\([^"]*\)".*/\1/p' | head -1)"
+  nome_remetente="$(printf '%s' "$resp" | sed -n 's/.*"sender_name":"\([^"]*\)".*/\1/p' | head -1)"
   if [[ -n "$remetente" ]]; then
     aplica_remetente "$remetente" "$nome_remetente" && mudou=1
   fi
@@ -2983,6 +2997,11 @@ autoteste() {
   local falhas=0
   _ok() { printf '  ok   %s\n' "$1"; }
   _fail() { printf '  FALHA %s\n' "$1"; falhas=$(( falhas + 1 )); }
+  # Aviso aparece e NAO conta falha, de proposito: o autoteste decide o
+  # rollback da auto-atualizacao (ver 70-autoupdate.sh). Reprovar aqui por
+  # configuracao faltando prenderia o servidor na versao antiga para sempre,
+  # que e o contrario do que se quer.
+  _aviso() { printf '  AVISO %s\n' "$1"; }
 
   printf 'autoteste do agente %s\n' "$AGENTE_VERSAO"
 
@@ -3017,6 +3036,17 @@ autoteste() {
   for i in 1 2 3; do avalia "$estado_teste" 10 85 95; done
   [[ "$AV_ACAO" == "resolver" ]] && _ok "recuperacao detectada" || _fail "recuperacao nao detectada (${AV_ACAO})"
   rm -f "$(caminho_estado "$estado_teste")" 2>/dev/null || true
+
+  # Canal de e-mail ligado sem destinatario nenhum nao quebra nada e nao envia
+  # nada. Precisa aparecer aqui, que e onde se procura problema.
+  if [[ "${CANAL_EMAIL:-1}" == "1" ]]; then
+    if [[ -n "${RECIPIENTS:-}" ]]; then
+      _ok "destinatario de e-mail configurado"
+    else
+      _aviso "canal de e-mail ligado e nenhum destinatario em ${AGENTE_RAIZ}/email.conf: nenhum e-mail sai deste servidor"
+      log_erro "canal de e-mail ligado e nenhum destinatario em ${AGENTE_RAIZ}/email.conf"
+    fi
+  fi
 
   printf '%s\n' "$([[ "$falhas" -eq 0 ]] && printf 'autoteste verde' || printf "autoteste com ${falhas} falha(s)")"
   return "$falhas"
