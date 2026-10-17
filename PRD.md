@@ -1,7 +1,7 @@
 # PRD: agente de monitoramento de servidores
 
 Autor: Wesley Menezes
-Última atualização: 2026-10-09 (versão 2.0.0 do agente)
+Última atualização: 2026-10-17
 
 ## O que é
 
@@ -109,6 +109,7 @@ falhar.
 | RF-24 | Enviar direto pelo SMTP da conta escolhida no painel, sem instalar nem alterar serviço de e-mail da máquina |
 | RF-25 | Receber do painel a conta de envio e o bot, e aplicá-los no ciclo de configuração |
 | RF-26 | Instalar sem perguntar o que o painel já tem cadastrado |
+| RF-28 | Instalar sem pergunta nenhuma quando o UUID vem na chamada, com toda a configuração vinda do painel |
 | RF-27 | Medir e enviar a saúde da máquina: fila nas três janelas, programas, linhas de execução e tempo ligado |
 | RF-17 | Dizer em uma frase o que houve, o que causa e se precisa de alguém agora |
 | RF-18 | Espaçar a renotificação de incidente longo, dobrando até o teto de um dia |
@@ -137,6 +138,39 @@ falhar.
 - Não monitora aplicação (endpoint HTTP, fila, latência). Só o servidor.
 
 ## Histórico
+
+### 2026-10-17: instalação silenciosa com o UUID na chamada
+
+O instalador passa a aceitar o UUID do servidor na linha de comando:
+
+```bash
+curl -fsSL <endereço>/install-monitoring.sh | sudo bash -s -- --uuid=<UUID>
+```
+
+Com ele, nada é perguntado. O script busca a configuração daquele servidor no
+painel e aplica o que vier: nome, idioma, limiares, destinatários, conta de
+envio de e-mail e bot do Telegram. O que não vier fica de fora, com aviso no
+resumo do final, em vez de virar pergunta.
+
+Aceita também `--uuid <UUID>` separado por espaço, o UUID solto como primeiro
+argumento, a variável de ambiente `SERVER_UUID` e `--api` para apontar outro
+endereço de painel. `--help` mostra o uso.
+
+Três consequências práticas:
+
+- UUID malformado para a instalação com erro, em vez de cair no fluxo de
+  perguntas. Instalar um agente que nunca aparece no painel é pior que não
+  instalar.
+- Painel que não responde encerra a instalação silenciosa. Sem painel não há
+  configuração nenhuma para aplicar.
+- Modo silencioso não exige terminal, então o comando roda em `cloud-init`,
+  em Ansible e em imagem de máquina.
+
+Sem o UUID, o instalador continua pergunta por pergunta, igual a antes.
+
+Reinstalar também parou de apagar o remetente: o `SENDER_EMAIL` já gravado na
+máquina é preservado quando a instalação não tem um em mãos, como já acontecia
+com a lista de destinatários desde a 2.6.1.
 
 ### 2.6.0, 2026-10-16: o servidor é gerido inteiro pelo painel
 
