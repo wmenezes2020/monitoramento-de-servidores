@@ -27,6 +27,28 @@
       "tests_roda_testes_zera_estado"
     ],
     "1": [
+      "tests_testa_destinatario",
+      "tests_testa_destinatario_agente_bin",
+      "tests_testa_destinatario_agente_estado",
+      "tests_testa_destinatario_agente_log",
+      "tests_testa_destinatario_agente_raiz",
+      "tests_testa_destinatario_agente_so_carregar",
+      "tests_testa_destinatario_contem",
+      "tests_testa_destinatario_dashboard_api_url",
+      "tests_testa_destinatario_dashboard_enabled",
+      "tests_testa_destinatario_dashboard_server_uuid",
+      "tests_testa_destinatario_do_email_conf",
+      "tests_testa_destinatario_falha",
+      "tests_testa_destinatario_grupo",
+      "tests_testa_destinatario_igual",
+      "tests_testa_destinatario_nao_contem",
+      "tests_testa_destinatario_ok",
+      "tests_testa_destinatario_postfix_generic",
+      "tests_testa_destinatario_resposta_do_painel",
+      "tests_testa_destinatario_roda_funcao",
+      "tests_testa_destinatario_sh__entry"
+    ],
+    "2": [
       "tests_testa_servicos",
       "tests_testa_servicos_agente_bin",
       "tests_testa_servicos_agente_estado",
@@ -48,7 +70,7 @@
       "tests_testa_servicos_sh__entry",
       "tests_testa_servicos_verdade"
     ],
-    "2": [
+    "3": [
       "tests_testa_remetente",
       "tests_testa_remetente_agente_bin",
       "tests_testa_remetente_agente_estado",
@@ -69,7 +91,7 @@
       "tests_testa_remetente_sh__entry",
       "tests_testa_remetente_verdade"
     ],
-    "3": [
+    "4": [
       "src_agent_10_util",
       "src_agent_10_util_agora",
       "src_agent_10_util_delta",
@@ -89,7 +111,7 @@
       "src_agent_10_util_sh__entry",
       "src_agent_10_util_solta_trava"
     ],
-    "4": [
+    "5": [
       "tests_testa_idioma",
       "tests_testa_idioma_agente_bin",
       "tests_testa_idioma_agente_estado",
@@ -109,7 +131,7 @@
       "tests_testa_idioma_templates_dir",
       "tests_testa_idioma_verdade"
     ],
-    "5": [
+    "6": [
       "src_agent_25_idioma",
       "src_agent_25_idioma_data_local",
       "src_agent_25_idioma_duracao_humana",
@@ -128,7 +150,7 @@
       "src_agent_25_idioma_unidade_metrica",
       "src_agent_25_idioma_urgencia"
     ],
-    "6": [
+    "7": [
       "tests_testa_ruido",
       "tests_testa_ruido_agente_bin",
       "tests_testa_ruido_agente_estado",
@@ -147,7 +169,7 @@
       "tests_testa_ruido_sh__entry",
       "tests_testa_ruido_verdade"
     ],
-    "7": [
+    "8": [
       "tests_testa_config_do_painel",
       "tests_testa_config_do_painel_agente_bin",
       "tests_testa_config_do_painel_agente_estado",
@@ -165,7 +187,7 @@
       "tests_testa_config_do_painel_sh__entry",
       "tests_testa_config_do_painel_valor"
     ],
-    "8": [
+    "9": [
       "tests_testa_envio_email",
       "tests_testa_envio_email_campo",
       "tests_testa_envio_email_chama",
@@ -183,7 +205,7 @@
       "tests_testa_envio_email_so_ascii",
       "tests_testa_envio_email_verdade"
     ],
-    "9": [
+    "10": [
       "src_agent_30_medir",
       "src_agent_30_medir_campo_meminfo",
       "src_agent_30_medir_ignorar_montagem",
@@ -200,7 +222,23 @@
       "src_agent_30_medir_sh__entry",
       "src_agent_30_medir_top_processos"
     ],
-    "10": [
+    "11": [
+      "src_agent_90_main",
+      "src_agent_90_main_autoteste",
+      "src_agent_90_main_avalia_e_notifica",
+      "src_agent_90_main_aviso",
+      "src_agent_90_main_fail",
+      "src_agent_90_main_grava_conf",
+      "src_agent_90_main_ok",
+      "src_agent_90_main_principal",
+      "src_agent_90_main_registra_heartbeat",
+      "src_agent_90_main_rodada",
+      "src_agent_90_main_sh__entry",
+      "src_agent_90_main_sincroniza_config",
+      "src_agent_90_main_status",
+      "src_agent_90_main_uso"
+    ],
+    "12": [
       "src_agent_29_servicos",
       "src_agent_29_servicos_aplica_relay_no_postfix",
       "src_agent_29_servicos_aplica_servico_email",
@@ -215,22 +253,7 @@
       "src_agent_29_servicos_mta_e_nosso",
       "src_agent_29_servicos_sh__entry"
     ],
-    "11": [
-      "src_agent_90_main",
-      "src_agent_90_main_autoteste",
-      "src_agent_90_main_avalia_e_notifica",
-      "src_agent_90_main_fail",
-      "src_agent_90_main_grava_conf",
-      "src_agent_90_main_ok",
-      "src_agent_90_main_principal",
-      "src_agent_90_main_registra_heartbeat",
-      "src_agent_90_main_rodada",
-      "src_agent_90_main_sh__entry",
-      "src_agent_90_main_sincroniza_config",
-      "src_agent_90_main_status",
-      "src_agent_90_main_uso"
-    ],
-    "12": [
+    "13": [
       "tests_testa_migracao",
       "tests_testa_migracao_agente_bin",
       "tests_testa_migracao_agente_estado",
@@ -244,7 +267,7 @@
       "tests_testa_migracao_sh__entry",
       "tests_testa_migracao_tem"
     ],
-    "13": [
+    "14": [
       "src_agent_40_estado",
       "src_agent_40_estado_caminho_estado",
       "src_agent_40_estado_consome_orcamento",
@@ -257,7 +280,7 @@
       "src_agent_40_estado_sh__entry",
       "src_agent_40_estado_silencio_ativo"
     ],
-    "14": [
+    "15": [
       "src_agent_80_bootstrap",
       "src_agent_80_bootstrap_escreve_config_inicial",
       "src_agent_80_bootstrap_instala_binarios",
@@ -270,7 +293,7 @@
       "src_agent_80_bootstrap_sh__entry",
       "src_agent_80_bootstrap_sou_root"
     ],
-    "15": [
+    "16": [
       "json",
       "path",
       "pathlib",
@@ -282,7 +305,7 @@
       "scripts_gerar_grafo_rationale_2",
       "sys"
     ],
-    "16": [
+    "17": [
       "src_agent_60_notificar",
       "src_agent_60_notificar_despacha_agregado",
       "src_agent_60_notificar_envia_alerta",
@@ -294,7 +317,7 @@
       "src_agent_60_notificar_sh__entry",
       "src_agent_60_notificar_template_de"
     ],
-    "17": [
+    "18": [
       "src_agent_70_autoupdate",
       "src_agent_70_autoupdate_atualiza_agente",
       "src_agent_70_autoupdate_baixa",
@@ -306,7 +329,7 @@
       "src_agent_70_autoupdate_versao_instalada",
       "src_agent_70_autoupdate_versao_maior"
     ],
-    "18": [
+    "19": [
       "tests_testa_instalador",
       "tests_testa_instalador_contem",
       "tests_testa_instalador_falha",
@@ -318,7 +341,7 @@
       "tests_testa_instalador_sh__entry",
       "tests_testa_instalador_valor_no_instalador"
     ],
-    "19": [
+    "20": [
       "src_agent_28_remetente",
       "src_agent_28_remetente_aplica_remetente",
       "src_agent_28_remetente_atualiza_generic_do_postfix",
@@ -328,7 +351,7 @@
       "src_agent_28_remetente_le_do_email_conf",
       "src_agent_28_remetente_sh__entry"
     ],
-    "20": [
+    "21": [
       "src_agent_50_avaliar",
       "src_agent_50_avaliar_avalia",
       "src_agent_50_avaliar_banda_de",
@@ -338,7 +361,7 @@
       "src_agent_50_avaliar_sh__entry",
       "src_agent_50_avaliar_valor_para_fechar_load"
     ],
-    "21": [
+    "22": [
       "src_envio_send_html_alert",
       "src_envio_send_html_alert_codifica_cabecalho",
       "src_envio_send_html_alert_envia_direto",
@@ -348,7 +371,7 @@
       "src_envio_send_html_alert_tem_smtp_do_painel",
       "src_envio_send_html_alert_usa_smtp_direto"
     ],
-    "22": [
+    "23": [
       "src_agent_20_config",
       "src_agent_20_config_carrega_config",
       "src_agent_20_config_limiar_de",
@@ -356,7 +379,7 @@
       "src_agent_20_config_sh__entry",
       "src_agent_20_config_valida_config"
     ],
-    "23": [
+    "24": [
       "src_agent_27_templates",
       "src_agent_27_templates_escreve_template",
       "src_agent_27_templates_idioma_html",
@@ -364,48 +387,49 @@
       "src_agent_27_templates_sincroniza_templates",
       "src_agent_27_templates_templates_lista"
     ],
-    "24": [
+    "25": [
       "scripts_build",
       "scripts_build_sh__entry",
       "scripts_build_sha"
     ],
-    "25": [
+    "26": [
       "src_agent_00_cabecalho",
       "src_agent_00_cabecalho_sh__entry"
     ],
-    "26": [
+    "27": [
       "src_envio_send_telegram_alert",
       "src_envio_send_telegram_alert_sh__entry"
     ]
   },
   "cohesion": {
     "0": 0.12681159420289856,
-    "1": 0.20526315789473684,
-    "2": 0.1871345029239766,
-    "3": 0.1437908496732026,
-    "4": 0.23529411764705882,
-    "5": 0.17647058823529413,
-    "6": 0.2647058823529412,
-    "7": 0.15833333333333333,
-    "8": 0.3,
-    "9": 0.18095238095238095,
-    "10": 0.2692307692307692,
-    "11": 0.2564102564102564,
-    "12": 0.3333333333333333,
-    "13": 0.2,
-    "14": 0.3090909090909091,
-    "15": 0.26666666666666666,
-    "16": 0.28888888888888886,
-    "17": 0.3333333333333333,
-    "18": 0.4888888888888889,
-    "19": 0.42857142857142855,
-    "20": 0.32142857142857145,
-    "21": 0.4642857142857143,
-    "22": 0.4,
+    "1": 0.16842105263157894,
+    "2": 0.20526315789473684,
+    "3": 0.1871345029239766,
+    "4": 0.1437908496732026,
+    "5": 0.23529411764705882,
+    "6": 0.17647058823529413,
+    "7": 0.2647058823529412,
+    "8": 0.15833333333333333,
+    "9": 0.3,
+    "10": 0.18095238095238095,
+    "11": 0.23076923076923078,
+    "12": 0.2692307692307692,
+    "13": 0.3333333333333333,
+    "14": 0.2,
+    "15": 0.3090909090909091,
+    "16": 0.26666666666666666,
+    "17": 0.28888888888888886,
+    "18": 0.3333333333333333,
+    "19": 0.4888888888888889,
+    "20": 0.42857142857142855,
+    "21": 0.32142857142857145,
+    "22": 0.4642857142857143,
     "23": 0.4,
-    "24": 0.6666666666666666,
-    "25": 1.0,
-    "26": 1.0
+    "24": 0.4,
+    "25": 0.6666666666666666,
+    "26": 1.0,
+    "27": 1.0
   },
   "gods": [
     {
@@ -426,6 +450,11 @@
     {
       "id": "src_agent_70_autoupdate_atualiza_agente",
       "label": "atualiza_agente()",
+      "degree": 8
+    },
+    {
+      "id": "tests_testa_destinatario_sh__entry",
+      "label": "testa-destinatario.sh script",
       "degree": 8
     },
     {
@@ -452,11 +481,6 @@
       "id": "tests_testa_envio_email_ok",
       "label": "ok()",
       "degree": 7
-    },
-    {
-      "id": "tests_testa_envio_email_falha",
-      "label": "falha()",
-      "degree": 7
     }
   ],
   "surprises": [],
@@ -464,7 +488,7 @@
     {
       "type": "isolated_nodes",
       "question": "What connects `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script` to the rest of the system?",
-      "why": "68 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "why": "78 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
       "type": "low_cohesion",
