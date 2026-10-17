@@ -100,6 +100,37 @@ velho ali desfaz, em toda instalação nova, a correção feita no agente. Foi o
 que aconteceu com `LOAD_ATENCAO=1.5` e `STEAL_ATENCAO=10`, que o instalador
 continuava gravando depois de a 2.4 tê-los corrigido.
 
+## Com o UUID na chamada, o instalador não pergunta nada
+
+```bash
+curl -fsSL <endereço>/install-monitoring.sh | sudo bash -s -- --uuid=<UUID>
+```
+
+Isso é o modo silencioso: `MODO_SILENCIOSO=1`, configuração inteira vinda do
+painel, e nenhuma pergunta. O que o painel não tiver fica de fora, com aviso no
+resumo do final.
+
+**Toda pergunta nova do instalador precisa ficar dentro de um caminho que o
+modo silencioso não percorre.** Uma pergunta solta trava a instalação
+automatizada para sempre, porque não há ninguém no teclado para responder, e o
+`read` fica esperando até o cron matar a sessão. `tests/testa-instalador.sh`
+conta os `read ... </dev/tty` do arquivo justamente para uma pergunta nova não
+entrar sem passar por aqui: subiu a conta, atualize o número e prove que a
+pergunta está no ramo interativo.
+
+O leitor de argumentos fica entre os marcadores
+`# --- Instalacao silenciosa: o UUID vem na chamada` e
+`# --- fim do leitor de argumentos ---`, antes da checagem de root, para que
+`--help` funcione sem sudo e para a bateria conseguir recortá-lo e executá-lo
+de verdade. Grep não prova que `--uuid` funciona.
+
+**UUID malformado para a instalação com erro.** Cair no fluxo de perguntas
+deixaria o servidor com agente instalado e invisível no painel, que é o pior
+dos dois mundos. Pelo mesmo motivo, painel que não responde encerra a
+instalação silenciosa em vez de seguir sem configuração.
+
+Desenho em `docs/SDD_INSTALACAO_SILENCIOSA.md`.
+
 ## O agente é gerado, não escrito à mão
 
 **Nunca editar `monitoring-agent.sh`, `monitor_cpu.sh`, `monitor_memory.sh` nem

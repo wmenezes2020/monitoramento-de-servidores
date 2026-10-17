@@ -6,7 +6,10 @@
 # Uso local:  sudo ./install-monitoring.sh
 # Via curl:   curl -fsSL https://raw.githubusercontent.com/wmenezes2020/monitoramento-de-servidores/main/install-monitoring.sh | sudo bash
 #
-# Pipe (curl|bash): stdin e o proprio script. NAO fazer exec 0</dev/tty — o bash leria
+# Silencioso:  curl -fsSL <mesmo endereco> | sudo bash -s -- --uuid=<UUID>
+#              Nada e perguntado: a configuracao inteira vem do painel.
+#
+# Pipe (curl|bash): stdin e o proprio script. NAO fazer exec 0</dev/tty: o bash leria
 # o resto do script do teclado e travaria. Todas as perguntas usam "read ... </dev/tty".
 # Saida do instalador vai para stderr (> &2) para aparecer imediatamente no pipe.
 #
@@ -144,6 +147,77 @@ cleanup_on_exit() {
 }
 trap cleanup_on_exit EXIT
 
+# --- Instalacao silenciosa: o UUID vem na chamada --------------------------
+#
+# Com o UUID do servidor na linha de comando o instalador nao pergunta nada:
+# busca a configuracao no painel e aplica o que vier. O que nao vier fica de
+# fora, sem pergunta. E o que o botao "Copiar instalador" do painel entrega
+# pronto para colar na sessao SSH:
+#
+#   curl -fsSL .../install-monitoring.sh | sudo bash -s -- --uuid=<UUID>
+#
+# Sem UUID o fluxo e o de sempre, pergunta por pergunta.
+MODO_SILENCIOSO=0
+UUID_DA_CHAMADA=""
+API_DA_CHAMADA=""
+PADRAO_UUID='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+
+mostra_ajuda() {
+  cat >&2 << 'AJUDA'
+Uso: sudo bash install-monitoring.sh [opcoes]
+
+  --uuid <UUID>  UUID do servidor cadastrado no painel. Com ele a instalacao e
+                 silenciosa: nada e perguntado e a configuracao vem do painel.
+                 O que o painel nao tiver fica de fora.
+  --api <URL>    Endereco da API do painel, quando nao for o padrao.
+  --help         Mostra esta ajuda.
+
+Sem --uuid o instalador pergunta cada dado, como sempre fez. Tambem aceita o
+UUID solto como primeiro argumento e a variavel de ambiente SERVER_UUID.
+AJUDA
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --uuid=*|--server-uuid=*) UUID_DA_CHAMADA="${1#*=}" ;;
+    --uuid|--server-uuid|-u)
+      UUID_DA_CHAMADA="${2:-}"
+      [[ $# -gt 1 ]] && shift
+      ;;
+    --api=*|--api-url=*) API_DA_CHAMADA="${1#*=}" ;;
+    --api|--api-url)
+      API_DA_CHAMADA="${2:-}"
+      [[ $# -gt 1 ]] && shift
+      ;;
+    --help|-h) mostra_ajuda; exit 0 ;;
+    *)
+      if [[ -z "$UUID_DA_CHAMADA" && "$1" =~ $PADRAO_UUID ]]; then
+        UUID_DA_CHAMADA="$1"
+      else
+        log_warn "Opcao desconhecida, ignorada: $1"
+      fi
+      ;;
+  esac
+  shift
+done
+
+UUID_DA_CHAMADA=$(echo "${UUID_DA_CHAMADA:-${SERVER_UUID:-}}" | tr -d '[:space:]')
+API_DA_CHAMADA=$(echo "${API_DA_CHAMADA:-}" | tr -d '[:space:]')
+
+if [[ -n "$UUID_DA_CHAMADA" ]]; then
+  # UUID errado nao pode virar instalacao interativa. Quem colou um
+  # identificador precisa saber agora que ele nao serve; cair nas perguntas
+  # aqui deixaria o servidor instalado e invisivel no painel, que e o pior
+  # dos dois mundos.
+  if [[ ! "$UUID_DA_CHAMADA" =~ $PADRAO_UUID ]]; then
+    log_err "UUID invalido: ${UUID_DA_CHAMADA}"
+    log_err "Copie o UUID na tela de Servidores do painel, ou rode sem --uuid para instalar respondendo as perguntas."
+    exit 1
+  fi
+  MODO_SILENCIOSO=1
+fi
+# --- fim do leitor de argumentos ---
+
 # Verificar execução como root
 if [[ $EUID -ne 0 ]]; then
   log_err "Execute este script como root: sudo bash $0"
@@ -167,9 +241,11 @@ if [[ "$OS_ID" != "ubuntu" && "$OS_ID" != "debian" ]]; then
 fi
 
 # IMPORTANTE: Com "curl | sudo bash", o stdin e o PIPE (conteudo do script).
-# Nao redirecionar stdin (exec 0</dev/tty) — senao o bash passa a ler o resto do script
+# Nao redirecionar stdin (exec 0</dev/tty): senao o bash passa a ler o resto do script
 # do teclado e trava. Usar apenas "read ... </dev/tty" em cada pergunta.
-if [[ ! -t 0 ]]; then
+# Instalacao silenciosa nao pergunta nada, entao nao precisa de terminal: e o
+# que permite rodar em cloud-init, em Ansible e em imagem de maquina.
+if [[ $MODO_SILENCIOSO -eq 0 ]] && [[ ! -t 0 ]]; then
   if [[ ! -r /dev/tty ]]; then
     log_err "Execute a partir de um terminal interativo (ex.: sessao SSH). /dev/tty indisponivel."
     exit 1
@@ -194,6 +270,7 @@ SVC_HOST=""; SVC_PORTA=""; SVC_USUARIO=""; SVC_SENHA=""
 SVC_REMETENTE=""; SVC_NOME=""; SVC_SEGURO=0
 DASHBOARD_SERVER_UUID=""
 DASHBOARD_API_URL="${DASHBOARD_API_URL:-https://api-observabilidade.edeniva.com.br/v1}"
+[[ -n "$API_DA_CHAMADA" ]] && DASHBOARD_API_URL="$API_DA_CHAMADA"
 RECIPIENTS=""
 
 # Destinatarios que JA estao neste servidor, lidos antes de qualquer escrita.
@@ -204,9 +281,15 @@ RECIPIENTS=""
 # perguntava: quem recebia alerta parava de receber, sem erro nenhum, e o
 # Telegram continuava saindo. Foi o que aconteceu em 16/10/2026.
 RECIPIENTS_NO_SERVIDOR=""
+# O remetente tem o mesmo problema, e ele aparece na instalacao silenciosa: um
+# servidor cuja conta de envio nao esta no painel teria o SENDER_EMAIL
+# reescrito em branco, e o e-mail pararia de sair ate a proxima sincronia.
+SENDER_NO_SERVIDOR=""
 if [[ -f /opt/monitoring/email.conf ]]; then
   RECIPIENTS_NO_SERVIDOR="$(grep -m1 '^RECIPIENTS=' /opt/monitoring/email.conf 2>/dev/null | sed 's/^RECIPIENTS="\{0,1\}//; s/"\{0,1\}$//')"
   [[ "$RECIPIENTS_NO_SERVIDOR" == *PLACEHOLDER* ]] && RECIPIENTS_NO_SERVIDOR=""
+  SENDER_NO_SERVIDOR="$(grep -m1 '^SENDER_EMAIL=' /opt/monitoring/email.conf 2>/dev/null | sed 's/^SENDER_EMAIL="\{0,1\}//; s/"\{0,1\}$//')"
+  [[ "$SENDER_NO_SERVIDOR" == *PLACEHOLDER* ]] && SENDER_NO_SERVIDOR=""
 fi
 
 # Procura o destinatario na ordem que evita perguntar o que ja se sabe: o que
@@ -223,6 +306,13 @@ garante_destinatarios() {
   fi
   log_warn "Nenhum destinatario de e-mail no painel nem neste servidor."
   log_warn "Sem destinatario o alerta por e-mail nao sai, e nao avisa que nao saiu."
+  if [[ $MODO_SILENCIOSO -eq 1 ]]; then
+    # Instalacao silenciosa nao pergunta. Cadastrado o destinatario no painel,
+    # a proxima sincronia do agente o traz, sem reinstalar nada.
+    RECIPIENTS=""
+    INSTALL_WARNINGS+=("Sem destinatario de e-mail. Cadastre em Quem recebe, na tela do servidor, no painel.")
+    return 0
+  fi
   printf 'E-mail(s) de destino para alertas (separados por virgula): ' >&2
   read -r RECIPIENTS </dev/tty || true
   RECIPIENTS=$(echo "${RECIPIENTS:-}" | tr -d ' ')
@@ -233,17 +323,26 @@ SMTP_DOMAIN=""
 TELEGRAM_BOT_TOKEN=""
 TELEGRAM_CHAT_ID=""
 
-printf 'Deseja conectar este servidor ao Dashboard de Observabilidade? (s/N): ' >&2
-read -r USE_DASHBOARD </dev/tty || true
-USE_DASHBOARD=$(echo "${USE_DASHBOARD:-n}" | tr '[:upper:]' '[:lower:]')
+if [[ $MODO_SILENCIOSO -eq 1 ]]; then
+  USE_DASHBOARD="s"
+  DASHBOARD_SERVER_UUID="$UUID_DA_CHAMADA"
+  log_info "Instalacao silenciosa do servidor ${DASHBOARD_SERVER_UUID}."
+  log_info "Nada sera perguntado: vale o que estiver no painel, e o que nao estiver fica de fora."
+else
+  printf 'Deseja conectar este servidor ao Dashboard de Observabilidade? (s/N): ' >&2
+  read -r USE_DASHBOARD </dev/tty || true
+  USE_DASHBOARD=$(echo "${USE_DASHBOARD:-n}" | tr '[:upper:]' '[:lower:]')
+fi
 
 if [[ "$USE_DASHBOARD" == "s" || "$USE_DASHBOARD" == "sim" || "$USE_DASHBOARD" == "y" || "$USE_DASHBOARD" == "yes" ]]; then
-  printf 'URL da API do Dashboard: [%s] ' "$DASHBOARD_API_URL" >&2
-  read -r DASHBOARD_API_URL_INPUT </dev/tty || true
-  [[ -n "$DASHBOARD_API_URL_INPUT" ]] && DASHBOARD_API_URL=$(echo "$DASHBOARD_API_URL_INPUT" | tr -d ' ')
-  printf 'UUID do Servidor (gerado no painel ao cadastrar o servidor): ' >&2
-  read -r DASHBOARD_SERVER_UUID </dev/tty || true
-  DASHBOARD_SERVER_UUID=$(echo "$DASHBOARD_SERVER_UUID" | tr -d ' ')
+  if [[ $MODO_SILENCIOSO -eq 0 ]]; then
+    printf 'URL da API do Dashboard: [%s] ' "$DASHBOARD_API_URL" >&2
+    read -r DASHBOARD_API_URL_INPUT </dev/tty || true
+    [[ -n "$DASHBOARD_API_URL_INPUT" ]] && DASHBOARD_API_URL=$(echo "$DASHBOARD_API_URL_INPUT" | tr -d ' ')
+    printf 'UUID do Servidor (gerado no painel ao cadastrar o servidor): ' >&2
+    read -r DASHBOARD_SERVER_UUID </dev/tty || true
+    DASHBOARD_SERVER_UUID=$(echo "$DASHBOARD_SERVER_UUID" | tr -d ' ')
+  fi
   if [[ -z "$DASHBOARD_SERVER_UUID" ]]; then
     log_warn "UUID nao informado. Dashboard desabilitado. Fluxo normal de coleta."
     DASHBOARD_ENABLED=0
@@ -302,6 +401,14 @@ if [[ "$USE_DASHBOARD" == "s" || "$USE_DASHBOARD" == "sim" || "$USE_DASHBOARD" =
         fi
       fi
     else
+      if [[ $MODO_SILENCIOSO -eq 1 ]]; then
+        # Sem painel nao ha o que instalar em silencio: a configuracao inteira
+        # vinha de la. Seguir adiante deixaria um agente sem limiar, sem
+        # destinatario e sem dono.
+        log_err "O painel nao respondeu com a configuracao deste servidor."
+        log_err "Confira se o UUID ${DASHBOARD_SERVER_UUID} existe no painel, se o servidor esta sendo vigiado, e se ${DASHBOARD_API_URL} responde desta maquina."
+        exit 1
+      fi
       log_warn "Nao foi possivel obter config do Dashboard (servidor inexistente ou API inacessivel). Fluxo normal."
       DASHBOARD_ENABLED=0
     fi
@@ -317,6 +424,15 @@ if [[ $SERVICO_EMAIL_DO_PAINEL -eq 1 ]]; then
   EMAIL_ENABLED=1
   SENDER_EMAIL="$SVC_REMETENTE"
   log_ok "E-mail ligado com a conta do Dashboard. Nenhum servico de e-mail sera instalado neste servidor."
+  echo "" >&2
+elif [[ $MODO_SILENCIOSO -eq 1 ]]; then
+  # Silencioso e sem conta de envio escolhida no painel: o e-mail fica
+  # desligado e nenhum servico de e-mail e instalado nesta maquina. Escolher a
+  # conta no painel e rodar de novo liga o envio sem tocar em mais nada.
+  EMAIL_ENABLED=0
+  log_warn "Nenhuma conta de envio de e-mail escolhida para este servidor no painel."
+  log_warn "Os alertas por e-mail ficam desligados e nenhum servico de e-mail sera instalado."
+  INSTALL_WARNINGS+=("E-mail desligado. Escolha uma conta de envio na tela do servidor, no painel, e rode o instalador de novo.")
   echo "" >&2
 else
 printf 'Deseja ativar notificacoes por e-mail? (s/N): ' >&2
@@ -342,7 +458,7 @@ fi
 echo "" >&2
 
 # --- Coleta de dados ( Dashboard conectado = menos perguntas; senao = fluxo completo ) ---
-log_info "Informe os dados solicitados (Enter para padrao quando indicado)."
+[[ $MODO_SILENCIOSO -eq 0 ]] && log_info "Informe os dados solicitados (Enter para padrao quando indicado)."
 echo "" >&2
 
 # --- Dados SMTP e destinatarios (se e-mail ativado) ---
@@ -398,7 +514,14 @@ else
 fi
 
 # --- Telegram (se Dashboard nao conectado ou nao retornou token/chat_id) ---
-if [[ $DASHBOARD_ENABLED -ne 1 ]] || [[ -z "$TELEGRAM_BOT_TOKEN" ]] || [[ -z "$TELEGRAM_CHAT_ID" ]]; then
+if [[ $MODO_SILENCIOSO -eq 1 ]]; then
+  if [[ -z "$TELEGRAM_BOT_TOKEN" ]] || [[ -z "$TELEGRAM_CHAT_ID" ]]; then
+    log_warn "Nenhum bot do Telegram escolhido para este servidor no painel. Os avisos por Telegram ficam de fora."
+    INSTALL_WARNINGS+=("Telegram de fora. Escolha um bot na tela do servidor, no painel, e rode o instalador de novo.")
+    TELEGRAM_BOT_TOKEN=""
+    TELEGRAM_CHAT_ID=""
+  fi
+elif [[ $DASHBOARD_ENABLED -ne 1 ]] || [[ -z "$TELEGRAM_BOT_TOKEN" ]] || [[ -z "$TELEGRAM_CHAT_ID" ]]; then
   if [[ $DASHBOARD_ENABLED -eq 1 ]] && { [[ -z "$TELEGRAM_BOT_TOKEN" ]] || [[ -z "$TELEGRAM_CHAT_ID" ]]; }; then
     log_info "Telegram nao configurado no Dashboard. Deseja configurar agora?"
   fi
@@ -592,7 +715,10 @@ if [[ $EMAIL_ENABLED -eq 1 ]]; then
   # adiante foi o que abriu a janela em que o arquivo ficava sem ela.
   printf 'SENDER_EMAIL="%s"\nSERVER_ID="%s"\nRECIPIENTS="%s"\n' "$SENDER_EMAIL" "$SMTP_DOMAIN" "$RECIPIENTS" > /opt/monitoring/email.conf
 else
-  printf 'SENDER_EMAIL=""\nSERVER_ID="%s"\nRECIPIENTS="%s"\n' "$(hostname 2>/dev/null || echo 'localhost')" "$RECIPIENTS" > /opt/monitoring/email.conf
+  # Reinstalar nao pode apagar o que ja funcionava: sem remetente em maos,
+  # fica o que esta nesta maquina, e a proxima sincronia do agente traz o do
+  # painel.
+  printf 'SENDER_EMAIL="%s"\nSERVER_ID="%s"\nRECIPIENTS="%s"\n' "$SENDER_NO_SERVIDOR" "$(hostname 2>/dev/null || echo 'localhost')" "${RECIPIENTS:-$RECIPIENTS_NO_SERVIDOR}" > /opt/monitoring/email.conf
 fi
 chmod 644 /opt/monitoring/email.conf
 
@@ -1116,6 +1242,9 @@ if [[ -n "$TELEGRAM_BOT_TOKEN" ]]; then
 fi
 if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
   echo "  - Dashboard: config em /opt/monitoring/dashboard.conf, primeira notificacao enviada" >&2
+fi
+if [[ $MODO_SILENCIOSO -eq 1 ]]; then
+  echo "  - Instalacao silenciosa: tudo veio do painel, nada foi perguntado" >&2
 fi
 echo "  - ClamAV: varredura diaria 02:00, quarentena em /var/virus-quarantine" >&2
 echo "  - Monitoramento: CPU, RAM e Disco a cada 5 min (alerta acima de 80%)" >&2

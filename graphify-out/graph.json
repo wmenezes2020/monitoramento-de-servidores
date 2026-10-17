@@ -8,7 +8,7 @@
       "label": "alvos()",
       "_callable": true,
       "_origin": "ast",
-      "community": 16,
+      "community": 17,
       "file_type": "code",
       "norm_label": "alvos()",
       "source_file": "scripts/gerar-grafo.py",
@@ -19,7 +19,7 @@
       "label": "arquivos_do_corpus()",
       "_callable": true,
       "_origin": "ast",
-      "community": 16,
+      "community": 17,
       "file_type": "code",
       "norm_label": "arquivos_do_corpus()",
       "source_file": "scripts/gerar-grafo.py",
@@ -30,7 +30,7 @@
       "label": "limpa_midia()",
       "_callable": true,
       "_origin": "ast",
-      "community": 16,
+      "community": 17,
       "file_type": "code",
       "norm_label": "limpa_midia()",
       "source_file": "scripts/gerar-grafo.py",
@@ -41,7 +41,7 @@
       "label": "main()",
       "_callable": true,
       "_origin": "ast",
-      "community": 16,
+      "community": 17,
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "scripts/gerar-grafo.py",
@@ -1252,796 +1252,10 @@
       "source_location": "L1"
     },
     {
-      "id": "tests_testa_migracao",
-      "label": "testa-migracao.sh",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "testa-migracao.sh",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_testa_migracao_agente_bin",
-      "label": "AGENTE_BIN",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_bin",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L30"
-    },
-    {
-      "id": "tests_testa_migracao_agente_estado",
-      "label": "AGENTE_ESTADO",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_estado",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L28"
-    },
-    {
-      "id": "tests_testa_migracao_agente_log",
-      "label": "AGENTE_LOG",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_log",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L29"
-    },
-    {
-      "id": "tests_testa_migracao_agente_raiz",
-      "label": "AGENTE_RAIZ",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_raiz",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L27"
-    },
-    {
-      "id": "tests_testa_migracao_falha",
-      "label": "falha()",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "falha()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L18"
-    },
-    {
-      "id": "tests_testa_migracao_igual",
-      "label": "igual()",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "igual()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L20"
-    },
-    {
-      "id": "tests_testa_migracao_naotem",
-      "label": "naotem()",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "naotem()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L22"
-    },
-    {
-      "id": "tests_testa_migracao_ok",
-      "label": "ok()",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "ok()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L17"
-    },
-    {
-      "id": "tests_testa_migracao_path",
-      "label": "PATH",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "path",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L58"
-    },
-    {
-      "id": "tests_testa_migracao_sh__entry",
-      "label": "testa-migracao.sh script",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "testa-migracao.sh script",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_testa_migracao_tem",
-      "label": "tem()",
-      "_origin": "ast",
-      "community": 13,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "tem()",
-      "source_file": "tests/testa-migracao.sh",
-      "source_location": "L21"
-    },
-    {
-      "id": "src_agent_40_estado",
-      "label": "40-estado.sh",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "40-estado.sh",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_40_estado_caminho_estado",
-      "label": "caminho_estado()",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "caminho_estado()",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L14"
-    },
-    {
-      "id": "src_agent_40_estado_consome_orcamento",
-      "label": "consome_orcamento()",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "consome_orcamento()",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L96"
-    },
-    {
-      "id": "src_agent_40_estado_encerra_silencio",
-      "label": "encerra_silencio()",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "encerra_silencio()",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L85"
-    },
-    {
-      "id": "src_agent_40_estado_grava_estado",
-      "label": "grava_estado()",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "grava_estado()",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L44"
-    },
-    {
-      "id": "src_agent_40_estado_inicia_silencio",
-      "label": "inicia_silencio()",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "inicia_silencio()",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L72"
-    },
-    {
-      "id": "src_agent_40_estado_le_estado",
-      "label": "le_estado()",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "le_estado()",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L17"
-    },
-    {
-      "id": "src_agent_40_estado_nome_seguro",
-      "label": "nome_seguro()",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "nome_seguro()",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L12"
-    },
-    {
-      "id": "src_agent_40_estado_orcamento_estourado",
-      "label": "orcamento_estourado()",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "orcamento_estourado()",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L114"
-    },
-    {
-      "id": "src_agent_40_estado_sh__entry",
-      "label": "40-estado.sh script",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "40-estado.sh script",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_40_estado_silencio_ativo",
-      "label": "silencio_ativo()",
-      "_origin": "ast",
-      "community": 14,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "silencio_ativo()",
-      "source_file": "src/agent/40-estado.sh",
-      "source_location": "L57"
-    },
-    {
-      "id": "src_agent_80_bootstrap",
-      "label": "80-bootstrap.sh",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "80-bootstrap.sh",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_80_bootstrap_escreve_config_inicial",
-      "label": "escreve_config_inicial()",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "escreve_config_inicial()",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L59"
-    },
-    {
-      "id": "src_agent_80_bootstrap_instala_binarios",
-      "label": "instala_binarios()",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "instala_binarios()",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L199"
-    },
-    {
-      "id": "src_agent_80_bootstrap_instala_cron",
-      "label": "instala_cron()",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "instala_cron()",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L161"
-    },
-    {
-      "id": "src_agent_80_bootstrap_le_legado",
-      "label": "le_legado()",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "le_legado()",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L110"
-    },
-    {
-      "id": "src_agent_80_bootstrap_meu_caminho",
-      "label": "meu_caminho()",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "meu_caminho()",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L38"
-    },
-    {
-      "id": "src_agent_80_bootstrap_precisa_bootstrap",
-      "label": "precisa_bootstrap()",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "precisa_bootstrap()",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L44"
-    },
-    {
-      "id": "src_agent_80_bootstrap_preserva_destinatarios",
-      "label": "preserva_destinatarios()",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "preserva_destinatarios()",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L131"
-    },
-    {
-      "id": "src_agent_80_bootstrap_roda_bootstrap",
-      "label": "roda_bootstrap()",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "roda_bootstrap()",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L223"
-    },
-    {
-      "id": "src_agent_80_bootstrap_sh__entry",
-      "label": "80-bootstrap.sh script",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "80-bootstrap.sh script",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_80_bootstrap_sou_root",
-      "label": "sou_root()",
-      "_origin": "ast",
-      "community": 15,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "sou_root()",
-      "source_file": "src/agent/80-bootstrap.sh",
-      "source_location": "L34"
-    },
-    {
-      "id": "path",
-      "label": "Path",
-      "_origin": "ast",
-      "community": 16,
-      "file_type": "code",
-      "norm_label": "path",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "scripts_gerar_grafo",
-      "label": "gerar-grafo.py",
-      "_origin": "ast",
-      "community": 16,
-      "file_type": "code",
-      "norm_label": "gerar-grafo.py",
-      "source_file": "scripts/gerar-grafo.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "scripts_gerar_grafo_rationale_2",
-      "label": "Gera o grafo do repositorio em graphify-out/. python scripts/gerar-grafo.py usa\u2026",
-      "_origin": "ast",
-      "community": 16,
-      "file_type": "rationale",
-      "norm_label": "gera o grafo do repositorio em graphify-out/. python scripts/gerar-grafo.py usa...",
-      "source_file": "scripts/gerar-grafo.py",
-      "source_location": "L2"
-    },
-    {
-      "id": "src_agent_60_notificar",
-      "label": "60-notificar.sh",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "60-notificar.sh",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_60_notificar_despacha_agregado",
-      "label": "despacha_agregado()",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "despacha_agregado()",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L182"
-    },
-    {
-      "id": "src_agent_60_notificar_envia_alerta",
-      "label": "envia_alerta()",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "envia_alerta()",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L114"
-    },
-    {
-      "id": "src_agent_60_notificar_envia_incidente_dashboard",
-      "label": "envia_incidente_dashboard()",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "envia_incidente_dashboard()",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L206"
-    },
-    {
-      "id": "src_agent_60_notificar_envia_metricas_dashboard",
-      "label": "envia_metricas_dashboard()",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "envia_metricas_dashboard()",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L234"
-    },
-    {
-      "id": "src_agent_60_notificar_monta_corpo",
-      "label": "monta_corpo()",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "monta_corpo()",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L31"
-    },
-    {
-      "id": "src_agent_60_notificar_monta_texto_tg",
-      "label": "monta_texto_tg()",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "monta_texto_tg()",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L92"
-    },
-    {
-      "id": "src_agent_60_notificar_registra_agregado",
-      "label": "registra_agregado()",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "registra_agregado()",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L175"
-    },
-    {
-      "id": "src_agent_60_notificar_sh__entry",
-      "label": "60-notificar.sh script",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "60-notificar.sh script",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_60_notificar_template_de",
-      "label": "template_de()",
-      "_origin": "ast",
-      "community": 17,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "template_de()",
-      "source_file": "src/agent/60-notificar.sh",
-      "source_location": "L15"
-    },
-    {
-      "id": "src_agent_70_autoupdate",
-      "label": "70-autoupdate.sh",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "70-autoupdate.sh",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_70_autoupdate_atualiza_agente",
-      "label": "atualiza_agente()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "atualiza_agente()",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L58"
-    },
-    {
-      "id": "src_agent_70_autoupdate_baixa",
-      "label": "baixa()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "baixa()",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L27"
-    },
-    {
-      "id": "src_agent_70_autoupdate_limpa_update",
-      "label": "_limpa_update()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "_limpa_update()",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L69"
-    },
-    {
-      "id": "src_agent_70_autoupdate_reporta_falha_update",
-      "label": "reporta_falha_update()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "reporta_falha_update()",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L187"
-    },
-    {
-      "id": "src_agent_70_autoupdate_restaura_rollback",
-      "label": "restaura_rollback()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "restaura_rollback()",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L174"
-    },
-    {
-      "id": "src_agent_70_autoupdate_sh__entry",
-      "label": "70-autoupdate.sh script",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "70-autoupdate.sh script",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_70_autoupdate_sha256_de",
-      "label": "sha256_de()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "sha256_de()",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L15"
-    },
-    {
-      "id": "src_agent_70_autoupdate_versao_instalada",
-      "label": "versao_instalada()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "versao_instalada()",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L35"
-    },
-    {
-      "id": "src_agent_70_autoupdate_versao_maior",
-      "label": "versao_maior()",
-      "_origin": "ast",
-      "community": 18,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "versao_maior()",
-      "source_file": "src/agent/70-autoupdate.sh",
-      "source_location": "L40"
-    },
-    {
       "id": "tests_testa_instalador",
       "label": "testa-instalador.sh",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2055,7 +1269,7 @@
       "id": "tests_testa_instalador_contem",
       "label": "contem()",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2069,7 +1283,7 @@
       "id": "tests_testa_instalador_falha",
       "label": "falha()",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2083,7 +1297,7 @@
       "id": "tests_testa_instalador_grupo",
       "label": "grupo()",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2097,7 +1311,7 @@
       "id": "tests_testa_instalador_igual",
       "label": "igual()",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2108,10 +1322,38 @@
       "source_location": "L40"
     },
     {
+      "id": "tests_testa_instalador_leitor",
+      "label": "leitor()",
+      "_origin": "ast",
+      "community": 13,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "leitor()",
+      "source_file": "tests/testa-instalador.sh",
+      "source_location": "L157"
+    },
+    {
+      "id": "tests_testa_instalador_limpa_args",
+      "label": "limpa_args()",
+      "_origin": "ast",
+      "community": 13,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "limpa_args()",
+      "source_file": "tests/testa-instalador.sh",
+      "source_location": "L140"
+    },
+    {
       "id": "tests_testa_instalador_nao_contem",
       "label": "nao_contem()",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2125,7 +1367,7 @@
       "id": "tests_testa_instalador_ok",
       "label": "ok()",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2139,7 +1381,7 @@
       "id": "tests_testa_instalador_padrao_no_agente",
       "label": "padrao_no_agente()",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2153,7 +1395,7 @@
       "id": "tests_testa_instalador_sh__entry",
       "label": "testa-instalador.sh script",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2167,7 +1409,7 @@
       "id": "tests_testa_instalador_valor_no_instalador",
       "label": "valor_no_instalador()",
       "_origin": "ast",
-      "community": 19,
+      "community": 13,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -2176,6 +1418,792 @@
       "norm_label": "valor_no_instalador()",
       "source_file": "tests/testa-instalador.sh",
       "source_location": "L62"
+    },
+    {
+      "id": "tests_testa_migracao",
+      "label": "testa-migracao.sh",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "testa-migracao.sh",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_testa_migracao_agente_bin",
+      "label": "AGENTE_BIN",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_bin",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L30"
+    },
+    {
+      "id": "tests_testa_migracao_agente_estado",
+      "label": "AGENTE_ESTADO",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_estado",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L28"
+    },
+    {
+      "id": "tests_testa_migracao_agente_log",
+      "label": "AGENTE_LOG",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_log",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L29"
+    },
+    {
+      "id": "tests_testa_migracao_agente_raiz",
+      "label": "AGENTE_RAIZ",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_raiz",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L27"
+    },
+    {
+      "id": "tests_testa_migracao_falha",
+      "label": "falha()",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "falha()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L18"
+    },
+    {
+      "id": "tests_testa_migracao_igual",
+      "label": "igual()",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "igual()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L20"
+    },
+    {
+      "id": "tests_testa_migracao_naotem",
+      "label": "naotem()",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "naotem()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L22"
+    },
+    {
+      "id": "tests_testa_migracao_ok",
+      "label": "ok()",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "ok()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L17"
+    },
+    {
+      "id": "tests_testa_migracao_path",
+      "label": "PATH",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "path",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L58"
+    },
+    {
+      "id": "tests_testa_migracao_sh__entry",
+      "label": "testa-migracao.sh script",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "testa-migracao.sh script",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_testa_migracao_tem",
+      "label": "tem()",
+      "_origin": "ast",
+      "community": 14,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "tem()",
+      "source_file": "tests/testa-migracao.sh",
+      "source_location": "L21"
+    },
+    {
+      "id": "src_agent_40_estado",
+      "label": "40-estado.sh",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "40-estado.sh",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_40_estado_caminho_estado",
+      "label": "caminho_estado()",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "caminho_estado()",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L14"
+    },
+    {
+      "id": "src_agent_40_estado_consome_orcamento",
+      "label": "consome_orcamento()",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "consome_orcamento()",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L96"
+    },
+    {
+      "id": "src_agent_40_estado_encerra_silencio",
+      "label": "encerra_silencio()",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "encerra_silencio()",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L85"
+    },
+    {
+      "id": "src_agent_40_estado_grava_estado",
+      "label": "grava_estado()",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "grava_estado()",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L44"
+    },
+    {
+      "id": "src_agent_40_estado_inicia_silencio",
+      "label": "inicia_silencio()",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "inicia_silencio()",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L72"
+    },
+    {
+      "id": "src_agent_40_estado_le_estado",
+      "label": "le_estado()",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "le_estado()",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L17"
+    },
+    {
+      "id": "src_agent_40_estado_nome_seguro",
+      "label": "nome_seguro()",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "nome_seguro()",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L12"
+    },
+    {
+      "id": "src_agent_40_estado_orcamento_estourado",
+      "label": "orcamento_estourado()",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "orcamento_estourado()",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L114"
+    },
+    {
+      "id": "src_agent_40_estado_sh__entry",
+      "label": "40-estado.sh script",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "40-estado.sh script",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_40_estado_silencio_ativo",
+      "label": "silencio_ativo()",
+      "_origin": "ast",
+      "community": 15,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "silencio_ativo()",
+      "source_file": "src/agent/40-estado.sh",
+      "source_location": "L57"
+    },
+    {
+      "id": "src_agent_80_bootstrap",
+      "label": "80-bootstrap.sh",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "80-bootstrap.sh",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_80_bootstrap_escreve_config_inicial",
+      "label": "escreve_config_inicial()",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "escreve_config_inicial()",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L59"
+    },
+    {
+      "id": "src_agent_80_bootstrap_instala_binarios",
+      "label": "instala_binarios()",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "instala_binarios()",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L199"
+    },
+    {
+      "id": "src_agent_80_bootstrap_instala_cron",
+      "label": "instala_cron()",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "instala_cron()",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L161"
+    },
+    {
+      "id": "src_agent_80_bootstrap_le_legado",
+      "label": "le_legado()",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "le_legado()",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L110"
+    },
+    {
+      "id": "src_agent_80_bootstrap_meu_caminho",
+      "label": "meu_caminho()",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "meu_caminho()",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L38"
+    },
+    {
+      "id": "src_agent_80_bootstrap_precisa_bootstrap",
+      "label": "precisa_bootstrap()",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "precisa_bootstrap()",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L44"
+    },
+    {
+      "id": "src_agent_80_bootstrap_preserva_destinatarios",
+      "label": "preserva_destinatarios()",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "preserva_destinatarios()",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L131"
+    },
+    {
+      "id": "src_agent_80_bootstrap_roda_bootstrap",
+      "label": "roda_bootstrap()",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "roda_bootstrap()",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L223"
+    },
+    {
+      "id": "src_agent_80_bootstrap_sh__entry",
+      "label": "80-bootstrap.sh script",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "80-bootstrap.sh script",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_80_bootstrap_sou_root",
+      "label": "sou_root()",
+      "_origin": "ast",
+      "community": 16,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "sou_root()",
+      "source_file": "src/agent/80-bootstrap.sh",
+      "source_location": "L34"
+    },
+    {
+      "id": "path",
+      "label": "Path",
+      "_origin": "ast",
+      "community": 17,
+      "file_type": "code",
+      "norm_label": "path",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "scripts_gerar_grafo",
+      "label": "gerar-grafo.py",
+      "_origin": "ast",
+      "community": 17,
+      "file_type": "code",
+      "norm_label": "gerar-grafo.py",
+      "source_file": "scripts/gerar-grafo.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "scripts_gerar_grafo_rationale_2",
+      "label": "Gera o grafo do repositorio em graphify-out/. python scripts/gerar-grafo.py usa\u2026",
+      "_origin": "ast",
+      "community": 17,
+      "file_type": "rationale",
+      "norm_label": "gera o grafo do repositorio em graphify-out/. python scripts/gerar-grafo.py usa...",
+      "source_file": "scripts/gerar-grafo.py",
+      "source_location": "L2"
+    },
+    {
+      "id": "src_agent_60_notificar",
+      "label": "60-notificar.sh",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "60-notificar.sh",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_60_notificar_despacha_agregado",
+      "label": "despacha_agregado()",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "despacha_agregado()",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L182"
+    },
+    {
+      "id": "src_agent_60_notificar_envia_alerta",
+      "label": "envia_alerta()",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "envia_alerta()",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L114"
+    },
+    {
+      "id": "src_agent_60_notificar_envia_incidente_dashboard",
+      "label": "envia_incidente_dashboard()",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "envia_incidente_dashboard()",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L206"
+    },
+    {
+      "id": "src_agent_60_notificar_envia_metricas_dashboard",
+      "label": "envia_metricas_dashboard()",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "envia_metricas_dashboard()",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L234"
+    },
+    {
+      "id": "src_agent_60_notificar_monta_corpo",
+      "label": "monta_corpo()",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "monta_corpo()",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L31"
+    },
+    {
+      "id": "src_agent_60_notificar_monta_texto_tg",
+      "label": "monta_texto_tg()",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "monta_texto_tg()",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L92"
+    },
+    {
+      "id": "src_agent_60_notificar_registra_agregado",
+      "label": "registra_agregado()",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "registra_agregado()",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L175"
+    },
+    {
+      "id": "src_agent_60_notificar_sh__entry",
+      "label": "60-notificar.sh script",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "60-notificar.sh script",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_60_notificar_template_de",
+      "label": "template_de()",
+      "_origin": "ast",
+      "community": 18,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "template_de()",
+      "source_file": "src/agent/60-notificar.sh",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_agent_70_autoupdate",
+      "label": "70-autoupdate.sh",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "70-autoupdate.sh",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_70_autoupdate_atualiza_agente",
+      "label": "atualiza_agente()",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "atualiza_agente()",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L58"
+    },
+    {
+      "id": "src_agent_70_autoupdate_baixa",
+      "label": "baixa()",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "baixa()",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L27"
+    },
+    {
+      "id": "src_agent_70_autoupdate_limpa_update",
+      "label": "_limpa_update()",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "_limpa_update()",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L69"
+    },
+    {
+      "id": "src_agent_70_autoupdate_reporta_falha_update",
+      "label": "reporta_falha_update()",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "reporta_falha_update()",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L187"
+    },
+    {
+      "id": "src_agent_70_autoupdate_restaura_rollback",
+      "label": "restaura_rollback()",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "restaura_rollback()",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L174"
+    },
+    {
+      "id": "src_agent_70_autoupdate_sh__entry",
+      "label": "70-autoupdate.sh script",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "70-autoupdate.sh script",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_70_autoupdate_sha256_de",
+      "label": "sha256_de()",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "sha256_de()",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_agent_70_autoupdate_versao_instalada",
+      "label": "versao_instalada()",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "versao_instalada()",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L35"
+    },
+    {
+      "id": "src_agent_70_autoupdate_versao_maior",
+      "label": "versao_maior()",
+      "_origin": "ast",
+      "community": 19,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "versao_maior()",
+      "source_file": "src/agent/70-autoupdate.sh",
+      "source_location": "L40"
     },
     {
       "id": "tests_testa_servicos",
@@ -4756,7 +4784,7 @@
     {
       "id": "json",
       "label": "json",
-      "community": 16,
+      "community": 17,
       "external": true,
       "file_type": "concept",
       "norm_label": "json",
@@ -4766,7 +4794,7 @@
     {
       "id": "pathlib",
       "label": "pathlib",
-      "community": 16,
+      "community": 17,
       "external": true,
       "file_type": "concept",
       "norm_label": "pathlib",
@@ -4776,7 +4804,7 @@
     {
       "id": "sys",
       "label": "sys",
-      "community": 16,
+      "community": 17,
       "external": true,
       "file_type": "concept",
       "norm_label": "sys",
@@ -6535,6 +6563,18 @@
       "context": "call",
       "source_file": "tests/testa-instalador.sh",
       "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_instalador_sh__entry",
+      "target": "tests_testa_instalador_leitor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tests/testa-instalador.sh",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -10129,6 +10169,28 @@
     },
     {
       "source": "tests_testa_instalador",
+      "target": "tests_testa_instalador_limpa_args",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-instalador.sh",
+      "source_location": "L140",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_instalador",
+      "target": "tests_testa_instalador_leitor",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-instalador.sh",
+      "source_location": "L157",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_instalador",
       "target": "tests_testa_instalador_grupo",
       "relation": "defines",
       "_origin": "ast",
@@ -10888,5 +10950,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "457ad3d7b5e18edb03a80d92ab7490e341faf66a"
+  "built_at_commit": "dd04a9f7bd42882f4f683a3d1e899971a918fa10"
 }

@@ -97,6 +97,80 @@ contem "com conta do painel nao instala MTA" 'SERVICO_EMAIL_DO_PAINEL -eq 0 ]] &
 contem "e pula a configuracao do Postfix" 'EMAIL_ENABLED -eq 1 && $SERVICO_EMAIL_DO_PAINEL -eq 0 ]]; then'
 
 # =========================================================================
+grupo "Instalacao silenciosa: o UUID vem na chamada"
+# =========================================================================
+#
+# Com o UUID na linha de comando o instalador nao pode perguntar nada. Cada
+# pergunta que escapar deste modo trava a instalacao automatizada, porque nao
+# ha ninguem no teclado para responder.
+
+contem "le os argumentos da chamada"      "while [[ \$# -gt 0 ]]; do"
+contem "aceita --uuid=<UUID>"             "--uuid=*|--server-uuid=*"
+contem "aceita --api=<URL>"               "--api=*|--api-url=*"
+contem "aceita --help"                    "--help|-h) mostra_ajuda; exit 0 ;;"
+contem "aceita SERVER_UUID do ambiente"   '${UUID_DA_CHAMADA:-${SERVER_UUID:-}}'
+contem "UUID invalido para a instalacao"  'log_err "UUID invalido: ${UUID_DA_CHAMADA}"'
+contem "silencioso dispensa o terminal"   'if [[ $MODO_SILENCIOSO -eq 0 ]] && [[ ! -t 0 ]]; then'
+contem "nao pergunta pelo painel"         'if [[ $MODO_SILENCIOSO -eq 1 ]]; then
+  USE_DASHBOARD="s"'
+contem "nao pergunta destinatario"        'INSTALL_WARNINGS+=("Sem destinatario de e-mail.'
+contem "nao pergunta e-mail"              'elif [[ $MODO_SILENCIOSO -eq 1 ]]; then'
+contem "nao pergunta Telegram"            'INSTALL_WARNINGS+=("Telegram de fora.'
+contem "painel mudo encerra com erro"     'log_err "O painel nao respondeu com a configuracao deste servidor."'
+contem "o resumo diz que foi silenciosa"  "Instalacao silenciosa: tudo veio do painel"
+
+# Toda pergunta do instalador tem que estar dentro de um caminho que o modo
+# silencioso nao percorre. A contagem existe para uma pergunta nova nao entrar
+# sem passar por aqui.
+PERGUNTAS="$(grep -c 'read -r.*</dev/tty' "$INST")"
+igual "o instalador tem 13 perguntas, todas no fluxo interativo" "13" "$PERGUNTAS"
+
+# As perguntas de SMTP ficam no ramo em que NOS cuidamos do envio. No modo
+# silencioso o e-mail so liga com a conta vinda do painel, que cai no ramo de
+# cima, entao esse bloco nunca e alcancado sem alguem no teclado.
+contem "perguntas de SMTP so sem conta do painel" 'elif [[ $EMAIL_ENABLED -eq 1 ]]; then'
+
+# --- o leitor de argumentos rodando de verdade ---------------------------
+#
+# Grep nao prova que a opcao funciona. Este trecho recorta o leitor do
+# instalador e o executa, que e a unica forma de saber se --uuid vira modo
+# silencioso.
+
+SANDBOX_ARGS="$(mktemp -d)"
+limpa_args() { rm -rf "$SANDBOX_ARGS" 2>/dev/null || true; }
+trap limpa_args EXIT
+
+sed -n '/^# --- Instalacao silenciosa: o UUID vem na chamada/,/^# --- fim do leitor de argumentos/p' \
+  "$INST" >"${SANDBOX_ARGS}/leitor.sh"
+
+cat >"${SANDBOX_ARGS}/roda.sh" <<'RODA'
+#!/usr/bin/env bash
+set -uo pipefail
+log_warn() { echo "[AVISO] $*" >&2; }
+log_err()  { echo "[ERRO] $*" >&2; }
+LEITOR="$1"; shift
+# shellcheck disable=SC1090
+source "$LEITOR"
+printf '%s|%s|%s\n' "$MODO_SILENCIOSO" "$UUID_DA_CHAMADA" "$API_DA_CHAMADA"
+RODA
+
+leitor() { bash "${SANDBOX_ARGS}/roda.sh" "${SANDBOX_ARGS}/leitor.sh" "$@" 2>/dev/null; }
+
+UUID_TESTE="636383ce-41c6-49b2-bfc9-96501e01a17c"
+
+igual "sem argumento, fluxo interativo"   "0||"                       "$(leitor)"
+igual "--uuid=<UUID> liga o silencioso"   "1|${UUID_TESTE}|"          "$(leitor --uuid=$UUID_TESTE)"
+igual "--uuid <UUID> separado por espaco" "1|${UUID_TESTE}|"          "$(leitor --uuid $UUID_TESTE)"
+igual "UUID solto tambem vale"            "1|${UUID_TESTE}|"          "$(leitor $UUID_TESTE)"
+igual "--api junto do --uuid"             "1|${UUID_TESTE}|https://painel.exemplo/v1" \
+      "$(leitor --uuid=$UUID_TESTE --api=https://painel.exemplo/v1)"
+igual "SERVER_UUID do ambiente"           "1|${UUID_TESTE}|"          "$(SERVER_UUID=$UUID_TESTE leitor)"
+igual "opcao desconhecida nao liga nada"  "0||"                       "$(leitor --nao-existe)"
+
+leitor --uuid=nao-e-uuid >/dev/null 2>&1
+igual "UUID malformado para a instalacao" "1" "$?"
+
+# =========================================================================
 
 printf '\n'
 if [[ "$FALHAS" -eq 0 ]]; then

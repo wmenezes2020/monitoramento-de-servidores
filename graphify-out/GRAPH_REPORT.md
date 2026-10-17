@@ -4,7 +4,7 @@
 - Corpus is ~19,525 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 344 nodes · 534 edges · 28 communities (25 shown, 3 thin omitted)
+- 346 nodes · 537 edges · 28 communities (25 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
@@ -22,13 +22,13 @@
 - 30-medir
 - 90-main
 - 29-servicos
+- testa-instalador
 - testa-migracao
 - 40-estado
 - 80-bootstrap
 - gerar-grafo
 - 60-notificar
 - 70-autoupdate
-- testa-instalador
 - 28-remetente
 - 50-avaliar
 - send_html_alert
@@ -41,11 +41,11 @@
 ## God Nodes (most connected - your core abstractions)
 1. `testa-envio-email.sh script` - 10 edges
 2. `t()` - 9 edges
-3. `testa-ruido.sh script` - 9 edges
-4. `atualiza_agente()` - 8 edges
-5. `testa-destinatario.sh script` - 8 edges
-6. `testa-idioma.sh script` - 8 edges
-7. `testa-instalador.sh script` - 8 edges
+3. `testa-instalador.sh script` - 9 edges
+4. `testa-ruido.sh script` - 9 edges
+5. `atualiza_agente()` - 8 edges
+6. `testa-destinatario.sh script` - 8 edges
+7. `testa-idioma.sh script` - 8 edges
 8. `testa-servicos.sh script` - 8 edges
 9. `roda-testes.sh script` - 7 edges
 10. `ok()` - 7 edges
@@ -110,33 +110,33 @@ Nodes (9): autoteste(), avalia_e_notifica(), principal(), registra_heartbeat(), 
 Cohesion: 0.27
 Nodes (9): aplica_relay_no_postfix(), aplica_servico_email(), aplica_servico_telegram(), aplica_servicos_do_painel(), bloco_json(), escreve_arquivo_de_credencial(), le_do_arquivo(), mta_e_nosso() (+1 more)
 
-### Community 13 - "testa-migracao"
+### Community 13 - "testa-instalador"
+Cohesion: 0.38
+Nodes (10): contem(), falha(), grupo(), igual(), leitor(), nao_contem(), ok(), padrao_no_agente() (+2 more)
+
+### Community 14 - "testa-migracao"
 Cohesion: 0.33
 Nodes (11): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, falha(), igual(), naotem(), ok() (+3 more)
 
-### Community 14 - "40-estado"
+### Community 15 - "40-estado"
 Cohesion: 0.20
 Nodes (3): caminho_estado(), le_estado(), 40-estado.sh script
 
-### Community 15 - "80-bootstrap"
+### Community 16 - "80-bootstrap"
 Cohesion: 0.31
 Nodes (9): escreve_config_inicial(), instala_binarios(), instala_cron(), le_legado(), meu_caminho(), preserva_destinatarios(), roda_bootstrap(), 80-bootstrap.sh script (+1 more)
 
-### Community 16 - "gerar-grafo"
+### Community 17 - "gerar-grafo"
 Cohesion: 0.27
 Nodes (9): json, Path, pathlib, alvos(), arquivos_do_corpus(), limpa_midia(), main(), Gera o grafo do repositorio em graphify-out/. python scripts/gerar-grafo.py usa… (+1 more)
 
-### Community 17 - "60-notificar"
+### Community 18 - "60-notificar"
 Cohesion: 0.29
 Nodes (6): envia_alerta(), envia_incidente_dashboard(), monta_corpo(), monta_texto_tg(), registra_agregado(), 60-notificar.sh script
 
-### Community 18 - "70-autoupdate"
+### Community 19 - "70-autoupdate"
 Cohesion: 0.33
 Nodes (8): atualiza_agente(), baixa(), reporta_falha_update(), restaura_rollback(), 70-autoupdate.sh script, sha256_de(), versao_instalada(), versao_maior()
-
-### Community 19 - "testa-instalador"
-Cohesion: 0.49
-Nodes (9): contem(), falha(), grupo(), igual(), nao_contem(), ok(), padrao_no_agente(), testa-instalador.sh script (+1 more)
 
 ### Community 20 - "28-remetente"
 Cohesion: 0.43
@@ -160,7 +160,7 @@ Nodes (3): escreve_template(), 27-templates.sh script, sincroniza_templates()
 
 ## Knowledge Gaps
 - **78 isolated node(s):** `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script`, `20-config.sh script`, `25-idioma.sh script` (+73 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 141 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 142 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions

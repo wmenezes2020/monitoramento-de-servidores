@@ -254,6 +254,20 @@
       "src_agent_29_servicos_sh__entry"
     ],
     "13": [
+      "tests_testa_instalador",
+      "tests_testa_instalador_contem",
+      "tests_testa_instalador_falha",
+      "tests_testa_instalador_grupo",
+      "tests_testa_instalador_igual",
+      "tests_testa_instalador_leitor",
+      "tests_testa_instalador_limpa_args",
+      "tests_testa_instalador_nao_contem",
+      "tests_testa_instalador_ok",
+      "tests_testa_instalador_padrao_no_agente",
+      "tests_testa_instalador_sh__entry",
+      "tests_testa_instalador_valor_no_instalador"
+    ],
+    "14": [
       "tests_testa_migracao",
       "tests_testa_migracao_agente_bin",
       "tests_testa_migracao_agente_estado",
@@ -267,7 +281,7 @@
       "tests_testa_migracao_sh__entry",
       "tests_testa_migracao_tem"
     ],
-    "14": [
+    "15": [
       "src_agent_40_estado",
       "src_agent_40_estado_caminho_estado",
       "src_agent_40_estado_consome_orcamento",
@@ -280,7 +294,7 @@
       "src_agent_40_estado_sh__entry",
       "src_agent_40_estado_silencio_ativo"
     ],
-    "15": [
+    "16": [
       "src_agent_80_bootstrap",
       "src_agent_80_bootstrap_escreve_config_inicial",
       "src_agent_80_bootstrap_instala_binarios",
@@ -293,7 +307,7 @@
       "src_agent_80_bootstrap_sh__entry",
       "src_agent_80_bootstrap_sou_root"
     ],
-    "16": [
+    "17": [
       "json",
       "path",
       "pathlib",
@@ -305,7 +319,7 @@
       "scripts_gerar_grafo_rationale_2",
       "sys"
     ],
-    "17": [
+    "18": [
       "src_agent_60_notificar",
       "src_agent_60_notificar_despacha_agregado",
       "src_agent_60_notificar_envia_alerta",
@@ -317,7 +331,7 @@
       "src_agent_60_notificar_sh__entry",
       "src_agent_60_notificar_template_de"
     ],
-    "18": [
+    "19": [
       "src_agent_70_autoupdate",
       "src_agent_70_autoupdate_atualiza_agente",
       "src_agent_70_autoupdate_baixa",
@@ -328,18 +342,6 @@
       "src_agent_70_autoupdate_sha256_de",
       "src_agent_70_autoupdate_versao_instalada",
       "src_agent_70_autoupdate_versao_maior"
-    ],
-    "19": [
-      "tests_testa_instalador",
-      "tests_testa_instalador_contem",
-      "tests_testa_instalador_falha",
-      "tests_testa_instalador_grupo",
-      "tests_testa_instalador_igual",
-      "tests_testa_instalador_nao_contem",
-      "tests_testa_instalador_ok",
-      "tests_testa_instalador_padrao_no_agente",
-      "tests_testa_instalador_sh__entry",
-      "tests_testa_instalador_valor_no_instalador"
     ],
     "20": [
       "src_agent_28_remetente",
@@ -415,13 +417,13 @@
     "10": 0.18095238095238095,
     "11": 0.23076923076923078,
     "12": 0.2692307692307692,
-    "13": 0.3333333333333333,
-    "14": 0.2,
-    "15": 0.3090909090909091,
-    "16": 0.26666666666666666,
-    "17": 0.28888888888888886,
-    "18": 0.3333333333333333,
-    "19": 0.4888888888888889,
+    "13": 0.3787878787878788,
+    "14": 0.3333333333333333,
+    "15": 0.2,
+    "16": 0.3090909090909091,
+    "17": 0.26666666666666666,
+    "18": 0.28888888888888886,
+    "19": 0.3333333333333333,
     "20": 0.42857142857142855,
     "21": 0.32142857142857145,
     "22": 0.4642857142857143,
@@ -443,6 +445,11 @@
       "degree": 9
     },
     {
+      "id": "tests_testa_instalador_sh__entry",
+      "label": "testa-instalador.sh script",
+      "degree": 9
+    },
+    {
       "id": "tests_testa_ruido_sh__entry",
       "label": "testa-ruido.sh script",
       "degree": 9
@@ -460,11 +467,6 @@
     {
       "id": "tests_testa_idioma_sh__entry",
       "label": "testa-idioma.sh script",
-      "degree": 8
-    },
-    {
-      "id": "tests_testa_instalador_sh__entry",
-      "label": "testa-instalador.sh script",
       "degree": 8
     },
     {
