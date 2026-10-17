@@ -28,3 +28,7 @@ graphify-out/.graphify_detect.json
 graphify-out/.graphify_extract.json
 graphify-out/.graphify_root
 graphify-out/.graphify_python
+
+# Artefato do Python, gerado a cada execucao do gerador de grafo.
+__pycache__/
+*.pyc

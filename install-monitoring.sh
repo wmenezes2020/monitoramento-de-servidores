@@ -195,6 +195,40 @@ SVC_REMETENTE=""; SVC_NOME=""; SVC_SEGURO=0
 DASHBOARD_SERVER_UUID=""
 DASHBOARD_API_URL="${DASHBOARD_API_URL:-https://api-observabilidade.edeniva.com.br/v1}"
 RECIPIENTS=""
+
+# Destinatarios que JA estao neste servidor, lidos antes de qualquer escrita.
+#
+# O email.conf e reescrito do zero mais abaixo. Ate a 2.6.0 essa reescrita
+# levava embora a linha RECIPIENTS, e so a regravava se a instalacao tivesse
+# algum destinatario em maos. Com a conta de e-mail vinda do painel ela nem
+# perguntava: quem recebia alerta parava de receber, sem erro nenhum, e o
+# Telegram continuava saindo. Foi o que aconteceu em 16/10/2026.
+RECIPIENTS_NO_SERVIDOR=""
+if [[ -f /opt/monitoring/email.conf ]]; then
+  RECIPIENTS_NO_SERVIDOR="$(grep -m1 '^RECIPIENTS=' /opt/monitoring/email.conf 2>/dev/null | sed 's/^RECIPIENTS="\{0,1\}//; s/"\{0,1\}$//')"
+  [[ "$RECIPIENTS_NO_SERVIDOR" == *PLACEHOLDER* ]] && RECIPIENTS_NO_SERVIDOR=""
+fi
+
+# Procura o destinatario na ordem que evita perguntar o que ja se sabe: o que
+# o painel mandou, o que esta nesta maquina, e por fim a pergunta.
+garante_destinatarios() {
+  if [[ -n "$RECIPIENTS" ]]; then
+    log_info "Destinatarios obtidos do Dashboard: $RECIPIENTS"
+    return 0
+  fi
+  if [[ -n "$RECIPIENTS_NO_SERVIDOR" ]]; then
+    RECIPIENTS="$RECIPIENTS_NO_SERVIDOR"
+    log_ok "Destinatarios preservados desta maquina: $RECIPIENTS"
+    return 0
+  fi
+  log_warn "Nenhum destinatario de e-mail no painel nem neste servidor."
+  log_warn "Sem destinatario o alerta por e-mail nao sai, e nao avisa que nao saiu."
+  printf 'E-mail(s) de destino para alertas (separados por virgula): ' >&2
+  read -r RECIPIENTS </dev/tty || true
+  RECIPIENTS=$(echo "${RECIPIENTS:-}" | tr -d ' ')
+  [[ -z "$RECIPIENTS" ]] && { log_err "Pelo menos um e-mail de destino e obrigatorio."; exit 1; }
+  return 0
+}
 SMTP_DOMAIN=""
 TELEGRAM_BOT_TOKEN=""
 TELEGRAM_CHAT_ID=""
@@ -321,6 +355,9 @@ if [[ $EMAIL_ENABLED -eq 1 && $SERVICO_EMAIL_DO_PAINEL -eq 1 ]]; then
   SMTP_PASS="$SVC_SENHA"
   SENDER_EMAIL="$SVC_REMETENTE"
   [[ -z "$SMTP_DOMAIN" ]] && SMTP_DOMAIN="$(hostname -f 2>/dev/null || hostname)"
+  # A conta de envio veio pronta, o destinatario nao: sao dois cadastros
+  # diferentes no painel, e ter um nao garante o outro.
+  garante_destinatarios
 elif [[ $EMAIL_ENABLED -eq 1 ]]; then
   printf 'Porta do servidor SMTP (ex: 587 ou 2525) [587]: ' >&2
   read -r SMTP_PORT </dev/tty || true
@@ -348,14 +385,7 @@ elif [[ $EMAIL_ENABLED -eq 1 ]]; then
   read -r SENDER_EMAIL </dev/tty || true
   [[ -z "$SENDER_EMAIL" ]] && { log_err "E-mail remetente e obrigatorio."; exit 1; }
 
-  if [[ $DASHBOARD_ENABLED -eq 1 ]] && [[ -n "$RECIPIENTS" ]]; then
-    log_info "Destinatarios obtidos do Dashboard: $RECIPIENTS"
-  else
-    printf 'E-mail(s) de destino para alertas (separados por virgula): ' >&2
-    read -r RECIPIENTS </dev/tty || true
-    [[ -z "$RECIPIENTS" ]] && { log_err "Pelo menos um e-mail de destino e obrigatorio."; exit 1; }
-    RECIPIENTS=$(echo "$RECIPIENTS" | tr -d ' ')
-  fi
+  garante_destinatarios
 else
   SMTP_PORT="587"
   [[ -z "$SMTP_DOMAIN" ]] && SMTP_DOMAIN=$(hostname 2>/dev/null) || SMTP_DOMAIN="localhost"
@@ -558,9 +588,11 @@ mkdir -p /opt/alerts/templates
 # --- 4b. E-mail: remetente e identificador do servidor (From + nome em todos os alertas) ---
 mkdir -p /opt/monitoring
 if [[ $EMAIL_ENABLED -eq 1 ]]; then
-  printf 'SENDER_EMAIL="%s"\nSERVER_ID="%s"\n' "$SENDER_EMAIL" "$SMTP_DOMAIN" > /opt/monitoring/email.conf
+  # A linha RECIPIENTS nasce aqui, junto do resto. Deixa-la para um passo
+  # adiante foi o que abriu a janela em que o arquivo ficava sem ela.
+  printf 'SENDER_EMAIL="%s"\nSERVER_ID="%s"\nRECIPIENTS="%s"\n' "$SENDER_EMAIL" "$SMTP_DOMAIN" "$RECIPIENTS" > /opt/monitoring/email.conf
 else
-  printf 'SENDER_EMAIL=""\nSERVER_ID="%s"\n' "$(hostname 2>/dev/null || echo 'localhost')" > /opt/monitoring/email.conf
+  printf 'SENDER_EMAIL=""\nSERVER_ID="%s"\nRECIPIENTS="%s"\n' "$(hostname 2>/dev/null || echo 'localhost')" "$RECIPIENTS" > /opt/monitoring/email.conf
 fi
 chmod 644 /opt/monitoring/email.conf
 

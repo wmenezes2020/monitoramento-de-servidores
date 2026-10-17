@@ -404,6 +404,43 @@ Alerta, registro e documentação passam pelo `humanizer`.
 **Sem travessão**, em nenhuma posição, nem meia-risca nem barra horizontal.
 A bateria reprova se aparecer um em `src/` ou `docs/`.
 
+## Sem destinatário o e-mail não sai, e não avisa que não saiu
+
+Três defeitos no mesmo caminho, todos calados, achados em 17/10/2026 depois de
+dois servidores reinstalados passarem a mandar alerta pelo Telegram e nenhum
+por e-mail:
+
+1. **A reinstalação reescrevia o `email.conf` do zero** e levava embora a linha
+   `RECIPIENTS`. Ela era regravada depois, mas só quando a instalação tinha
+   algum destinatário em mãos. Quem recebia alerta parava de receber.
+2. **Com a conta de e-mail vinda do painel, a instalação nem perguntava o
+   destinatário.** Conta de envio e destinatário são dois cadastros diferentes:
+   ter um não garante o outro.
+3. **Sem destinatário, o agente não chamava o enviador e não registrava nada.**
+   O `60-notificar.sh` exigia `-n RECIPIENTS` na mesma condição que decide o
+   envio, então a ausência virava silêncio em vez de erro.
+
+Hoje `garante_destinatarios`, no instalador, procura no painel, depois no que
+já está na máquina, e só então pergunta. A linha `RECIPIENTS` nasce no mesmo
+`printf` do resto do `email.conf`. E o agente registra o alerta que não saiu por
+falta de destinatário.
+
+O autoteste também avisa, com `_aviso` e **não** com `_fail`: o autoteste decide
+o rollback da auto-atualização, e reprovar ali por configuração faltando
+prenderia o servidor na versão antiga para sempre.
+
+### O `\1` do sed virou um byte 0x01 dentro do arquivo
+
+No mesmo caminho, a parte de troca do sed que lê o remetente estava vazia
+(`.*//p` em vez de `.*/\1/p`), e em algum momento o `\1` foi gravado como um
+byte de controle literal por um script de edição. O shell não reclama, o sed não
+reclama, e a substituição devolve um caractere de controle onde deveria vir o
+endereço: o remetente escolhido na tela do servidor nunca saiu do painel.
+
+`tests/testa-destinatario.sh` varre `src/` e os artefatos da raiz por byte de
+controle (ESC fica de fora, é o que desenha cor no terminal) e confere o caminho
+inteiro do remetente com um `curl` e um `postmap` de mentira.
+
 ## Entrega
 
 - `docs/SDD_<NOME>.md` antes de codar, para mudança não trivial.

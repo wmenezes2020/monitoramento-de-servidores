@@ -141,9 +141,18 @@ envia_alerta() {
 
   corpo="$(monta_corpo "$metrica" "$chave" "$valor" "$limiar" "$acao" "$nivel" "$dur" "$pico" "$extra_html")"
 
-  if [[ "${CANAL_EMAIL:-1}" == "1" && -n "${RECIPIENTS:-}" && -x "${AGENTE_BIN}/send_html_alert.sh" ]]; then
-    "${AGENTE_BIN}/send_html_alert.sh" "$(template_de "$metrica")" "$RECIPIENTS" "$assunto" "$titulo" "$corpo" \
-      >/dev/null 2>&1 || log_erro "envio de e-mail falhou para ${chave}"
+  # Canal ligado e nenhum destinatario e o modo de falha mais silencioso que
+  # este agente tem: nada sai, nada e registrado, e o painel continua verde.
+  # Em 16/10/2026 dois servidores ficaram exatamente assim depois de uma
+  # reinstalacao, com o Telegram saindo normalmente, e o unico jeito de
+  # descobrir foi ler o email.conf dentro da maquina.
+  if [[ "${CANAL_EMAIL:-1}" == "1" && -x "${AGENTE_BIN}/send_html_alert.sh" ]]; then
+    if [[ -z "${RECIPIENTS:-}" ]]; then
+      log_erro "alerta de ${chave} nao saiu por e-mail: canal ligado e nenhum destinatario em ${AGENTE_RAIZ}/email.conf"
+    else
+      "${AGENTE_BIN}/send_html_alert.sh" "$(template_de "$metrica")" "$RECIPIENTS" "$assunto" "$titulo" "$corpo" \
+        >/dev/null 2>&1 || log_erro "envio de e-mail falhou para ${chave}"
+    fi
   fi
 
   local manda_tg=1
