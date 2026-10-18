@@ -181,19 +181,20 @@ exit 0
 FALSO
 chmod +x "${SANDBOX}/falso/curl"
 
+mkdir -p "${SANDBOX}/envio"
 printf '<html><body>${TITLE} ${MESSAGE} ${DATE} ${HOST}</body></html>\n' >"${SANDBOX}/templates/alert.html"
-printf 'SENDER_EMAIL="avisos@empresa.com"\nSENDER_NAME="Monitoramento"\n' >"${SANDBOX}/email.conf"
-printf 'SMTP_HOST="smtp.gmail.com"\nSMTP_PORTA="587"\nSMTP_SEGURO="0"\nSMTP_USUARIO="avisos@empresa.com"\nSMTP_SENHA="abcd efgh"\n' >"${SANDBOX}/smtp.conf"
+printf 'SENDER_EMAIL="avisos@empresa.com"\nSENDER_NAME="Monitoramento"\n' >"${SANDBOX}/envio/email.conf"
+printf 'SMTP_HOST="smtp.gmail.com"\nSMTP_PORTA="587"\nSMTP_SEGURO="0"\nSMTP_USUARIO="avisos@empresa.com"\nSMTP_SENHA="abcd efgh"\n' >"${SANDBOX}/envio/smtp.conf"
 
-# O enviador le caminhos fixos em /opt/monitoring; a copia do teste aponta
-# para o sandbox. Mexer nos caminhos no proprio script seria testar outra
-# coisa que nao a que roda no servidor.
-sed "s|/opt/monitoring/email.conf|${SANDBOX}/email.conf|g; s|/opt/monitoring/smtp.conf|${SANDBOX}/smtp.conf|g; s|/opt/monitoring/agent.conf|${SANDBOX}/agent.conf|g" \
-  "${RAIZ}/send_html_alert.sh" >"${SANDBOX}/envia.sh"
+# O enviador le os arquivos de configuracao de AGENTE_RAIZ, que aqui aponta
+# para a caixa de areia. A bateria testa o arquivo que vai para o servidor, e
+# nao uma copia com os caminhos reescritos: copia e outro arquivo, e outro
+# arquivo e outro comportamento no dia em que os dois divergirem.
+ENVIA_REAL="${RAIZ}/send_html_alert.sh"
 
 : >"$CHAMADAS"
 PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" \
-  bash "${SANDBOX}/envia.sh" "${SANDBOX}/templates/alert.html" \
+  AGENTE_RAIZ="${SANDBOX}/envio" bash "$ENVIA_REAL" "${SANDBOX}/templates/alert.html" \
   "um@empresa.com,dois@empresa.com" "[ATENÇÃO] loja: CPU no limite (97%)" "Titulo" "<p>corpo</p>" \
   >/dev/null 2>&1
 SAIDA_ENVIO=$?
@@ -277,9 +278,9 @@ SMTP_PORTA="587"
 SMTP_SEGURO="0"
 SMTP_USUARIO="avisos@empresa.com"
 SMTP_SENHA="abcd efgh"
-' >"${SANDBOX}/smtp.conf"
+' >"${SANDBOX}/envio/smtp.conf"
 : >"$CHAMADAS"
-PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" POSTFIX_MAIN="${SANDBOX}/etc/postfix/main.cf"   bash "${SANDBOX}/envia.sh" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>"   >/dev/null 2>&1
+PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" POSTFIX_MAIN="${SANDBOX}/etc/postfix/main.cf"   AGENTE_RAIZ="${SANDBOX}/envio" bash "$ENVIA_REAL" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>"   >/dev/null 2>&1
 
 contem     "com Postfix nosso, envia pela maquina" "$(cat "$CHAMADAS")" "MAIL_USADO"
 nao_contem "e nao chama o SMTP por fora"           "$(cat "$CHAMADAS")" "URL=smtp"
@@ -292,7 +293,7 @@ myhostname = loja.exemplo
 mentira "sem a marca, o MTA nao e nosso" mta_e_nosso
 
 : >"$CHAMADAS"
-PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" POSTFIX_MAIN="${SANDBOX}/etc/postfix/main.cf"   bash "${SANDBOX}/envia.sh" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>"   >/dev/null 2>&1
+PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" POSTFIX_MAIN="${SANDBOX}/etc/postfix/main.cf"   AGENTE_RAIZ="${SANDBOX}/envio" bash "$ENVIA_REAL" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>"   >/dev/null 2>&1
 
 contem     "MTA de terceiro: envia direto" "$(cat "$CHAMADAS")" "URL=smtp://smtp.gmail.com:587"
 nao_contem "e nao usa o mail da maquina"   "$(cat "$CHAMADAS")" "MAIL_USADO"
@@ -307,9 +308,9 @@ grupo "Sem conta no painel, o caminho antigo continua valendo"
 # =========================================================================
 
 : >"$CHAMADAS"
-: >"${SANDBOX}/smtp.conf"   # sem conta do painel
+: >"${SANDBOX}/envio/smtp.conf"   # sem conta do painel
 PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" \
-  bash "${SANDBOX}/envia.sh" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>" \
+  AGENTE_RAIZ="${SANDBOX}/envio" bash "$ENVIA_REAL" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>" \
   >/dev/null 2>&1
 
 contem     "voltou a usar o mail"      "$(cat "$CHAMADAS")" "MAIL_USADO"

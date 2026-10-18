@@ -110,6 +110,7 @@ falhar.
 | RF-25 | Receber do painel a conta de envio e o bot, e aplicá-los no ciclo de configuração |
 | RF-26 | Instalar sem perguntar o que o painel já tem cadastrado |
 | RF-28 | Instalar sem pergunta nenhuma quando o UUID vem na chamada, com toda a configuração vinda do painel |
+| RF-29 | Registrar a resposta do servidor de e-mail em todo envio, sem jamais registrar a credencial |
 | RF-27 | Medir e enviar a saúde da máquina: fila nas três janelas, programas, linhas de execução e tempo ligado |
 | RF-17 | Dizer em uma frase o que houve, o que causa e se precisa de alguém agora |
 | RF-18 | Espaçar a renotificação de incidente longo, dobrando até o teto de um dia |
@@ -138,6 +139,34 @@ falhar.
 - Não monitora aplicação (endpoint HTTP, fila, latência). Só o servidor.
 
 ## Histórico
+
+### 2.6.2, 2026-10-17: o que o servidor de e-mail respondeu fica no registro
+
+Um servidor foi instalado, o envio do e-mail de boas-vindas deu certo, e o
+e-mail não chegou. No servidor não havia nada para olhar: o envio bem-sucedido
+não deixava registro nenhum, e sem o identificador da fila não dá para achar a
+mensagem no painel do provedor.
+
+Agora todo envio direto registra o que o servidor de e-mail respondeu, no
+`/var/log/monitoring-agent.log`:
+
+```
+2026-10-17 23:42:51 [INFO] send_html_alert: aceito para alguem@exemplo.com por smtp.provedor.com:587: 250 2.0.0 Ok: queued as ABC123
+2026-10-17 23:42:51 [ERRO] send_html_alert: envio direto para outro@exemplo.com falhou (curl 55) por smtp.provedor.com:587: 550 5.7.1 Sender not allowed
+```
+
+Com isso, "o alerta não chegou" passa a ter três respostas possíveis e
+distinguíveis: o agente não tentou, o servidor recusou e disse por quê, ou o
+servidor aceitou e o problema está depois dele.
+
+**A credencial não entra no registro.** A conversa do `curl` tem a linha
+`AUTH PLAIN` com usuário e senha em base64. Só as linhas de resposta do
+servidor são aproveitadas, por lista de permissão, e a bateria tem um `curl`
+de mentira com a linha do `AUTH` no meio para provar que ela não vaza.
+
+Os caminhos de configuração do enviador viraram variáveis (`AGENTE_RAIZ`),
+como no resto do agente. Antes as baterias testavam uma cópia do script com os
+caminhos reescritos por `sed`; agora testam o arquivo que vai para o servidor.
 
 ### 2026-10-17: instalação silenciosa com o UUID na chamada
 
