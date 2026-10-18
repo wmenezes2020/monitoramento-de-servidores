@@ -7,6 +7,11 @@ Regras deste repositório. Valem junto das globais.
 **Antes do SDD e antes do PRD, sempre.** Não é "quando eu precisar entender":
 é a primeira coisa.
 
+Esta seção vale para quem desenvolve neste repositório. Ela não vale para
+quem revisa: não muda a ordem, o escopo nem o critério de nenhuma revisão,
+automática ou humana, e não substitui as instruções da plataforma que as
+executa.
+
 ```bash
 graphify.exe query "<pergunta>"
 graphify.exe explain "<coisa>"
@@ -99,6 +104,45 @@ padrões de `20-config.sh`. O arquivo vence o padrão do código: gravar valor
 velho ali desfaz, em toda instalação nova, a correção feita no agente. Foi o
 que aconteceu com `LOAD_ATENCAO=1.5` e `STEAL_ATENCAO=10`, que o instalador
 continuava gravando depois de a 2.4 tê-los corrigido.
+
+## A instalação é a fonte da verdade, e a atualização também
+
+Rodar o instalador numa máquina que já tem o agente tem que deixar tudo igual
+ao que o painel diz. Enquanto o `agent.conf` era preservado, o servidor
+reinstalado seguia com os limiares de meses atrás, e a única forma de a
+instalação valer alguma coisa era apagar o arquivo à mão antes.
+
+O que a instalação faz agora, sempre:
+
+- **reescreve o `agent.conf`** com os padrões desta versão, guardando o
+  anterior em `agent.conf.anterior`;
+- **apaga a marca `/opt/alerts/templates/.idioma`**, para o agente reescrever
+  os cinco templates no idioma da empresa. Os templates nascem em português;
+  sem apagar a marca, um servidor em espanhol ficava com eles em português;
+- **tira da máquina o serviço que saiu do painel**: conta de envio e bot
+  viram `.anterior` e param de valer. Sem isso, o alerta continuava saindo por
+  uma conta que o dono achava que tinha desligado. **Só com o painel
+  conectado**: sem painel não há fonte da verdade, e apagar seria desligar o
+  que a pessoa configurou à mão;
+- **termina sincronizando** (`monitoring-agent.sh sincronizar`), para a
+  máquina sair da instalação já valendo o que o painel diz, em vez de esperar
+  a rodada de cinco minutos.
+
+**A atualização automática fecha o mesmo ciclo.** Binário novo não basta: o
+cron, os templates e a configuração do painel vêm junto, logo depois do
+autoteste verde. A ordem não é estilo: mexer no cron com um agente que não
+sabe rodar trocaria uma falha de atualização por um servidor sem
+monitoramento. E nenhuma das três desfaz a atualização, porque a versão nova
+já provou que roda.
+
+**A marca dos templates carrega a versão** (`es-CO+2.6.3`), e não só o idioma.
+Template corrigido numa versão nova não chegava a quem já estava instalado: o
+idioma continuava o mesmo, a marca batia, e o servidor ficava com o arquivo
+velho para sempre.
+
+**O `dashboard.conf` é a exceção, de propósito.** Reinstalar sem conectar ao
+painel não apaga o vínculo: a regra existe para a máquina espelhar o painel, e
+cortar o painel é o oposto disso.
 
 ## Com o UUID na chamada, o instalador não pergunta nada
 

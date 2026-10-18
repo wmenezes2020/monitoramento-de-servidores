@@ -182,7 +182,7 @@ igual   "cinco templates"          "5" "$(ls "${TEMPLATES_DIR}"/*.html 2>/dev/nu
 verdade "rotulo de data em pt"     grep -q "<strong>Data:</strong>"  "${TEMPLATES_DIR}/alert.html"
 verdade "rodape em pt"             grep -q "Alerta automático"       "${TEMPLATES_DIR}/alert.html"
 verdade "lang do html em pt"       grep -q 'lang="pt-BR"'            "${TEMPLATES_DIR}/alert.html"
-igual   "marca de idioma gravada"  "pt-BR" "$(cat "${TEMPLATES_DIR}/.idioma" 2>/dev/null)"
+igual   "marca de idioma com a versao" "pt-BR+${AGENTE_VERSAO}" "$(cat "${TEMPLATES_DIR}/.idioma" 2>/dev/null)"
 
 # As quatro variaveis precisam continuar literais: quem substitui e o envsubst
 # dentro do send_html_alert.sh, na hora do envio. Expandi-las aqui mandaria um
@@ -213,6 +213,17 @@ verdade "rodape em es" grep -q "Alerta automática"       "${TEMPLATES_DIR}/aler
 ANTES="$(stat -c %Y "${TEMPLATES_DIR}/alert.html" 2>/dev/null || echo 0)"
 sincroniza_templates
 igual "idioma igual nao reescreve" "$ANTES" "$(stat -c %Y "${TEMPLATES_DIR}/alert.html" 2>/dev/null || echo 0)"
+
+# Versao nova reescreve, mesmo com o idioma igual. Sem isto, template
+# corrigido numa versao nova nunca chegava a quem ja estava instalado: a marca
+# batia pelo idioma e o servidor ficava com o arquivo velho para sempre.
+printf 'SUJEIRA-DA-VERSAO-ANTIGA\n' >>"${TEMPLATES_DIR}/alert.html"
+VERSAO_ORIGINAL="$AGENTE_VERSAO"
+AGENTE_VERSAO="99.9.9"
+sincroniza_templates
+igual      "a marca passa a dizer a versao nova" "es-CO+99.9.9" "$(cat "${TEMPLATES_DIR}/.idioma" 2>/dev/null)"
+nao_contem "e o template foi reescrito de verdade" "$(cat "${TEMPLATES_DIR}/alert.html")" "SUJEIRA-DA-VERSAO-ANTIGA"
+AGENTE_VERSAO="$VERSAO_ORIGINAL"
 
 unset TEMPLATES_DIR
 

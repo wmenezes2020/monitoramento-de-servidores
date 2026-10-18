@@ -171,6 +171,25 @@ leitor --uuid=nao-e-uuid >/dev/null 2>&1
 igual "UUID malformado para a instalacao" "1" "$?"
 
 # =========================================================================
+grupo "Reinstalar e a fonte da verdade"
+# =========================================================================
+#
+# Reinstalar numa maquina que ja tinha o agente precisa deixar tudo igual ao
+# que o painel diz. Enquanto o agent.conf era preservado, o servidor
+# reinstalado seguia com os limiares de meses atras, e so apagando o arquivo a
+# mao a instalacao valia de alguma coisa.
+
+nao_contem "o agent.conf deixou de ser preservado" "agent.conf ja existe; preservado."
+nao_contem "e nao e mais condicional"              "if [[ ! -f /opt/monitoring/agent.conf ]]; then"
+contem "o anterior fica guardado"       "/opt/monitoring/agent.conf.anterior"
+contem "a marca de idioma sai"          "rm -f /opt/alerts/templates/.idioma"
+contem "conta de envio que saiu do painel sai daqui" "smtp.conf.anterior"
+contem "bot que saiu do painel sai daqui"            "telegram.conf.anterior"
+contem "e isso so vale com painel conectado"         'if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
+  if [[ $SERVICO_EMAIL_DO_PAINEL -ne 1 ]]'
+contem "a instalacao termina sincronizando"          "monitoring-agent.sh sincronizar"
+
+# =========================================================================
 
 printf '\n'
 if [[ "$FALHAS" -eq 0 ]]; then

@@ -805,6 +805,29 @@ DASHCONF
   log_info "Dashboard config em /opt/monitoring/dashboard.conf"
 fi
 
+# --- 4e. O que o painel nao tem mais nao fica na maquina ------------------
+#
+# Reinstalar tem que deixar a maquina igual ao que o painel diz, e isso inclui
+# o que foi tirado de la. Sem esta parte, a conta de e-mail e o bot removidos
+# do painel continuavam valendo no servidor, porque os arquivos deles nunca
+# eram apagados: o alerta seguia saindo por uma conta que o dono achava que
+# tinha desligado.
+#
+# So acontece com o painel conectado. Sem painel nao ha fonte da verdade
+# nenhuma, e apagar seria desligar o que a pessoa configurou a mao.
+if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
+  if [[ $SERVICO_EMAIL_DO_PAINEL -ne 1 ]] && [[ -f /opt/monitoring/smtp.conf ]]; then
+    mv -f /opt/monitoring/smtp.conf /opt/monitoring/smtp.conf.anterior 2>/dev/null || true
+    log_warn "Nenhuma conta de envio neste servidor no painel. A conta que estava gravada aqui saiu de uso (ficou em smtp.conf.anterior)."
+    INSTALL_WARNINGS+=("Conta de envio de e-mail removida desta maquina porque nao esta no painel.")
+  fi
+  if [[ -z "$TELEGRAM_BOT_TOKEN" ]] && [[ -f /opt/monitoring/telegram.conf ]]; then
+    mv -f /opt/monitoring/telegram.conf /opt/monitoring/telegram.conf.anterior 2>/dev/null || true
+    log_warn "Nenhum bot do Telegram neste servidor no painel. O bot que estava gravado aqui saiu de uso (ficou em telegram.conf.anterior)."
+    INSTALL_WARNINGS+=("Bot do Telegram removido desta maquina porque nao esta no painel.")
+  fi
+fi
+
 cat > /usr/local/bin/send_dashboard_metrics.sh << 'SENDDASH'
 #!/usr/bin/env bash
 # Envia metricas/incidentes para o Dashboard via API REST.
@@ -964,6 +987,11 @@ write_alert_template "/opt/alerts/templates/memory-alert.html" "#8b5cf6" "RAM" "
 write_alert_template "/opt/alerts/templates/disk-alert.html" "#0ea5e9" "DISCO" "Espaco em disco critico" "Disco"
 # ClamAV template (vermelho)
 write_alert_template "/opt/alerts/templates/clamav-alert.html" "#dc2626" "ClamAV" "Malware detectado" "ClamAV"
+# A marca de idioma sai junto. Os templates acima nascem em portugues; e a
+# sincronia que os reescreve no idioma da empresa. Deixar a marca antiga diria
+# ao agente que ja estao no idioma certo, e um servidor em espanhol ficaria com
+# os cinco arquivos em portugues ate alguem trocar o idioma no painel.
+rm -f /opt/alerts/templates/.idioma 2>/dev/null || true
 log_ok "Templates HTML criados."
 
 # --- 6. Agente de monitoramento ---
@@ -1072,8 +1100,19 @@ rm -rf "$AGENTE_TMP" 2>/dev/null || true
 # Configuracao do agente. Os limiares de atencao ficam abaixo dos criticos,
 # para o aviso chegar antes do problema, e a histerese evita que um pico de
 # poucos segundos vire mensagem.
-if [[ ! -f /opt/monitoring/agent.conf ]]; then
-  cat > /opt/monitoring/agent.conf << AGENTCONF
+# A instalacao e a fonte da verdade: o agent.conf e reescrito sempre, com os
+# padroes desta versao, e logo depois a sincronia traz por cima o que o painel
+# diz. Preservar o arquivo antigo deixava o servidor reinstalado rodando com os
+# limiares de meses atras, e era preciso lembrar de apagar o arquivo a mao para
+# a instalacao valer.
+#
+# O que estava la nao e jogado fora em silencio: fica em agent.conf.anterior,
+# para quem tiver editado a mao conseguir comparar.
+if [[ -f /opt/monitoring/agent.conf ]]; then
+  cp -a /opt/monitoring/agent.conf /opt/monitoring/agent.conf.anterior 2>/dev/null || true
+  log_info "agent.conf reescrito; o anterior ficou em /opt/monitoring/agent.conf.anterior"
+fi
+cat > /opt/monitoring/agent.conf << AGENTCONF
 # Configuracao do agente de monitoramento.
 # Gerada pelo instalador em $(date '+%Y-%m-%d %H:%M:%S').
 # Os limiares tambem chegam do painel; editar aqui vale ate a proxima sincronia.
@@ -1128,11 +1167,8 @@ RECUPERACAO_TELEGRAM=0
 AUTO_UPDATE=1
 UPDATE_CANAL=main
 AGENTCONF
-  chmod 644 /opt/monitoring/agent.conf
-  log_ok "Configuracao em /opt/monitoring/agent.conf"
-else
-  log_info "agent.conf ja existe; preservado."
-fi
+chmod 644 /opt/monitoring/agent.conf
+log_ok "Configuracao em /opt/monitoring/agent.conf"
 
 # Destinatarios de e-mail no lugar de configuracao, nao dentro do script.
 if [[ -n "${RECIPIENTS}" ]]; then
@@ -1219,6 +1255,19 @@ if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
 else
   [[ -n "$TELEGRAM_BOT_TOKEN" ]] && log_info "Telegram configurado; execute sudo /usr/local/bin/telegram-get-chat-id.sh e depois teste o envio."
 fi
+# A instalacao so termina quando a maquina esta valendo o que o painel diz:
+# limiares, idioma, templates e canais. Sem isto, o agent.conf recem-escrito
+# ficaria com os padroes ate a sincronia da proxima rodada de cinco minutos, e
+# o primeiro alerta do servidor sairia pelo limiar errado.
+if [[ $DASHBOARD_ENABLED -eq 1 ]] && [[ "${AGENTE_OK}" -eq 1 ]]; then
+  if /usr/local/bin/monitoring-agent.sh sincronizar >/dev/null 2>&1; then
+    log_ok "Configuracao e templates sincronizados com o painel."
+  else
+    log_warn "Nao consegui sincronizar agora. A proxima rodada do agente tenta de novo, em ate 5 minutos."
+    INSTALL_WARNINGS+=("Sincronia com o painel nao concluida na instalacao.")
+  fi
+fi
+
 if [[ $DASHBOARD_ENABLED -eq 1 ]] && [[ -n "$DASHBOARD_SERVER_UUID" ]]; then
   log_info "Enviando primeira notificacao completa (CPU, Memoria, Disco) ao Dashboard..."
   if /usr/local/bin/monitor_cpu.sh 2>/dev/null; then

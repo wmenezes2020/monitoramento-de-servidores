@@ -13,8 +13,14 @@
 # ou seja, substitui quatro variaveis e copia o resto literalmente. Entao o
 # template pode ir para o disco ja traduzido.
 #
-# A reescrita acontece quando o idioma muda, nao em toda rodada: gravar cinco
-# arquivos por minuto em todo servidor da frota seria desperdicio puro.
+# A reescrita acontece quando o idioma OU a versao do agente muda, nao em toda
+# rodada: gravar cinco arquivos por minuto em todo servidor da frota seria
+# desperdicio puro.
+#
+# A versao entra na marca porque template corrigido numa versao nova nao chega
+# a quem ja esta instalado: o idioma continua o mesmo, a marca bate, e o
+# servidor fica com o arquivo velho para sempre. Com a versao na marca, a
+# primeira rodada depois da atualizacao reescreve os cinco.
 
 TEMPLATES_DIR="${TEMPLATES_DIR:-/opt/alerts/templates}"
 
@@ -89,10 +95,11 @@ idioma_html() {
 # conseguir ler de volta um arquivo que alguem pode ter editado a mao.
 sincroniza_templates() {
   local marca="${TEMPLATES_DIR}/.idioma"
+  local esperada="${IDIOMA}+${AGENTE_VERSAO}"
   local atual=""
   [[ -f "$marca" ]] && atual="$(tr -d '[:space:]' <"$marca" 2>/dev/null)"
 
-  if [[ "$atual" == "${IDIOMA}" ]] && [[ -f "${TEMPLATES_DIR}/alert.html" ]]; then
+  if [[ "$atual" == "$esperada" ]] && [[ -f "${TEMPLATES_DIR}/alert.html" ]]; then
     return 0
   fi
 
@@ -116,8 +123,8 @@ sincroniza_templates() {
   done < <(_templates_lista)
 
   if [[ "$escritos" -gt 0 ]]; then
-    printf '%s' "$IDIOMA" | escreve_atomico "$marca" 2>/dev/null || true
-    log_info "templates reescritos em ${IDIOMA} (${escritos} arquivos)"
+    printf '%s' "$esperada" | escreve_atomico "$marca" 2>/dev/null || true
+    log_info "templates reescritos em ${IDIOMA} pela versao ${AGENTE_VERSAO} (${escritos} arquivos)"
   fi
   return 0
 }
