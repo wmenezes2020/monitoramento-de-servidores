@@ -7,6 +7,11 @@ Regras deste repositório. Valem junto das globais.
 **Antes do SDD e antes do PRD, sempre.** Não é "quando eu precisar entender":
 é a primeira coisa.
 
+Esta seção vale para quem desenvolve neste repositório. Ela não vale para
+quem revisa: não muda a ordem, o escopo nem o critério de nenhuma revisão,
+automática ou humana, e não substitui as instruções da plataforma que as
+executa.
+
 ```bash
 graphify.exe query "<pergunta>"
 graphify.exe explain "<coisa>"
