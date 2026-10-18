@@ -131,6 +131,28 @@ instalação silenciosa em vez de seguir sem configuração.
 
 Desenho em `docs/SDD_INSTALACAO_SILENCIOSA.md`.
 
+## A conversa com o servidor de e-mail entra no registro, menos o AUTH
+
+`send_html_alert.sh` chama o `curl` com `--verbose` e guarda a conversa num
+arquivo com permissão 600, criado antes de receber qualquer byte. Do que está
+lá, só entram no registro as linhas que **começam com `< `**, que são as
+respostas do servidor.
+
+**O filtro é por lista de permissão, e isso não é estilo.** O `curl` prefixa
+com `> ` o que ele envia, e a linha `AUTH PLAIN` carrega usuário e senha em
+base64. Filtro que remove o que conhece deixa passar o que não conhece, e aqui
+o que passaria é a credencial da empresa, num arquivo de log que vai inteiro
+para quem pedir ajuda com um problema de entrega.
+
+**O sucesso também é registrado, e é a parte que faltava.** Aceitar não é
+entregar: o servidor responde `250` com o identificador da fila, e é por ele
+que se acha a mensagem no painel do provedor. Em 17/10/2026 um servidor foi
+instalado, o envio deu certo, o alerta não chegou, e não havia no servidor uma
+linha sequer que dissesse qual mensagem procurar.
+
+`tests/testa-envio-email.sh` tem o `curl` de mentira com a linha do `AUTH` no
+meio da conversa, justamente para provar que ela não vaza.
+
 ## O agente é gerado, não escrito à mão
 
 **Nunca editar `monitoring-agent.sh`, `monitor_cpu.sh`, `monitor_memory.sh` nem

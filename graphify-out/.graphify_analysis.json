@@ -151,6 +151,25 @@
       "src_agent_25_idioma_urgencia"
     ],
     "7": [
+      "tests_testa_envio_email",
+      "tests_testa_envio_email_campo",
+      "tests_testa_envio_email_chama",
+      "tests_testa_envio_email_chama_direto",
+      "tests_testa_envio_email_contem",
+      "tests_testa_envio_email_envios_log",
+      "tests_testa_envio_email_falha",
+      "tests_testa_envio_email_grupo",
+      "tests_testa_envio_email_igual",
+      "tests_testa_envio_email_linhas",
+      "tests_testa_envio_email_mentira",
+      "tests_testa_envio_email_nao_contem",
+      "tests_testa_envio_email_ok",
+      "tests_testa_envio_email_path",
+      "tests_testa_envio_email_sh__entry",
+      "tests_testa_envio_email_so_ascii",
+      "tests_testa_envio_email_verdade"
+    ],
+    "8": [
       "tests_testa_ruido",
       "tests_testa_ruido_agente_bin",
       "tests_testa_ruido_agente_estado",
@@ -169,7 +188,7 @@
       "tests_testa_ruido_sh__entry",
       "tests_testa_ruido_verdade"
     ],
-    "8": [
+    "9": [
       "tests_testa_config_do_painel",
       "tests_testa_config_do_painel_agente_bin",
       "tests_testa_config_do_painel_agente_estado",
@@ -186,24 +205,6 @@
       "tests_testa_config_do_painel_resposta_do_painel",
       "tests_testa_config_do_painel_sh__entry",
       "tests_testa_config_do_painel_valor"
-    ],
-    "9": [
-      "tests_testa_envio_email",
-      "tests_testa_envio_email_campo",
-      "tests_testa_envio_email_chama",
-      "tests_testa_envio_email_contem",
-      "tests_testa_envio_email_envios_log",
-      "tests_testa_envio_email_falha",
-      "tests_testa_envio_email_grupo",
-      "tests_testa_envio_email_igual",
-      "tests_testa_envio_email_linhas",
-      "tests_testa_envio_email_mentira",
-      "tests_testa_envio_email_nao_contem",
-      "tests_testa_envio_email_ok",
-      "tests_testa_envio_email_path",
-      "tests_testa_envio_email_sh__entry",
-      "tests_testa_envio_email_so_ascii",
-      "tests_testa_envio_email_verdade"
     ],
     "10": [
       "src_agent_30_medir",
@@ -344,6 +345,18 @@
       "src_agent_70_autoupdate_versao_maior"
     ],
     "20": [
+      "src_envio_send_html_alert",
+      "src_envio_send_html_alert_codifica_cabecalho",
+      "src_envio_send_html_alert_envia_direto",
+      "src_envio_send_html_alert_monta_mime",
+      "src_envio_send_html_alert_mta_e_nosso",
+      "src_envio_send_html_alert_registra",
+      "src_envio_send_html_alert_respostas_do_servidor",
+      "src_envio_send_html_alert_sh__entry",
+      "src_envio_send_html_alert_tem_smtp_do_painel",
+      "src_envio_send_html_alert_usa_smtp_direto"
+    ],
+    "21": [
       "src_agent_28_remetente",
       "src_agent_28_remetente_aplica_remetente",
       "src_agent_28_remetente_atualiza_generic_do_postfix",
@@ -353,7 +366,7 @@
       "src_agent_28_remetente_le_do_email_conf",
       "src_agent_28_remetente_sh__entry"
     ],
-    "21": [
+    "22": [
       "src_agent_50_avaliar",
       "src_agent_50_avaliar_avalia",
       "src_agent_50_avaliar_banda_de",
@@ -362,16 +375,6 @@
       "src_agent_50_avaliar_load_vira_alerta",
       "src_agent_50_avaliar_sh__entry",
       "src_agent_50_avaliar_valor_para_fechar_load"
-    ],
-    "22": [
-      "src_envio_send_html_alert",
-      "src_envio_send_html_alert_codifica_cabecalho",
-      "src_envio_send_html_alert_envia_direto",
-      "src_envio_send_html_alert_monta_mime",
-      "src_envio_send_html_alert_mta_e_nosso",
-      "src_envio_send_html_alert_sh__entry",
-      "src_envio_send_html_alert_tem_smtp_do_painel",
-      "src_envio_send_html_alert_usa_smtp_direto"
     ],
     "23": [
       "src_agent_20_config",
@@ -411,9 +414,9 @@
     "4": 0.1437908496732026,
     "5": 0.23529411764705882,
     "6": 0.17647058823529413,
-    "7": 0.2647058823529412,
-    "8": 0.15833333333333333,
-    "9": 0.3,
+    "7": 0.27941176470588236,
+    "8": 0.2647058823529412,
+    "9": 0.15833333333333333,
     "10": 0.18095238095238095,
     "11": 0.23076923076923078,
     "12": 0.2692307692307692,
@@ -424,9 +427,9 @@
     "17": 0.26666666666666666,
     "18": 0.28888888888888886,
     "19": 0.3333333333333333,
-    "20": 0.42857142857142855,
-    "21": 0.32142857142857145,
-    "22": 0.4642857142857143,
+    "20": 0.37777777777777777,
+    "21": 0.42857142857142855,
+    "22": 0.32142857142857145,
     "23": 0.4,
     "24": 0.4,
     "25": 0.6666666666666666,
@@ -437,7 +440,7 @@
     {
       "id": "tests_testa_envio_email_sh__entry",
       "label": "testa-envio-email.sh script",
-      "degree": 10
+      "degree": 11
     },
     {
       "id": "src_agent_25_idioma_t",

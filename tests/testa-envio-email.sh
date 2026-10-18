@@ -168,19 +168,19 @@ mentira "mas falhar em todos e falha" test $? -eq 0
 grupo "Remetente com acento no nome"
 # =========================================================================
 
-# O script le /opt/monitoring/email.conf, que nao existe aqui. Em vez de um
-# bash -c com sed embutido, que vira um ninho de aspas, a copia e preparada
-# antes e chamada direto.
-printf 'SENDER_EMAIL="alertas@empresa.com"\nSENDER_NAME="Monitoracao"\n' >"${SANDBOX}/email.conf"
-sed "s|/opt/monitoring/email.conf|${SANDBOX}/email.conf|g" "$ENVIA" >"${SANDBOX}/envia.sh"
+# O script le o email.conf de AGENTE_RAIZ, que aqui aponta para a caixa de
+# areia. Antes a bateria reescrevia o caminho dentro de uma copia do script
+# com sed; agora o caminho e variavel, como no resto do agente.
+mkdir -p "${SANDBOX}/conf"
+printf 'SENDER_EMAIL="alertas@empresa.com"\nSENDER_NAME="Monitoracao"\n' >"${SANDBOX}/conf/email.conf"
 : >"$ENVIOS"
-bash "${SANDBOX}/envia.sh" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>" >/dev/null 2>&1
+AGENTE_RAIZ="${SANDBOX}/conf" bash "$ENVIA" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>" >/dev/null 2>&1
 igual "nome sem acento fica legivel" "Monitoracao <alertas@empresa.com>" "$(campo FROM)"
 
-printf 'SENDER_EMAIL="alertas@empresa.com"\nSENDER_NAME="Monitoracao"\n' >"${SANDBOX}/email.conf"
-sed -i 's/Monitoracao/Monitoração/' "${SANDBOX}/email.conf"
+printf 'SENDER_EMAIL="alertas@empresa.com"\nSENDER_NAME="Monitoracao"\n' >"${SANDBOX}/conf/email.conf"
+sed -i 's/Monitoracao/Monitoração/' "${SANDBOX}/conf/email.conf"
 : >"$ENVIOS"
-bash "${SANDBOX}/envia.sh" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>" >/dev/null 2>&1
+AGENTE_RAIZ="${SANDBOX}/conf" bash "$ENVIA" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>" >/dev/null 2>&1
 FROM="$(campo FROM)"
 contem   "nome acentuado tambem e codificado" "$FROM" "=?UTF-8?B?"
 contem   "e o endereco fica legivel ao lado"  "$FROM" "<alertas@empresa.com>"
@@ -193,6 +193,95 @@ grupo "Nada a enviar"
 : >"$ENVIOS"
 bash "$ENVIA" "${SANDBOX}/templates/alert.html" "" "[OK] x" "T" "<p>c</p>" >/dev/null 2>&1
 igual "lista vazia nao chama o mail" "0" "$(linhas)"
+
+# =========================================================================
+grupo "A resposta do servidor de e-mail fica registrada"
+# =========================================================================
+#
+# Na instalacao de 17/10/2026 o envio deu certo, o alerta nao chegou, e nao
+# havia no servidor uma linha sequer que dissesse qual mensagem procurar no
+# painel do provedor. Aceitar nao e entregar: o que o servidor responde no
+# "250" traz o identificador da fila, e e por ele que se acha a mensagem.
+#
+# O cuidado que esta bateria guarda: a conversa do curl tem a linha do AUTH,
+# com usuario e senha em base64. Ela nao pode chegar ao registro.
+
+DIRETO="${SANDBOX}/direto"
+mkdir -p "${DIRETO}/opt" "${DIRETO}/bin"
+
+cat >"${DIRETO}/opt/smtp.conf" <<'CONF'
+SMTP_HOST="smtp.exemplo.invalido"
+SMTP_PORTA="587"
+SMTP_USUARIO="conta@exemplo.invalido"
+SMTP_SENHA="senha-de-mentira-123"
+CONF
+printf 'SENDER_EMAIL="alertas@exemplo.invalido"\nSERVER_ID="servidor"\n' >"${DIRETO}/opt/email.conf"
+
+# curl de mentira: imita a conversa que o curl -v escreve, com a linha do AUTH
+# no meio dela, como acontece de verdade.
+cat >"${DIRETO}/bin/curl" <<'FALSOCURL'
+#!/usr/bin/env bash
+destino=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mail-rcpt) destino="${2:-}"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+{
+  printf '* Connected to smtp.exemplo.invalido port 587\n'
+  printf '< 220 smtp.exemplo.invalido ESMTP ready\n'
+  printf '> AUTH PLAIN AGNvbnRhQGV4ZW1wbG8Ac2VuaGEtZGUtbWVudGlyYS0xMjM=\n'
+  printf '< 235 2.7.0 Authentication successful\n'
+  printf '< 250 2.1.0 Sender ok\n'
+  case "$destino" in
+    recusa*) printf '< 550 5.7.1 Sender not allowed for this account\n' ;;
+    *)       printf '< 354 Enter message\n'
+             printf '< 250 2.0.0 Ok: queued as FILA-ABC123\n' ;;
+  esac
+  printf '< 221 2.0.0 Bye\n'
+} >&2
+case "$destino" in
+  recusa*) exit 55 ;;
+  *)       exit 0 ;;
+esac
+FALSOCURL
+chmod +x "${DIRETO}/bin/curl"
+
+REGISTRO="${DIRETO}/agente.log"
+chama_direto() {
+  : >"$REGISTRO"
+  PATH="${DIRETO}/bin:${PATH}" AGENTE_RAIZ="${DIRETO}/opt" AGENTE_LOG="$REGISTRO" \
+    bash "$ENVIA" "${SANDBOX}/templates/alert.html" "$1" "[OK] teste" "Titulo" "<p>corpo</p>" \
+    >/dev/null 2>&1
+  return $?
+}
+
+chama_direto "um@empresa.com"
+igual "o envio direto deu certo" "0" "$?"
+LOG="$(cat "$REGISTRO" 2>/dev/null)"
+
+contem "o registro diz que foi aceito"        "$LOG" "aceito para um@empresa.com"
+contem "com o servidor que aceitou"           "$LOG" "smtp.exemplo.invalido:587"
+contem "e com o identificador da fila"        "$LOG" "FILA-ABC123"
+contem "no formato do registro do agente"     "$LOG" "[INFO] send_html_alert:"
+
+# O que nao pode estar la, de jeito nenhum.
+nao_contem "a linha do AUTH nao vai para o registro"   "$LOG" "AUTH"
+nao_contem "nem o base64 da credencial"                "$LOG" "AGNvbnRhQGV4ZW1wbG8"
+nao_contem "nem a senha em texto"                      "$LOG" "senha-de-mentira-123"
+nao_contem "nem o usuario da conta de envio"           "$LOG" "conta@exemplo.invalido"
+nao_contem "e nada do que o agente mandou"             "$LOG" "> "
+
+chama_direto "recusa@empresa.com"
+CODIGO="$?"
+LOG="$(cat "$REGISTRO" 2>/dev/null)"
+
+igual   "recusa do servidor devolve erro"     "1" "$CODIGO"
+contem  "a recusa fica registrada como erro"  "$LOG" "[ERRO] send_html_alert:"
+contem  "com o motivo que o servidor deu"     "$LOG" "550 5.7.1 Sender not allowed"
+contem  "e com o codigo do curl"              "$LOG" "curl 55"
+nao_contem "a recusa tambem nao vaza o AUTH"  "$LOG" "AUTH"
 
 # =========================================================================
 

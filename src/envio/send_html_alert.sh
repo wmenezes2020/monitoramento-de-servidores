@@ -9,11 +9,28 @@
 # script antigo que chamam este caminho continuam funcionando.
 set -uo pipefail
 
-[[ -f /opt/monitoring/email.conf ]] && source /opt/monitoring/email.conf 2>/dev/null
-[[ -f /opt/monitoring/agent.conf ]] && source /opt/monitoring/agent.conf 2>/dev/null
+# Os caminhos sao os mesmos de sempre, agora por variavel: e o que permite a
+# bateria exercitar o envio direto sem root e sem /opt de verdade.
+AGENTE_RAIZ="${AGENTE_RAIZ:-/opt/monitoring}"
+AGENTE_LOG="${AGENTE_LOG:-/var/log/monitoring-agent.log}"
+
+[[ -f "${AGENTE_RAIZ}/email.conf" ]] && source "${AGENTE_RAIZ}/email.conf" 2>/dev/null
+[[ -f "${AGENTE_RAIZ}/agent.conf" ]] && source "${AGENTE_RAIZ}/agent.conf" 2>/dev/null
 # Conta de envio escolhida no painel. Existindo, o envio vai direto ao SMTP e
 # nao passa pelo servico de e-mail da maquina. Ver o bloco "envio direto".
-[[ -f /opt/monitoring/smtp.conf ]] && source /opt/monitoring/smtp.conf 2>/dev/null
+[[ -f "${AGENTE_RAIZ}/smtp.conf" ]] && source "${AGENTE_RAIZ}/smtp.conf" 2>/dev/null
+
+# Registro no mesmo arquivo do agente, no mesmo formato. Nao rotaciona aqui:
+# quem rotaciona e o agente, que escreve no mesmo lugar a cada minuto.
+registra() {
+  local nivel="$1"; shift
+  local linha
+  linha="$(date '+%Y-%m-%d %H:%M:%S') [$nivel] send_html_alert: $*"
+  if [[ -w "$(dirname "$AGENTE_LOG")" ]] || [[ -w "$AGENTE_LOG" ]]; then
+    printf '%s\n' "$linha" >>"$AGENTE_LOG" 2>/dev/null || true
+  fi
+  return 0
+}
 
 TEMPLATE_PATH="${1:-/opt/alerts/templates/alert.html}"
 RECIPIENTS="${2:-}"
@@ -122,6 +139,29 @@ usa_smtp_direto() {
   return 0
 }
 
+# So as respostas do servidor, nunca o que o agente mandou.
+#
+# O curl prefixa com "< " o que vem do servidor e com "> " o que ele envia. A
+# linha do AUTH esta entre as que ele envia e carrega usuario e senha em
+# base64: ela nao pode chegar ao registro de jeito nenhum. Por isso o filtro e
+# por lista de permissao, e nao por remocao do que parece perigoso: filtro que
+# tira o que conhece deixa passar o que nao conhece, e aqui o que passa e uma
+# credencial.
+respostas_do_servidor() {
+  local transcricao="$1"
+  grep '^< ' "$transcricao" 2>/dev/null \
+    | sed 's/^< //' \
+    | grep -E '^[0-9]{3}' \
+    | tail -3 \
+    | LC_ALL=C tr -cd '\40-\176\n' \
+    | tr '\n' ' ' \
+    | cut -c1-300
+}
+
+# Preenchidas por envia_direto para quem chama registrar o que houve.
+RESPOSTA_SMTP=""
+CODIGO_CURL=0
+
 # envia_direto DESTINATARIO ARQUIVO_MIME
 envia_direto() {
   local destinatario="$1" arquivo="$2"
@@ -141,15 +181,25 @@ envia_direto() {
   chmod 600 "$cfg" 2>/dev/null || true
   printf 'user = "%s:%s"\n' "$SMTP_USUARIO" "$SMTP_SENHA" >"$cfg"
 
-  curl --silent --show-error --config "$cfg" \
+  # A conversa com o servidor vai para um arquivo nosso, com permissao 600
+  # antes de receber qualquer byte: ela contem a linha do AUTH.
+  local transcricao
+  transcricao="$(mktemp /tmp/smtp.XXXXXX.log)" || { rm -f "$cfg"; return 1; }
+  chmod 600 "$transcricao" 2>/dev/null || true
+
+  curl --silent --show-error --verbose --config "$cfg" \
     --url "${esquema}://${SMTP_HOST}:${porta}" \
     --mail-from "$REMETENTE" \
     --mail-rcpt "$destinatario" \
     --upload-file "$arquivo" \
     --connect-timeout 15 --max-time 60 \
-    "${extra[@]}" 2>/dev/null
+    "${extra[@]}" 2>"$transcricao"
   local codigo=$?
   rm -f "$cfg"
+
+  RESPOSTA_SMTP="$(respostas_do_servidor "$transcricao")"
+  CODIGO_CURL="$codigo"
+  rm -f "$transcricao"
   return "$codigo"
 }
 
@@ -193,10 +243,17 @@ for BRUTO in "${LISTA[@]}"; do
     monta_mime "$RECIPIENT" "$MIME_FILE"
     if envia_direto "$RECIPIENT" "$MIME_FILE"; then
       enviado=$(( enviado + 1 ))
+      # O que o servidor respondeu fica registrado mesmo no sucesso, e e a
+      # parte que faltava: aceitar nao e entregar. Na instalacao de
+      # 17/10/2026 o envio deu certo, o alerta nao chegou, e nao havia no
+      # servidor nenhuma linha que dissesse para qual mensagem olhar no
+      # painel do provedor. A resposta traz o identificador da fila.
+      registra INFO "aceito para ${RECIPIENT} por ${SMTP_HOST}:${SMTP_PORTA:-587}: ${RESPOSTA_SMTP:-sem resposta registrada}"
     else
       recusado=$(( recusado + 1 ))
-      printf 'send_html_alert: envio direto para %s falhou (SMTP %s:%s)\n' \
-        "$RECIPIENT" "$SMTP_HOST" "${SMTP_PORTA:-587}" >&2
+      registra ERRO "envio direto para ${RECIPIENT} falhou (curl ${CODIGO_CURL}) por ${SMTP_HOST}:${SMTP_PORTA:-587}: ${RESPOSTA_SMTP:-sem resposta do servidor}"
+      printf 'send_html_alert: envio direto para %s falhou (SMTP %s:%s): %s\n' \
+        "$RECIPIENT" "$SMTP_HOST" "${SMTP_PORTA:-587}" "${RESPOSTA_SMTP:-sem resposta}" >&2
     fi
     rm -f "$MIME_FILE"
   elif command -v mail >/dev/null 2>&1; then

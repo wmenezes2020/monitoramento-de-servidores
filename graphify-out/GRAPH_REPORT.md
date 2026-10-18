@@ -1,10 +1,10 @@
 # Graph Report - monitoramento-de-servidores  (2026-10-17)
 
 ## Corpus Check
-- Corpus is ~19,525 words - fits in a single context window. You may not need a graph.
+- Corpus is ~19,913 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 346 nodes · 537 edges · 28 communities (25 shown, 3 thin omitted)
+- 349 nodes · 543 edges · 28 communities (25 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
@@ -16,9 +16,9 @@
 - 10-util
 - testa-idioma
 - 25-idioma
+- testa-envio-email
 - testa-ruido
 - testa-config-do-painel
-- testa-envio-email
 - 30-medir
 - 90-main
 - 29-servicos
@@ -29,9 +29,9 @@
 - gerar-grafo
 - 60-notificar
 - 70-autoupdate
+- send_html_alert
 - 28-remetente
 - 50-avaliar
-- send_html_alert
 - 20-config
 - 27-templates
 - build
@@ -39,7 +39,7 @@
 - send_telegram_alert
 
 ## God Nodes (most connected - your core abstractions)
-1. `testa-envio-email.sh script` - 10 edges
+1. `testa-envio-email.sh script` - 11 edges
 2. `t()` - 9 edges
 3. `testa-instalador.sh script` - 9 edges
 4. `testa-ruido.sh script` - 9 edges
@@ -86,17 +86,17 @@ Nodes (16): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREG
 Cohesion: 0.18
 Nodes (10): frase_problema(), frase_recuperacao(), impacto_metrica(), msg_en(), msg_es(), msg_pt(), 25-idioma.sh script, sujeito_metrica() (+2 more)
 
-### Community 7 - "testa-ruido"
+### Community 7 - "testa-envio-email"
+Cohesion: 0.28
+Nodes (15): campo(), chama(), chama_direto(), contem(), ENVIOS_LOG, falha(), grupo(), igual() (+7 more)
+
+### Community 8 - "testa-ruido"
 Cohesion: 0.26
 Nodes (16): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, antes_de(), contem(), envelhece() (+8 more)
 
-### Community 8 - "testa-config-do-painel"
+### Community 9 - "testa-config-do-painel"
 Cohesion: 0.16
 Nodes (14): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, DASHBOARD_API_URL, DASHBOARD_ENABLED, DASHBOARD_SERVER_UUID (+6 more)
-
-### Community 9 - "testa-envio-email"
-Cohesion: 0.30
-Nodes (14): campo(), chama(), contem(), ENVIOS_LOG, falha(), grupo(), igual(), mentira() (+6 more)
 
 ### Community 10 - "30-medir"
 Cohesion: 0.18
@@ -138,17 +138,17 @@ Nodes (6): envia_alerta(), envia_incidente_dashboard(), monta_corpo(), monta_tex
 Cohesion: 0.33
 Nodes (8): atualiza_agente(), baixa(), reporta_falha_update(), restaura_rollback(), 70-autoupdate.sh script, sha256_de(), versao_instalada(), versao_maior()
 
-### Community 20 - "28-remetente"
+### Community 20 - "send_html_alert"
+Cohesion: 0.38
+Nodes (9): codifica_cabecalho(), envia_direto(), monta_mime(), mta_e_nosso(), registra(), respostas_do_servidor(), send_html_alert.sh script, tem_smtp_do_painel() (+1 more)
+
+### Community 21 - "28-remetente"
 Cohesion: 0.43
 Nodes (7): aplica_remetente(), atualiza_generic_do_postfix(), dominio_do_postfix(), email_valido(), grava_no_email_conf(), le_do_email_conf(), 28-remetente.sh script
 
-### Community 21 - "50-avaliar"
+### Community 22 - "50-avaliar"
 Cohesion: 0.32
 Nodes (5): avalia(), banda_de(), espera_renotificacao(), 50-avaliar.sh script, valor_para_fechar_load()
-
-### Community 22 - "send_html_alert"
-Cohesion: 0.46
-Nodes (7): codifica_cabecalho(), envia_direto(), monta_mime(), mta_e_nosso(), send_html_alert.sh script, tem_smtp_do_painel(), usa_smtp_direto()
 
 ### Community 23 - "20-config"
 Cohesion: 0.40
