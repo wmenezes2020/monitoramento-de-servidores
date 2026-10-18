@@ -1,10 +1,10 @@
-# Graph Report - monitoramento-de-servidores  (2026-10-17)
+# Graph Report - monitoramento-de-servidores  (2026-10-18)
 
 ## Corpus Check
-- Corpus is ~19,913 words - fits in a single context window. You may not need a graph.
+- Corpus is ~20,184 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 349 nodes · 543 edges · 28 communities (25 shown, 3 thin omitted)
+- 350 nodes · 546 edges · 28 communities (25 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
@@ -44,11 +44,11 @@
 3. `testa-instalador.sh script` - 9 edges
 4. `testa-ruido.sh script` - 9 edges
 5. `atualiza_agente()` - 8 edges
-6. `testa-destinatario.sh script` - 8 edges
-7. `testa-idioma.sh script` - 8 edges
-8. `testa-servicos.sh script` - 8 edges
-9. `roda-testes.sh script` - 7 edges
-10. `ok()` - 7 edges
+6. `roda-testes.sh script` - 8 edges
+7. `testa-destinatario.sh script` - 8 edges
+8. `testa-idioma.sh script` - 8 edges
+9. `testa-servicos.sh script` - 8 edges
+10. `principal()` - 7 edges
 
 ## Surprising Connections (you probably didn't know these)
 - None detected - all connections are within the same source files.
@@ -59,8 +59,8 @@
 ## Communities (28 total, 3 thin omitted)
 
 ### Community 0 - "roda-testes"
-Cohesion: 0.13
-Nodes (19): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, falha(), FIXTURE_DF, FIXTURE_DF_INODES (+11 more)
+Cohesion: 0.12
+Nodes (20): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, falha(), FIXTURE_DF, FIXTURE_DF_INODES (+12 more)
 
 ### Community 1 - "testa-destinatario"
 Cohesion: 0.17
@@ -103,7 +103,7 @@ Cohesion: 0.18
 Nodes (9): campo_meminfo(), ignorar_montagem(), le_cpu_bruto(), mede_cpu(), mede_disco(), mede_memoria(), _saida_df(), _saida_df_inodes() (+1 more)
 
 ### Community 11 - "90-main"
-Cohesion: 0.23
+Cohesion: 0.24
 Nodes (9): autoteste(), avalia_e_notifica(), principal(), registra_heartbeat(), rodada(), 90-main.sh script, sincroniza_config(), status() (+1 more)
 
 ### Community 12 - "29-servicos"
@@ -169,6 +169,6 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script` to the rest of the system?**
   _78 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `roda-testes` be split into smaller, more focused modules?**
-  _Cohesion score 0.12681159420289856 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.12333333333333334 - nodes in this community are weakly interconnected._
 - **Should `10-util` be split into smaller, more focused modules?**
   _Cohesion score 0.1437908496732026 - nodes in this community are weakly interconnected._

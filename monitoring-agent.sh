@@ -15,7 +15,7 @@ set -uo pipefail
 # A versao e o unico carimbo. Carimbar o commit tornaria o bundle diferente a
 # cada commit mesmo sem mudanca em src/, o checksum do manifesto mudaria
 # sozinho, e o "build --check" do CI reprovaria sempre.
-AGENTE_VERSAO="2.6.2"
+AGENTE_VERSAO="2.6.3"
 
 
 # ---------------------------------------------------------------------------
@@ -844,8 +844,14 @@ msg_es() {
 # ou seja, substitui quatro variaveis e copia o resto literalmente. Entao o
 # template pode ir para o disco ja traduzido.
 #
-# A reescrita acontece quando o idioma muda, nao em toda rodada: gravar cinco
-# arquivos por minuto em todo servidor da frota seria desperdicio puro.
+# A reescrita acontece quando o idioma OU a versao do agente muda, nao em toda
+# rodada: gravar cinco arquivos por minuto em todo servidor da frota seria
+# desperdicio puro.
+#
+# A versao entra na marca porque template corrigido numa versao nova nao chega
+# a quem ja esta instalado: o idioma continua o mesmo, a marca bate, e o
+# servidor fica com o arquivo velho para sempre. Com a versao na marca, a
+# primeira rodada depois da atualizacao reescreve os cinco.
 
 TEMPLATES_DIR="${TEMPLATES_DIR:-/opt/alerts/templates}"
 
@@ -920,10 +926,11 @@ idioma_html() {
 # conseguir ler de volta um arquivo que alguem pode ter editado a mao.
 sincroniza_templates() {
   local marca="${TEMPLATES_DIR}/.idioma"
+  local esperada="${IDIOMA}+${AGENTE_VERSAO}"
   local atual=""
   [[ -f "$marca" ]] && atual="$(tr -d '[:space:]' <"$marca" 2>/dev/null)"
 
-  if [[ "$atual" == "${IDIOMA}" ]] && [[ -f "${TEMPLATES_DIR}/alert.html" ]]; then
+  if [[ "$atual" == "$esperada" ]] && [[ -f "${TEMPLATES_DIR}/alert.html" ]]; then
     return 0
   fi
 
@@ -947,8 +954,8 @@ sincroniza_templates() {
   done < <(_templates_lista)
 
   if [[ "$escritos" -gt 0 ]]; then
-    printf '%s' "$IDIOMA" | escreve_atomico "$marca" 2>/dev/null || true
-    log_info "templates reescritos em ${IDIOMA} (${escritos} arquivos)"
+    printf '%s' "$esperada" | escreve_atomico "$marca" 2>/dev/null || true
+    log_info "templates reescritos em ${IDIOMA} pela versao ${AGENTE_VERSAO} (${escritos} arquivos)"
   fi
   return 0
 }
@@ -2422,6 +2429,20 @@ atualiza_agente() {
   fi
 
   log_info "atualizado para ${nova} com autoteste verde"
+
+  # Binario novo nao basta: o que a versao nova mudou fora do binario precisa
+  # chegar junto, senao o servidor roda a versao nova com o cron, os templates
+  # e a configuracao da antiga.
+  #
+  # Esta parte roda DEPOIS do autoteste verde, de proposito: mexer no cron e
+  # nos templates com um agente que nao sabe rodar seria trocar uma falha de
+  # atualizacao por um servidor sem monitoramento. Nenhuma das tres falhas
+  # desfaz a atualizacao, porque a versao nova ja provou que roda; cada uma
+  # registra o que nao deu certo.
+  instala_cron || log_erro "cron nao atualizado para a versao ${nova}; o agente novo ja esta instalado"
+  sincroniza_templates || log_erro "templates nao reescritos na versao ${nova}"
+  sincroniza_config || log_erro "painel nao respondeu depois da atualizacao; a proxima rodada tenta de novo"
+
   _limpa_update
   return 0
 }
@@ -3167,6 +3188,15 @@ principal() {
     silenciar)  carrega_config; inicia_silencio "${2:-15m}" "${3:-manutencao}"; printf 'Alertas suprimidos por %s (%s). A coleta continua.\n' "${2:-15m}" "${3:-manutencao}" ;;
     falar)      carrega_config; encerra_silencio; printf 'Silencio encerrado.\n' ;;
     atualizar)  carrega_config; atualiza_agente; printf 'Versao instalada: %s\n' "$(versao_instalada)" ;;
+    sincronizar)
+      # Puxa a configuracao do painel e reescreve os templates agora, sem
+      # esperar a rodada de cinco em cinco minutos. E o que o instalador chama
+      # no fim, para a maquina sair da instalacao ja valendo o que o painel diz.
+      carrega_config
+      sincroniza_config || printf 'Nao consegui falar com o painel.\n' >&2
+      sincroniza_templates || true
+      printf 'Configuracao e templates sincronizados com o painel.\n'
+      ;;
     instalar)   carrega_config; roda_bootstrap && printf 'Agente %s instalado.\n' "$AGENTE_VERSAO" ;;
     versao)     printf '%s\n' "$AGENTE_VERSAO" ;;
     ajuda|-h|--help) uso ;;

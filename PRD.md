@@ -111,6 +111,8 @@ falhar.
 | RF-26 | Instalar sem perguntar o que o painel já tem cadastrado |
 | RF-28 | Instalar sem pergunta nenhuma quando o UUID vem na chamada, com toda a configuração vinda do painel |
 | RF-29 | Registrar a resposta do servidor de e-mail em todo envio, sem jamais registrar a credencial |
+| RF-30 | Reinstalar sobrescreve configuração, templates e serviços pelo que o painel diz |
+| RF-31 | Atualizar sozinho traz cron, templates e configuração junto do binário, depois do autoteste |
 | RF-27 | Medir e enviar a saúde da máquina: fila nas três janelas, programas, linhas de execução e tempo ligado |
 | RF-17 | Dizer em uma frase o que houve, o que causa e se precisa de alguém agora |
 | RF-18 | Espaçar a renotificação de incidente longo, dobrando até o teto de um dia |
@@ -139,6 +141,43 @@ falhar.
 - Não monitora aplicação (endpoint HTTP, fila, latência). Só o servidor.
 
 ## Histórico
+
+### 2.6.3, 2026-10-18: reinstalar passa a valer, e atualizar traz tudo junto
+
+Reinstalar numa máquina que já tinha o agente não trocava o `agent.conf`: o
+arquivo era preservado, e o servidor seguia com os limiares de meses atrás.
+Para a instalação valer alguma coisa era preciso apagar o arquivo à mão antes,
+e quem não sabia disso reinstalava achando que tinha atualizado tudo.
+
+Agora a instalação é a fonte da verdade:
+
+- o `agent.conf` é reescrito sempre, com os padrões desta versão, e o anterior
+  fica em `agent.conf.anterior`;
+- a marca de idioma dos templates sai, para os cinco arquivos serem reescritos
+  no idioma da empresa;
+- conta de envio e bot que saíram do painel saem da máquina, viram `.anterior`
+  e param de valer. Só com o painel conectado: sem painel não há fonte da
+  verdade nenhuma;
+- a instalação termina sincronizando com o painel, em vez de deixar o servidor
+  com os padrões até a rodada de cinco minutos.
+
+**A atualização automática fecha o mesmo ciclo.** Depois do autoteste verde,
+ela reaplica o cron, reescreve os templates e puxa a configuração do painel.
+Antes, o servidor atualizado rodava o binário novo com o cron e os templates
+da versão antiga, e nada quebrava: só ficava velho, em silêncio.
+
+A ordem é deliberada. As três acontecem **depois** do autoteste, porque mexer
+no cron com um agente que não sabe rodar trocaria uma falha de atualização por
+um servidor sem monitoramento. E nenhuma das três desfaz a atualização: a
+versão nova já provou que roda, e voltar atrás por causa do cron deixaria o
+binário velho com o motivo escondido numa linha de registro.
+
+A marca dos templates passou a carregar a versão do agente, e não só o idioma.
+Sem isso, template corrigido numa versão nova nunca chegava a quem já estava
+instalado.
+
+O `dashboard.conf` ficou de fora de propósito: reinstalar sem conectar ao
+painel não apaga o vínculo com ele.
 
 ### 2.6.2, 2026-10-17: o que o servidor de e-mail respondeu fica no registro
 

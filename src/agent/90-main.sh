@@ -480,6 +480,15 @@ principal() {
     silenciar)  carrega_config; inicia_silencio "${2:-15m}" "${3:-manutencao}"; printf 'Alertas suprimidos por %s (%s). A coleta continua.\n' "${2:-15m}" "${3:-manutencao}" ;;
     falar)      carrega_config; encerra_silencio; printf 'Silencio encerrado.\n' ;;
     atualizar)  carrega_config; atualiza_agente; printf 'Versao instalada: %s\n' "$(versao_instalada)" ;;
+    sincronizar)
+      # Puxa a configuracao do painel e reescreve os templates agora, sem
+      # esperar a rodada de cinco em cinco minutos. E o que o instalador chama
+      # no fim, para a maquina sair da instalacao ja valendo o que o painel diz.
+      carrega_config
+      sincroniza_config || printf 'Nao consegui falar com o painel.\n' >&2
+      sincroniza_templates || true
+      printf 'Configuracao e templates sincronizados com o painel.\n'
+      ;;
     instalar)   carrega_config; roda_bootstrap && printf 'Agente %s instalado.\n' "$AGENTE_VERSAO" ;;
     versao)     printf '%s\n' "$AGENTE_VERSAO" ;;
     ajuda|-h|--help) uso ;;

@@ -464,6 +464,41 @@ verdade "versao do bundle bate com agent.version" \
   grep -q "^AGENTE_VERSAO=\"$(tr -d '[:space:]' <"${RAIZ}/agent.version")\"" "${RAIZ}/monitoring-agent.sh"
 
 # =========================================================================
+grupo "Depois de atualizar, o resto tambem fica novo"
+# =========================================================================
+#
+# Binario novo nao basta. O cron, os templates e a configuracao do painel
+# precisam vir junto, senao o servidor roda a versao nova com o cron e os
+# templates da antiga, e ninguem percebe: nada quebra, so fica velho.
+#
+# A ordem importa e e o que estes testes guardam: as tres chamadas ficam
+# DEPOIS do autoteste. Mexer no cron com um agente que nao sabe rodar seria
+# trocar uma falha de atualizacao por um servidor sem monitoramento.
+
+linha_de() { grep -n -- "$1" "${RAIZ}/monitoring-agent.sh" | head -1 | cut -d: -f1; }
+
+L_AUTOTESTE="$(linha_de 'autoteste da versao ${nova} falhou')"
+L_CRON="$(linha_de 'cron nao atualizado para a versao')"
+L_TEMPLATES="$(linha_de 'templates nao reescritos na versao')"
+L_PAINEL="$(linha_de 'painel nao respondeu depois da atualizacao')"
+
+verdade "o cron e reaplicado na atualizacao"      test -n "$L_CRON"
+verdade "os templates sao reescritos"             test -n "$L_TEMPLATES"
+verdade "a config do painel e puxada"             test -n "$L_PAINEL"
+verdade "cron so depois do autoteste verde"       test "${L_CRON:-0}" -gt "${L_AUTOTESTE:-0}"
+verdade "templates so depois do autoteste verde"  test "${L_TEMPLATES:-0}" -gt "${L_AUTOTESTE:-0}"
+verdade "painel so depois do autoteste verde"     test "${L_PAINEL:-0}" -gt "${L_AUTOTESTE:-0}"
+
+# Nenhuma das tres pode desfazer a atualizacao: a versao nova ja provou que
+# roda, e voltar atras por causa do cron deixaria o servidor com o binario
+# velho e o motivo escondido numa linha de log.
+verdade "falha nessas tres nao faz rollback" \
+  bash -c 'grep -A 3 "cron nao atualizado para a versao" "'"${RAIZ}"'/monitoring-agent.sh" | grep -qv restaura_rollback'
+
+# O comando que o instalador chama no fim da instalacao.
+verdade "existe o comando sincronizar" grep -q '^    sincronizar)' "${RAIZ}/monitoring-agent.sh"
+
+# =========================================================================
 grupo "Nada de travessao no que a pessoa le"
 # =========================================================================
 

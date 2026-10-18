@@ -167,6 +167,20 @@ atualiza_agente() {
   fi
 
   log_info "atualizado para ${nova} com autoteste verde"
+
+  # Binario novo nao basta: o que a versao nova mudou fora do binario precisa
+  # chegar junto, senao o servidor roda a versao nova com o cron, os templates
+  # e a configuracao da antiga.
+  #
+  # Esta parte roda DEPOIS do autoteste verde, de proposito: mexer no cron e
+  # nos templates com um agente que nao sabe rodar seria trocar uma falha de
+  # atualizacao por um servidor sem monitoramento. Nenhuma das tres falhas
+  # desfaz a atualizacao, porque a versao nova ja provou que roda; cada uma
+  # registra o que nao deu certo.
+  instala_cron || log_erro "cron nao atualizado para a versao ${nova}; o agente novo ja esta instalado"
+  sincroniza_templates || log_erro "templates nao reescritos na versao ${nova}"
+  sincroniza_config || log_erro "painel nao respondeu depois da atualizacao; a proxima rodada tenta de novo"
+
   _limpa_update
   return 0
 }
