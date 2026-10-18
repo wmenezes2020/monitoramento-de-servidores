@@ -658,6 +658,11 @@ fi
 systemctl restart postfix 2>/dev/null || INSTALL_WARNINGS+=("Nao foi possivel reiniciar postfix. Tente: sudo systemctl restart postfix")
 systemctl enable postfix 2>/dev/null || true
 log_ok "Postfix configurado."
+elif [[ $SERVICO_EMAIL_DO_PAINEL -eq 1 ]]; then
+  # Dizer "e-mail desabilitado" aqui foi o que fez o log de 17/10/2026 parecer
+  # que o envio estava desligado, tres linhas depois de ligar o envio pela
+  # conta do painel. Quem foi procurar defeito comecou pelo lugar errado.
+  log_ok "Envio direto pela conta do painel. Nenhum servico de e-mail instalado nesta maquina."
 else
   log_ok "E-mail desabilitado. Postfix nao instalado."
 fi
@@ -1230,7 +1235,11 @@ echo -e "${GREEN}  Instalacao concluida com sucesso           ${NC}" >&2
 echo -e "${GREEN}============================================${NC}" >&2
 echo "" >&2
 echo "Resumo:" >&2
-if [[ $EMAIL_ENABLED -eq 1 ]]; then
+if [[ $EMAIL_ENABLED -eq 1 && $SERVICO_EMAIL_DO_PAINEL -eq 1 ]]; then
+  echo "  - E-mail: envio direto por ${SMTP_HOST}:${SMTP_PORT}, remetente ${SENDER_EMAIL}" >&2
+  echo "    (sem servico de e-mail nesta maquina; a entrega depende do provedor da conta)" >&2
+  echo "  - Destinatarios e-mail: ${RECIPIENTS}" >&2
+elif [[ $EMAIL_ENABLED -eq 1 ]]; then
   echo "  - Postfix (SMTP2Go): porta ${SMTP_PORT}, remetente ${SENDER_EMAIL}" >&2
   echo "  - Destinatarios e-mail: ${RECIPIENTS}" >&2
 else
