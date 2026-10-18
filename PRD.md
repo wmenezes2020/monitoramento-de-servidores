@@ -111,6 +111,7 @@ falhar.
 | RF-26 | Instalar sem perguntar o que o painel já tem cadastrado |
 | RF-28 | Instalar sem pergunta nenhuma quando o UUID vem na chamada, com toda a configuração vinda do painel |
 | RF-29 | Registrar a resposta do servidor de e-mail em todo envio, sem jamais registrar a credencial |
+| RF-32 | Entregar a mensagem com CRLF, como o SMTP exige, e não com LF solto |
 | RF-30 | Reinstalar sobrescreve configuração, templates e serviços pelo que o painel diz |
 | RF-31 | Atualizar sozinho traz cron, templates e configuração junto do binário, depois do autoteste |
 | RF-27 | Medir e enviar a saúde da máquina: fila nas três janelas, programas, linhas de execução e tempo ligado |
@@ -141,6 +142,31 @@ falhar.
 - Não monitora aplicação (endpoint HTTP, fila, latência). Só o servidor.
 
 ## Histórico
+
+### 2.6.4, 2026-10-18: a mensagem saía com o fim de linha errado
+
+Duas reinstalações seguidas, o instalador dizendo "E-mail de boas-vindas
+enviado", o `curl` voltando com código 0, e nenhum e-mail chegando. Nada no
+servidor apontava para o problema, porque do ponto de vista do script o envio
+tinha dado certo.
+
+A causa: o RFC 5322 exige CRLF no fim de cada linha, e o arquivo que o agente
+monta tem LF solto, como todo arquivo de texto no Linux. O servidor de e-mail
+responde `250` do mesmo jeito, aceita a mensagem e a descarta depois, sem
+erro em lugar nenhum. A linha em branco que separa cabeçalho de corpo também
+ia errada, o que é o bastante para um filtro estrito tratar a mensagem
+inteira como lixo.
+
+A correção é o `--crlf` no `curl`, que converte na hora do envio, e a limpeza
+do CR no corpo antes de montar a mensagem, para a conversão não dobrar.
+
+Medido contra um servidor SMTP de mentira que grava os bytes crus, com o
+próprio `send_html_alert.sh`: antes, 9 fins de linha LF e 2 CRLF; depois, 10
+CRLF e nenhum LF, com a separação de cabeçalho correta.
+
+O instalador passou a mostrar a resposta do servidor de e-mail na tela, com o
+identificador da fila, em vez de só dizer "enviado". Aceitar não é entregar, e
+agora a diferença aparece para quem está instalando.
 
 ### 2.6.3, 2026-10-18: reinstalar passa a valer, e atualizar traz tudo junto
 

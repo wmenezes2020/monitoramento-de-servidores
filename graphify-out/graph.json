@@ -2553,7 +2553,7 @@
       },
       "norm_label": "monta_mime()",
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L208"
+      "source_location": "L221"
     },
     {
       "id": "src_envio_send_html_alert_mta_e_nosso",
@@ -3648,500 +3648,10 @@
       "source_location": "L122"
     },
     {
-      "id": "tests_testa_idioma",
-      "label": "testa-idioma.sh",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "testa-idioma.sh",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_testa_idioma_agente_bin",
-      "label": "AGENTE_BIN",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_bin",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L37"
-    },
-    {
-      "id": "tests_testa_idioma_agente_estado",
-      "label": "AGENTE_ESTADO",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_estado",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L36"
-    },
-    {
-      "id": "tests_testa_idioma_agente_log",
-      "label": "AGENTE_LOG",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_log",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L37"
-    },
-    {
-      "id": "tests_testa_idioma_agente_raiz",
-      "label": "AGENTE_RAIZ",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_raiz",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L36"
-    },
-    {
-      "id": "tests_testa_idioma_agente_so_carregar",
-      "label": "AGENTE_SO_CARREGAR",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "agente_so_carregar",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L38"
-    },
-    {
-      "id": "tests_testa_idioma_casa",
-      "label": "casa()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "casa()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L29"
-    },
-    {
-      "id": "tests_testa_idioma_contem",
-      "label": "contem()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "contem()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L27"
-    },
-    {
-      "id": "tests_testa_idioma_falha",
-      "label": "falha()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "falha()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L17"
-    },
-    {
-      "id": "tests_testa_idioma_grupo",
-      "label": "grupo()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "grupo()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L15"
-    },
-    {
-      "id": "tests_testa_idioma_igual",
-      "label": "igual()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "igual()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L24"
-    },
-    {
-      "id": "tests_testa_idioma_mentira",
-      "label": "mentira()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "mentira()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L31"
-    },
-    {
-      "id": "tests_testa_idioma_nao_contem",
-      "label": "nao_contem()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "nao_contem()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L28"
-    },
-    {
-      "id": "tests_testa_idioma_ok",
-      "label": "ok()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "ok()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L16"
-    },
-    {
-      "id": "tests_testa_idioma_sh__entry",
-      "label": "testa-idioma.sh script",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "testa-idioma.sh script",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "tests_testa_idioma_sha_de",
-      "label": "sha_de()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "sha_de()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L260"
-    },
-    {
-      "id": "tests_testa_idioma_templates_dir",
-      "label": "TEMPLATES_DIR",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "code"
-      },
-      "norm_label": "templates_dir",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L176"
-    },
-    {
-      "id": "tests_testa_idioma_verdade",
-      "label": "verdade()",
-      "_origin": "ast",
-      "community": 5,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "verdade()",
-      "source_file": "tests/testa-idioma.sh",
-      "source_location": "L30"
-    },
-    {
-      "id": "src_agent_25_idioma",
-      "label": "25-idioma.sh",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "file"
-      },
-      "norm_label": "25-idioma.sh",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_25_idioma_data_local",
-      "label": "data_local()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "data_local()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L80"
-    },
-    {
-      "id": "src_agent_25_idioma_duracao_humana",
-      "label": "duracao_humana()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "duracao_humana()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L87"
-    },
-    {
-      "id": "src_agent_25_idioma_frase_problema",
-      "label": "frase_problema()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "frase_problema()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L105"
-    },
-    {
-      "id": "src_agent_25_idioma_frase_recuperacao",
-      "label": "frase_recuperacao()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "frase_recuperacao()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L136"
-    },
-    {
-      "id": "src_agent_25_idioma_idioma_normalizado",
-      "label": "idioma_normalizado()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "idioma_normalizado()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L22"
-    },
-    {
-      "id": "src_agent_25_idioma_impacto_metrica",
-      "label": "impacto_metrica()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "impacto_metrica()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L138"
-    },
-    {
-      "id": "src_agent_25_idioma_msg_en",
-      "label": "msg_en()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "msg_en()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L273"
-    },
-    {
-      "id": "src_agent_25_idioma_msg_es",
-      "label": "msg_es()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "msg_es()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L376"
-    },
-    {
-      "id": "src_agent_25_idioma_msg_pt",
-      "label": "msg_pt()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "msg_pt()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L167"
-    },
-    {
-      "id": "src_agent_25_idioma_prefixo_assunto",
-      "label": "prefixo_assunto()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "prefixo_assunto()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L69"
-    },
-    {
-      "id": "src_agent_25_idioma_rotulo_metrica",
-      "label": "rotulo_metrica()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "rotulo_metrica()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L48"
-    },
-    {
-      "id": "src_agent_25_idioma_sh__entry",
-      "label": "25-idioma.sh script",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_entrypoint"
-      },
-      "norm_label": "25-idioma.sh script",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L1"
-    },
-    {
-      "id": "src_agent_25_idioma_sujeito_metrica",
-      "label": "sujeito_metrica()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "sujeito_metrica()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L123"
-    },
-    {
-      "id": "src_agent_25_idioma_t",
-      "label": "t()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "t()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L33"
-    },
-    {
-      "id": "src_agent_25_idioma_unidade_metrica",
-      "label": "unidade_metrica()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "unidade_metrica()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L62"
-    },
-    {
-      "id": "src_agent_25_idioma_urgencia",
-      "label": "urgencia()",
-      "_origin": "ast",
-      "community": 6,
-      "file_type": "code",
-      "metadata": {
-        "language": "bash",
-        "kind": "bash_function"
-      },
-      "norm_label": "urgencia()",
-      "source_file": "src/agent/25-idioma.sh",
-      "source_location": "L153"
-    },
-    {
       "id": "tests_testa_envio_email",
       "label": "testa-envio-email.sh",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4152,10 +3662,24 @@
       "source_location": "L1"
     },
     {
+      "id": "tests_testa_envio_email_args_do_curl",
+      "label": "ARGS_DO_CURL",
+      "_origin": "ast",
+      "community": 5,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "args_do_curl",
+      "source_file": "tests/testa-envio-email.sh",
+      "source_location": "L253"
+    },
+    {
       "id": "tests_testa_envio_email_campo",
       "label": "campo()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4169,7 +3693,7 @@
       "id": "tests_testa_envio_email_chama",
       "label": "chama()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4183,7 +3707,7 @@
       "id": "tests_testa_envio_email_chama_direto",
       "label": "chama_direto()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4191,13 +3715,13 @@
       },
       "norm_label": "chama_direto()",
       "source_file": "tests/testa-envio-email.sh",
-      "source_location": "L252"
+      "source_location": "L254"
     },
     {
       "id": "tests_testa_envio_email_contem",
       "label": "contem()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4211,7 +3735,7 @@
       "id": "tests_testa_envio_email_envios_log",
       "label": "ENVIOS_LOG",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4225,7 +3749,7 @@
       "id": "tests_testa_envio_email_falha",
       "label": "falha()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4239,7 +3763,7 @@
       "id": "tests_testa_envio_email_grupo",
       "label": "grupo()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4253,7 +3777,7 @@
       "id": "tests_testa_envio_email_igual",
       "label": "igual()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4267,7 +3791,7 @@
       "id": "tests_testa_envio_email_linhas",
       "label": "linhas()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4281,7 +3805,7 @@
       "id": "tests_testa_envio_email_mentira",
       "label": "mentira()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4295,7 +3819,7 @@
       "id": "tests_testa_envio_email_nao_contem",
       "label": "nao_contem()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4309,7 +3833,7 @@
       "id": "tests_testa_envio_email_ok",
       "label": "ok()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4323,7 +3847,7 @@
       "id": "tests_testa_envio_email_path",
       "label": "PATH",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4337,7 +3861,7 @@
       "id": "tests_testa_envio_email_sh__entry",
       "label": "testa-envio-email.sh script",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4351,7 +3875,7 @@
       "id": "tests_testa_envio_email_so_ascii",
       "label": "so_ascii()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4365,7 +3889,7 @@
       "id": "tests_testa_envio_email_verdade",
       "label": "verdade()",
       "_origin": "ast",
-      "community": 7,
+      "community": 5,
       "file_type": "code",
       "metadata": {
         "language": "bash",
@@ -4374,6 +3898,496 @@
       "norm_label": "verdade()",
       "source_file": "tests/testa-envio-email.sh",
       "source_location": "L39"
+    },
+    {
+      "id": "tests_testa_idioma",
+      "label": "testa-idioma.sh",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "testa-idioma.sh",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_testa_idioma_agente_bin",
+      "label": "AGENTE_BIN",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_bin",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L37"
+    },
+    {
+      "id": "tests_testa_idioma_agente_estado",
+      "label": "AGENTE_ESTADO",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_estado",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L36"
+    },
+    {
+      "id": "tests_testa_idioma_agente_log",
+      "label": "AGENTE_LOG",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_log",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L37"
+    },
+    {
+      "id": "tests_testa_idioma_agente_raiz",
+      "label": "AGENTE_RAIZ",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_raiz",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L36"
+    },
+    {
+      "id": "tests_testa_idioma_agente_so_carregar",
+      "label": "AGENTE_SO_CARREGAR",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "agente_so_carregar",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L38"
+    },
+    {
+      "id": "tests_testa_idioma_casa",
+      "label": "casa()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "casa()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L29"
+    },
+    {
+      "id": "tests_testa_idioma_contem",
+      "label": "contem()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "contem()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L27"
+    },
+    {
+      "id": "tests_testa_idioma_falha",
+      "label": "falha()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "falha()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L17"
+    },
+    {
+      "id": "tests_testa_idioma_grupo",
+      "label": "grupo()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "grupo()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L15"
+    },
+    {
+      "id": "tests_testa_idioma_igual",
+      "label": "igual()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "igual()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L24"
+    },
+    {
+      "id": "tests_testa_idioma_mentira",
+      "label": "mentira()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "mentira()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L31"
+    },
+    {
+      "id": "tests_testa_idioma_nao_contem",
+      "label": "nao_contem()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "nao_contem()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L28"
+    },
+    {
+      "id": "tests_testa_idioma_ok",
+      "label": "ok()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "ok()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L16"
+    },
+    {
+      "id": "tests_testa_idioma_sh__entry",
+      "label": "testa-idioma.sh script",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "testa-idioma.sh script",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_testa_idioma_sha_de",
+      "label": "sha_de()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "sha_de()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L260"
+    },
+    {
+      "id": "tests_testa_idioma_templates_dir",
+      "label": "TEMPLATES_DIR",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "code"
+      },
+      "norm_label": "templates_dir",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L176"
+    },
+    {
+      "id": "tests_testa_idioma_verdade",
+      "label": "verdade()",
+      "_origin": "ast",
+      "community": 6,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "verdade()",
+      "source_file": "tests/testa-idioma.sh",
+      "source_location": "L30"
+    },
+    {
+      "id": "src_agent_25_idioma",
+      "label": "25-idioma.sh",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "file"
+      },
+      "norm_label": "25-idioma.sh",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_25_idioma_data_local",
+      "label": "data_local()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "data_local()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L80"
+    },
+    {
+      "id": "src_agent_25_idioma_duracao_humana",
+      "label": "duracao_humana()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "duracao_humana()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L87"
+    },
+    {
+      "id": "src_agent_25_idioma_frase_problema",
+      "label": "frase_problema()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "frase_problema()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L105"
+    },
+    {
+      "id": "src_agent_25_idioma_frase_recuperacao",
+      "label": "frase_recuperacao()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "frase_recuperacao()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L136"
+    },
+    {
+      "id": "src_agent_25_idioma_idioma_normalizado",
+      "label": "idioma_normalizado()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "idioma_normalizado()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L22"
+    },
+    {
+      "id": "src_agent_25_idioma_impacto_metrica",
+      "label": "impacto_metrica()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "impacto_metrica()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L138"
+    },
+    {
+      "id": "src_agent_25_idioma_msg_en",
+      "label": "msg_en()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "msg_en()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L273"
+    },
+    {
+      "id": "src_agent_25_idioma_msg_es",
+      "label": "msg_es()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "msg_es()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L376"
+    },
+    {
+      "id": "src_agent_25_idioma_msg_pt",
+      "label": "msg_pt()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "msg_pt()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L167"
+    },
+    {
+      "id": "src_agent_25_idioma_prefixo_assunto",
+      "label": "prefixo_assunto()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "prefixo_assunto()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L69"
+    },
+    {
+      "id": "src_agent_25_idioma_rotulo_metrica",
+      "label": "rotulo_metrica()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "rotulo_metrica()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L48"
+    },
+    {
+      "id": "src_agent_25_idioma_sh__entry",
+      "label": "25-idioma.sh script",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_entrypoint"
+      },
+      "norm_label": "25-idioma.sh script",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_agent_25_idioma_sujeito_metrica",
+      "label": "sujeito_metrica()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "sujeito_metrica()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L123"
+    },
+    {
+      "id": "src_agent_25_idioma_t",
+      "label": "t()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "t()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L33"
+    },
+    {
+      "id": "src_agent_25_idioma_unidade_metrica",
+      "label": "unidade_metrica()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "unidade_metrica()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L62"
+    },
+    {
+      "id": "src_agent_25_idioma_urgencia",
+      "label": "urgencia()",
+      "_origin": "ast",
+      "community": 7,
+      "file_type": "code",
+      "metadata": {
+        "language": "bash",
+        "kind": "bash_function"
+      },
+      "norm_label": "urgencia()",
+      "source_file": "src/agent/25-idioma.sh",
+      "source_location": "L153"
     },
     {
       "id": "tests_testa_ruido",
@@ -5670,7 +5684,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L200",
+      "source_location": "L213",
       "weight": 1.0
     },
     {
@@ -5682,7 +5696,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L241",
+      "source_location": "L256",
       "weight": 1.0
     },
     {
@@ -5694,7 +5708,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L243",
+      "source_location": "L258",
       "weight": 1.0
     },
     {
@@ -5706,7 +5720,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L244",
+      "source_location": "L259",
       "weight": 1.0
     },
     {
@@ -5718,7 +5732,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L251",
+      "source_location": "L266",
       "weight": 1.0
     },
     {
@@ -6258,7 +6272,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tests/testa-envio-email.sh",
-      "source_location": "L260",
+      "source_location": "L262",
       "weight": 1.0
     },
     {
@@ -9356,7 +9370,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/envio/send_html_alert.sh",
-      "source_location": "L208",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -9988,13 +10002,24 @@
     },
     {
       "source": "tests_testa_envio_email",
+      "target": "tests_testa_envio_email_args_do_curl",
+      "relation": "defines",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/testa-envio-email.sh",
+      "source_location": "L253",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_testa_envio_email",
       "target": "tests_testa_envio_email_chama_direto",
       "relation": "defines",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/testa-envio-email.sh",
-      "source_location": "L252",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -11110,5 +11135,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8479a6337ccf1dbdf327076fcaaabdca15309268"
+  "built_at_commit": "627c665e095921fa4fdd3c5e67786a413aeb4d36"
 }

@@ -187,7 +187,20 @@ envia_direto() {
   transcricao="$(mktemp /tmp/smtp.XXXXXX.log)" || { rm -f "$cfg"; return 1; }
   chmod 600 "$transcricao" 2>/dev/null || true
 
-  curl --silent --show-error --verbose --config "$cfg" \
+  # --crlf nao e detalhe: o RFC 5322 exige CRLF, e o arquivo que montamos aqui
+  # tem LF solto, como todo arquivo de texto no Linux. Sem a conversao, a
+  # mensagem sai com LF e o servidor de e-mail responde 250 do mesmo jeito: o
+  # envio "da certo" e a mensagem some depois, sem erro em lugar nenhum.
+  #
+  # Foi isso que aconteceu em 17 e 18/10/2026. O instalador dizia "E-mail de
+  # boas-vindas enviado", o curl voltava com 0, e nada chegava na caixa de
+  # entrada. Medido contra um servidor SMTP de mentira que grava os bytes
+  # crus: sem --crlf chegavam 9 fins de linha LF e 2 CRLF, inclusive na linha
+  # em branco que separa cabecalho de corpo; com --crlf, 10 CRLF e nenhum LF.
+  #
+  # O arquivo precisa chegar aqui com LF puro, senao a conversao dobraria o
+  # CR. Por isso monta_mime limpa o CR do conteudo antes de gravar.
+  curl --silent --show-error --verbose --crlf --config "$cfg" \
     --url "${esquema}://${SMTP_HOST}:${porta}" \
     --mail-from "$REMETENTE" \
     --mail-rcpt "$destinatario" \
@@ -216,7 +229,9 @@ monta_mime() {
     printf 'Content-Type: text/html; charset=UTF-8\n'
     printf 'Content-Transfer-Encoding: 8bit\n'
     printf '\n'
-    cat "$RENDERED_FILE"
+    # Conteudo com LF puro. O CR aqui dentro viraria CRCRLF na conversao do
+    # curl, que e a outra forma de entregar uma mensagem malformada.
+    tr -d '\r' <"$RENDERED_FILE"
   } >"$saida"
 }
 
