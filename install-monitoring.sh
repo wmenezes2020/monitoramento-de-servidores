@@ -1237,10 +1237,22 @@ if [[ $EMAIL_ENABLED -eq 1 ]] && [[ -n "$RECIPIENTS" ]]; then
       fi
     done
   done <<< "$RECIPIENTS"
+  # O que o servidor de e-mail respondeu aparece aqui, e nao so no registro.
+  # "Enviado" sozinho nao diz nada quando a mensagem nao chega: a resposta do
+  # provedor traz o identificador da fila, que e por onde se acha a mensagem
+  # no painel dele.
+  RESPOSTA_DO_SMTP="$(grep 'send_html_alert: aceito' /var/log/monitoring-agent.log 2>/dev/null | tail -1 | sed 's/.*send_html_alert: //')"
+  MOTIVO_DA_RECUSA="$(grep 'send_html_alert: envio direto' /var/log/monitoring-agent.log 2>/dev/null | tail -1 | sed 's/.*send_html_alert: //')"
   if [[ $EMAIL_OK -eq 1 ]]; then
     log_ok "E-mail de boas-vindas enviado para: $RECIPIENTS"
+    if [[ -n "$RESPOSTA_DO_SMTP" ]]; then
+      log_info "Resposta do servidor de e-mail: ${RESPOSTA_DO_SMTP}"
+      log_info "Se nao chegar na caixa de entrada, procure por esse identificador no painel do provedor: aceitar nao e entregar."
+    fi
   else
-    log_warn "Envio do e-mail de boas-vindas falhou. Verifique: tail -f /var/log/mail.log"
+    log_warn "Envio do e-mail de boas-vindas falhou."
+    [[ -n "$MOTIVO_DA_RECUSA" ]] && log_warn "O servidor de e-mail respondeu: ${MOTIVO_DA_RECUSA}"
+    log_warn "O registro do agente tem a conversa: tail -40 /var/log/monitoring-agent.log"
   fi
 else
   [[ $EMAIL_ENABLED -eq 0 ]] && log_ok "E-mail desabilitado. Nenhum e-mail de boas-vindas enviado."

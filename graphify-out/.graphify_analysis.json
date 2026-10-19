@@ -113,6 +113,26 @@
       "src_agent_10_util_solta_trava"
     ],
     "5": [
+      "tests_testa_envio_email",
+      "tests_testa_envio_email_args_do_curl",
+      "tests_testa_envio_email_campo",
+      "tests_testa_envio_email_chama",
+      "tests_testa_envio_email_chama_direto",
+      "tests_testa_envio_email_contem",
+      "tests_testa_envio_email_envios_log",
+      "tests_testa_envio_email_falha",
+      "tests_testa_envio_email_grupo",
+      "tests_testa_envio_email_igual",
+      "tests_testa_envio_email_linhas",
+      "tests_testa_envio_email_mentira",
+      "tests_testa_envio_email_nao_contem",
+      "tests_testa_envio_email_ok",
+      "tests_testa_envio_email_path",
+      "tests_testa_envio_email_sh__entry",
+      "tests_testa_envio_email_so_ascii",
+      "tests_testa_envio_email_verdade"
+    ],
+    "6": [
       "tests_testa_idioma",
       "tests_testa_idioma_agente_bin",
       "tests_testa_idioma_agente_estado",
@@ -132,7 +152,7 @@
       "tests_testa_idioma_templates_dir",
       "tests_testa_idioma_verdade"
     ],
-    "6": [
+    "7": [
       "src_agent_25_idioma",
       "src_agent_25_idioma_data_local",
       "src_agent_25_idioma_duracao_humana",
@@ -150,25 +170,6 @@
       "src_agent_25_idioma_t",
       "src_agent_25_idioma_unidade_metrica",
       "src_agent_25_idioma_urgencia"
-    ],
-    "7": [
-      "tests_testa_envio_email",
-      "tests_testa_envio_email_campo",
-      "tests_testa_envio_email_chama",
-      "tests_testa_envio_email_chama_direto",
-      "tests_testa_envio_email_contem",
-      "tests_testa_envio_email_envios_log",
-      "tests_testa_envio_email_falha",
-      "tests_testa_envio_email_grupo",
-      "tests_testa_envio_email_igual",
-      "tests_testa_envio_email_linhas",
-      "tests_testa_envio_email_mentira",
-      "tests_testa_envio_email_nao_contem",
-      "tests_testa_envio_email_ok",
-      "tests_testa_envio_email_path",
-      "tests_testa_envio_email_sh__entry",
-      "tests_testa_envio_email_so_ascii",
-      "tests_testa_envio_email_verdade"
     ],
     "8": [
       "tests_testa_ruido",
@@ -413,9 +414,9 @@
     "2": 0.20526315789473684,
     "3": 0.1871345029239766,
     "4": 0.1437908496732026,
-    "5": 0.23529411764705882,
-    "6": 0.17647058823529413,
-    "7": 0.27941176470588236,
+    "5": 0.2549019607843137,
+    "6": 0.23529411764705882,
+    "7": 0.17647058823529413,
     "8": 0.2647058823529412,
     "9": 0.15833333333333333,
     "10": 0.18095238095238095,
@@ -494,7 +495,7 @@
     {
       "type": "isolated_nodes",
       "question": "What connects `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script` to the rest of the system?",
-      "why": "78 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "why": "79 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
       "type": "low_cohesion",

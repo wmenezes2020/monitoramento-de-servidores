@@ -222,6 +222,7 @@ printf 'SENDER_EMAIL="alertas@exemplo.invalido"\nSERVER_ID="servidor"\n' >"${DIR
 cat >"${DIRETO}/bin/curl" <<'FALSOCURL'
 #!/usr/bin/env bash
 destino=""
+printf '%s\n' "$*" >>"${ARGS_DO_CURL:-/dev/null}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --mail-rcpt) destino="${2:-}"; shift 2 ;;
@@ -249,8 +250,9 @@ FALSOCURL
 chmod +x "${DIRETO}/bin/curl"
 
 REGISTRO="${DIRETO}/agente.log"
+export ARGS_DO_CURL="${DIRETO}/args-do-curl"
 chama_direto() {
-  : >"$REGISTRO"
+  : >"$REGISTRO"; : >"$ARGS_DO_CURL"
   PATH="${DIRETO}/bin:${PATH}" AGENTE_RAIZ="${DIRETO}/opt" AGENTE_LOG="$REGISTRO" \
     bash "$ENVIA" "${SANDBOX}/templates/alert.html" "$1" "[OK] teste" "Titulo" "<p>corpo</p>" \
     >/dev/null 2>&1
@@ -282,6 +284,38 @@ contem  "a recusa fica registrada como erro"  "$LOG" "[ERRO] send_html_alert:"
 contem  "com o motivo que o servidor deu"     "$LOG" "550 5.7.1 Sender not allowed"
 contem  "e com o codigo do curl"              "$LOG" "curl 55"
 nao_contem "a recusa tambem nao vaza o AUTH"  "$LOG" "AUTH"
+
+# =========================================================================
+grupo "A mensagem sai com o fim de linha que o SMTP exige"
+# =========================================================================
+#
+# O defeito que custou dois dias, em 17 e 18/10/2026: o instalador dizia
+# "E-mail de boas-vindas enviado", o curl voltava com codigo 0, e nada chegava
+# na caixa de entrada.
+#
+# O arquivo que montamos aqui tem LF solto, como todo arquivo de texto no
+# Linux, e o RFC 5322 exige CRLF. Sem conversao, a mensagem sai malformada,
+# inclusive na linha em branco que separa cabecalho de corpo, e o servidor de
+# e-mail responde 250 do mesmo jeito: o envio "da certo" e a mensagem some
+# depois, sem erro em lugar nenhum.
+#
+# Medido contra um servidor SMTP de mentira que grava os bytes crus: sem
+# --crlf chegavam 9 fins de linha LF e 2 CRLF; com --crlf, 10 CRLF e nenhum
+# LF. E por isso que este teste olha o argumento, e nao a saida: quem converte
+# e o curl, e o que esta em jogo e ele receber a ordem de converter.
+
+chama_direto "um@empresa.com"
+ARGS="$(cat "$ARGS_DO_CURL" 2>/dev/null)"
+
+contem "o curl recebe --crlf"            "$ARGS" "--crlf"
+contem "e continua mandando o arquivo"   "$ARGS" "--upload-file"
+contem "com o destinatario no envelope"  "$ARGS" "--mail-rcpt um@empresa.com"
+contem "e o remetente no envelope"       "$ARGS" "--mail-from"
+
+# Converter duas vezes seria tao ruim quanto nao converter: CR seguido de CRLF
+# e outra forma de mensagem malformada. Por isso o corpo e limpo antes.
+contem "o conteudo e limpo de CR antes de montar o MIME" \
+  "$(cat "${RAIZ}/send_html_alert.sh")" "tr -d '\r' <\"\$RENDERED_FILE\""
 
 # =========================================================================
 

@@ -1,10 +1,10 @@
 # Graph Report - monitoramento-de-servidores  (2026-10-18)
 
 ## Corpus Check
-- Corpus is ~20,184 words - fits in a single context window. You may not need a graph.
+- Corpus is ~20,375 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 350 nodes · 546 edges · 28 communities (25 shown, 3 thin omitted)
+- 351 nodes · 547 edges · 28 communities (25 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
@@ -14,9 +14,9 @@
 - testa-servicos
 - testa-remetente
 - 10-util
+- testa-envio-email
 - testa-idioma
 - 25-idioma
-- testa-envio-email
 - testa-ruido
 - testa-config-do-painel
 - 30-medir
@@ -78,17 +78,17 @@ Nodes (18): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREG
 Cohesion: 0.14
 Nodes (6): agora(), log(), log_erro(), log_info(), pega_trava(), 10-util.sh script
 
-### Community 5 - "testa-idioma"
+### Community 5 - "testa-envio-email"
+Cohesion: 0.25
+Nodes (16): ARGS_DO_CURL, campo(), chama(), chama_direto(), contem(), ENVIOS_LOG, falha(), grupo() (+8 more)
+
+### Community 6 - "testa-idioma"
 Cohesion: 0.24
 Nodes (16): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, casa(), contem(), falha() (+8 more)
 
-### Community 6 - "25-idioma"
+### Community 7 - "25-idioma"
 Cohesion: 0.18
 Nodes (10): frase_problema(), frase_recuperacao(), impacto_metrica(), msg_en(), msg_es(), msg_pt(), 25-idioma.sh script, sujeito_metrica() (+2 more)
-
-### Community 7 - "testa-envio-email"
-Cohesion: 0.28
-Nodes (15): campo(), chama(), chama_direto(), contem(), ENVIOS_LOG, falha(), grupo(), igual() (+7 more)
 
 ### Community 8 - "testa-ruido"
 Cohesion: 0.26
@@ -159,15 +159,15 @@ Cohesion: 0.40
 Nodes (3): escreve_template(), 27-templates.sh script, sincroniza_templates()
 
 ## Knowledge Gaps
-- **78 isolated node(s):** `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script`, `20-config.sh script`, `25-idioma.sh script` (+73 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 142 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **79 isolated node(s):** `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script`, `20-config.sh script`, `25-idioma.sh script` (+74 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 143 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **What connects `build.sh script`, `00-cabecalho.sh script`, `10-util.sh script` to the rest of the system?**
-  _78 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _79 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `roda-testes` be split into smaller, more focused modules?**
   _Cohesion score 0.12333333333333334 - nodes in this community are weakly interconnected._
 - **Should `10-util` be split into smaller, more focused modules?**

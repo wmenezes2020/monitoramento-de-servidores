@@ -175,6 +175,31 @@ instalação silenciosa em vez de seguir sem configuração.
 
 Desenho em `docs/SDD_INSTALACAO_SILENCIOSA.md`.
 
+## A mensagem sai com CRLF, e isso foi um defeito de dois dias
+
+O RFC 5322 exige CRLF no fim de cada linha. O arquivo que o
+`send_html_alert.sh` monta tem LF solto, como todo arquivo de texto no Linux.
+Quem converte é o `curl`, com **`--crlf`**, e sem essa opção a mensagem sai
+malformada, inclusive na linha em branco que separa cabeçalho de corpo.
+
+**O servidor de e-mail responde `250` do mesmo jeito.** O envio "dá certo", o
+`curl` volta com código 0, o instalador diz "E-mail de boas-vindas enviado", e
+a mensagem some depois, sem erro em lugar nenhum. Foi o que aconteceu em 17 e
+18/10/2026: duas reinstalações, nenhum e-mail, e nada no servidor apontando
+para o problema.
+
+Medido contra um servidor SMTP de mentira que grava os bytes crus: sem
+`--crlf` chegavam 9 fins de linha LF e 2 CRLF; com `--crlf`, 10 CRLF e nenhum
+LF.
+
+**Converter duas vezes é tão ruim quanto não converter.** Conteúdo que já
+tivesse CR viraria `CRCRLF`, que é outra forma de mensagem malformada. Por
+isso `monta_mime` limpa o CR do corpo antes de gravar, e o arquivo chega ao
+`curl` com LF puro.
+
+A bateria confere o argumento, não a saída: quem converte é o `curl`, e o que
+está em jogo é ele receber a ordem.
+
 ## A conversa com o servidor de e-mail entra no registro, menos o AUTH
 
 `send_html_alert.sh` chama o `curl` com `--verbose` e guarda a conversa num
