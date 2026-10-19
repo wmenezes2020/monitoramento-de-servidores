@@ -112,6 +112,7 @@ falhar.
 | RF-28 | Instalar sem pergunta nenhuma quando o UUID vem na chamada, com toda a configuração vinda do painel |
 | RF-29 | Registrar a resposta do servidor de e-mail em todo envio, sem jamais registrar a credencial |
 | RF-32 | Entregar a mensagem com CRLF, como o SMTP exige, e não com LF solto |
+| RF-33 | Só usar o serviço de e-mail da máquina quando o relay dele for a conta do painel |
 | RF-30 | Reinstalar sobrescreve configuração, templates e serviços pelo que o painel diz |
 | RF-31 | Atualizar sozinho traz cron, templates e configuração junto do binário, depois do autoteste |
 | RF-27 | Medir e enviar a saúde da máquina: fila nas três janelas, programas, linhas de execução e tempo ligado |
@@ -142,6 +143,34 @@ falhar.
 - Não monitora aplicação (endpoint HTTP, fila, latência). Só o servidor.
 
 ## Histórico
+
+### 2.6.5, 2026-10-19: o alerta saía pelo provedor antigo
+
+O servidor tinha Postfix instalado por nós numa instalação antiga, com o relay
+de um provedor, e no painel a conta de envio já era outra. O agente via
+"Postfix nosso" e entregava a mensagem para ele, que relayava para o provedor
+velho, que recusava com `550 From header sender domain not verified`.
+
+O `mail` aceita na fila e volta com código 0, então a instalação dizia
+"E-mail de boas-vindas enviado" e a recusa chegava depois, assíncrona, na
+caixa local do root. Foram dois dias assim, com três reinstalações.
+
+Agora o agente só entrega ao serviço de e-mail da máquina quando o `relayhost`
+dele é a conta que o painel mandou. Não batendo, fala direto com o servidor de
+e-mail da conta, e volta a sair pela máquina assim que a sincronia conseguir
+aplicar o relay.
+
+Duas correções vieram junto:
+
+- a sincronia com o painel passou a acontecer **antes** do e-mail de
+  boas-vindas, porque na ordem inversa a mensagem saía pela conta antiga;
+- a instalação avisa quando encontra Postfix de instalação anterior apontando
+  para outro provedor, porque qualquer outra coisa na máquina que use o `mail`
+  continua saindo por lá.
+
+O `relayhost` é lido pela última ocorrência, que é a que o Postfix usa: o
+`main.cf` acumula linhas a cada instalação, e o log do servidor mostrava
+`overriding earlier entry: relayhost=`.
 
 ### 2.6.4, 2026-10-18: a mensagem saía com o fim de linha errado
 

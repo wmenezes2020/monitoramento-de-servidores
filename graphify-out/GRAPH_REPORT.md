@@ -1,17 +1,17 @@
-# Graph Report - monitoramento-de-servidores  (2026-10-18)
+# Graph Report - monitoramento-de-servidores  (2026-10-19)
 
 ## Corpus Check
-- Corpus is ~20,375 words - fits in a single context window. You may not need a graph.
+- Corpus is ~20,659 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 351 nodes · 547 edges · 28 communities (25 shown, 3 thin omitted)
+- 354 nodes · 553 edges · 28 communities (25 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
 - roda-testes
-- testa-destinatario
 - testa-servicos
+- testa-destinatario
 - testa-remetente
 - 10-util
 - testa-envio-email
@@ -26,10 +26,10 @@
 - testa-migracao
 - 40-estado
 - 80-bootstrap
+- send_html_alert
 - gerar-grafo
 - 60-notificar
 - 70-autoupdate
-- send_html_alert
 - 28-remetente
 - 50-avaliar
 - 20-config
@@ -40,14 +40,14 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `testa-envio-email.sh script` - 11 edges
-2. `t()` - 9 edges
-3. `testa-instalador.sh script` - 9 edges
-4. `testa-ruido.sh script` - 9 edges
-5. `atualiza_agente()` - 8 edges
-6. `roda-testes.sh script` - 8 edges
-7. `testa-destinatario.sh script` - 8 edges
-8. `testa-idioma.sh script` - 8 edges
-9. `testa-servicos.sh script` - 8 edges
+2. `testa-servicos.sh script` - 10 edges
+3. `t()` - 9 edges
+4. `testa-instalador.sh script` - 9 edges
+5. `testa-ruido.sh script` - 9 edges
+6. `atualiza_agente()` - 8 edges
+7. `roda-testes.sh script` - 8 edges
+8. `testa-destinatario.sh script` - 8 edges
+9. `testa-idioma.sh script` - 8 edges
 10. `principal()` - 7 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -62,13 +62,13 @@
 Cohesion: 0.12
 Nodes (20): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, falha(), FIXTURE_DF, FIXTURE_DF_INODES (+12 more)
 
-### Community 1 - "testa-destinatario"
+### Community 1 - "testa-servicos"
+Cohesion: 0.19
+Nodes (21): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, chmod_funciona(), conta_do_painel(), contem() (+13 more)
+
+### Community 2 - "testa-destinatario"
 Cohesion: 0.17
 Nodes (18): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, contem(), DASHBOARD_API_URL, DASHBOARD_ENABLED (+10 more)
-
-### Community 2 - "testa-servicos"
-Cohesion: 0.21
-Nodes (19): AGENTE_BIN, AGENTE_ESTADO, AGENTE_LOG, AGENTE_RAIZ, AGENTE_SO_CARREGAR, chmod_funciona(), contem(), falha() (+11 more)
 
 ### Community 3 - "testa-remetente"
 Cohesion: 0.19
@@ -126,21 +126,21 @@ Nodes (3): caminho_estado(), le_estado(), 40-estado.sh script
 Cohesion: 0.31
 Nodes (9): escreve_config_inicial(), instala_binarios(), instala_cron(), le_legado(), meu_caminho(), preserva_destinatarios(), roda_bootstrap(), 80-bootstrap.sh script (+1 more)
 
-### Community 17 - "gerar-grafo"
+### Community 17 - "send_html_alert"
+Cohesion: 0.35
+Nodes (10): codifica_cabecalho(), envia_direto(), monta_mime(), mta_e_nosso(), registra(), relay_e_do_painel(), respostas_do_servidor(), send_html_alert.sh script (+2 more)
+
+### Community 18 - "gerar-grafo"
 Cohesion: 0.27
 Nodes (9): json, Path, pathlib, alvos(), arquivos_do_corpus(), limpa_midia(), main(), Gera o grafo do repositorio em graphify-out/. python scripts/gerar-grafo.py usa… (+1 more)
 
-### Community 18 - "60-notificar"
+### Community 19 - "60-notificar"
 Cohesion: 0.29
 Nodes (6): envia_alerta(), envia_incidente_dashboard(), monta_corpo(), monta_texto_tg(), registra_agregado(), 60-notificar.sh script
 
-### Community 19 - "70-autoupdate"
+### Community 20 - "70-autoupdate"
 Cohesion: 0.33
 Nodes (8): atualiza_agente(), baixa(), reporta_falha_update(), restaura_rollback(), 70-autoupdate.sh script, sha256_de(), versao_instalada(), versao_maior()
-
-### Community 20 - "send_html_alert"
-Cohesion: 0.38
-Nodes (9): codifica_cabecalho(), envia_direto(), monta_mime(), mta_e_nosso(), registra(), respostas_do_servidor(), send_html_alert.sh script, tem_smtp_do_painel() (+1 more)
 
 ### Community 21 - "28-remetente"
 Cohesion: 0.43

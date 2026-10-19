@@ -187,7 +187,18 @@ contem "conta de envio que saiu do painel sai daqui" "smtp.conf.anterior"
 contem "bot que saiu do painel sai daqui"            "telegram.conf.anterior"
 contem "e isso so vale com painel conectado"         'if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
   if [[ $SERVICO_EMAIL_DO_PAINEL -ne 1 ]]'
-contem "a instalacao termina sincronizando"          "monitoring-agent.sh sincronizar"
+contem "a instalacao sincroniza com o painel"        "monitoring-agent.sh sincronizar"
+
+# A sincronia vem ANTES do e-mail de boas-vindas. Na ordem inversa, num
+# servidor que trocou de provedor no painel, a mensagem de boas-vindas sai
+# pela conta antiga: foi o que aconteceu em 19/10/2026.
+L_SYNC="$(grep -n 'monitoring-agent.sh sincronizar' "$INST" | head -1 | cut -d: -f1)"
+L_BOASVINDAS="$(grep -n 'E-mail de boas-vindas enviado para' "$INST" | head -1 | cut -d: -f1)"
+ORDEM_CERTA="nao"
+[[ "${L_SYNC:-0}" -lt "${L_BOASVINDAS:-0}" ]] && ORDEM_CERTA="sim"
+igual "e sincroniza antes de mandar o e-mail de boas-vindas" "sim" "$ORDEM_CERTA"
+
+contem "avisa do Postfix antigo com outro relay" "Postfix de uma instalacao anterior, com relay"
 
 # =========================================================================
 

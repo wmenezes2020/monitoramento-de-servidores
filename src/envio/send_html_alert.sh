@@ -133,9 +133,41 @@ mta_e_nosso() {
   grep -qF '# --- Sistema de Monitoramento de Servidores ---' "$main_cf" 2>/dev/null
 }
 
+# O relay do Postfix e a conta que o painel mandou?
+#
+# "Nosso" nao basta. Em 19/10/2026 um servidor tinha Postfix nosso com o relay
+# de um provedor antigo e, no smtp.conf, a conta nova escolhida no painel. O
+# enviador via "Postfix nosso" e entregava a mensagem para ele; o Postfix
+# relayava para o provedor VELHO, que respondia:
+#
+#   550 From header sender domain not verified (edeniva.com.br)
+#
+# O `mail` aceita na fila e volta com codigo 0, entao a instalacao dizia
+# "E-mail de boas-vindas enviado". A recusa chegava depois, assincrona, e ia
+# para a caixa local do root, que ninguem le. Dois dias assim.
+#
+# O relayhost e lido com tail: o main.cf acumula linhas quando o instalador
+# roda mais de uma vez, e o Postfix usa a ULTIMA. Era o que o proprio log do
+# servidor dizia, em "overriding earlier entry: relayhost=".
+relay_e_do_painel() {
+  local main_cf="${POSTFIX_MAIN:-/etc/postfix/main.cf}" atual
+  [[ -f "$main_cf" ]] || return 1
+  atual="$(sed -n 's/^relayhost[[:space:]]*=[[:space:]]*//p' "$main_cf" 2>/dev/null | tail -1 | tr -d '[:space:]')"
+  [[ -n "$atual" ]] || return 1
+  [[ "$atual" == "[${SMTP_HOST}]:${SMTP_PORTA:-587}" ]]
+}
+
+# A conta do painel sai pelo Postfix da maquina so quando ele esta de fato
+# configurado com ela. Com o relay apontando para outro lugar, o agente fala
+# direto com o servidor de e-mail da conta: melhor um envio por fora do que um
+# alerta entregue a um provedor que nao aceita mais o nosso remetente.
+#
+# Isso tambem se conserta sozinho: quando a sincronia conseguir aplicar a
+# conta no relay, o envio volta a sair pela maquina na proxima mensagem.
 usa_smtp_direto() {
   tem_smtp_do_painel || return 1
-  mta_e_nosso && return 1
+  mta_e_nosso || return 0
+  relay_e_do_painel && return 1
   return 0
 }
 

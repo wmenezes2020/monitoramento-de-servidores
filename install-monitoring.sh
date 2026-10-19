@@ -828,6 +828,22 @@ if [[ $DASHBOARD_ENABLED -eq 1 ]]; then
   fi
 fi
 
+# --- 4f. Postfix de instalacao anterior, apontando para outro provedor -----
+#
+# O servidor pode ter um Postfix que NOS configuramos numa instalacao antiga,
+# com o relay de um provedor que nao e mais o do painel. O agente nao usa mais
+# esse caminho quando o relay nao bate com a conta do painel, mas quem instala
+# precisa saber que ele esta la: qualquer outra coisa na maquina que use o
+# `mail` continua saindo por aquele provedor.
+if [[ $SERVICO_EMAIL_DO_PAINEL -eq 1 ]] && grep -qF "$POSTFIX_MARKER" /etc/postfix/main.cf 2>/dev/null; then
+  RELAY_ATUAL="$(sed -n 's/^relayhost[[:space:]]*=[[:space:]]*//p' /etc/postfix/main.cf 2>/dev/null | tail -1 | tr -d '[:space:]')"
+  if [[ "$RELAY_ATUAL" != "[${SVC_HOST}]:${SVC_PORTA:-587}" ]]; then
+    log_warn "Este servidor tem Postfix de uma instalacao anterior, com relay ${RELAY_ATUAL:-vazio}."
+    log_warn "Os alertas saem direto pela conta do painel e nao passam por ele."
+    INSTALL_WARNINGS+=("Postfix antigo com relay ${RELAY_ATUAL:-vazio}. Os alertas nao passam por ele; a conta do painel e usada direto.")
+  fi
+fi
+
 cat > /usr/local/bin/send_dashboard_metrics.sh << 'SENDDASH'
 #!/usr/bin/env bash
 # Envia metricas/incidentes para o Dashboard via API REST.
@@ -1221,6 +1237,26 @@ if [[ "${AGENTE_OK}" -eq 1 ]]; then
 fi
 
 
+# A sincronia vem ANTES do e-mail de boas-vindas, e isso nao e arrumacao.
+#
+# Em 19/10/2026 a ordem era a inversa: o e-mail saia primeiro e a sincronia
+# depois. Num servidor que trocou de provedor no painel, a mensagem de
+# boas-vindas saiu pela conta ANTIGA, que o provedor recusou, e a conta nova
+# so passou a valer segundos depois. A instalacao dizia "enviado" e a recusa
+# chegava assincrona, numa caixa que ninguem le.
+# A instalacao so termina quando a maquina esta valendo o que o painel diz:
+# limiares, idioma, templates e canais. Sem isto, o agent.conf recem-escrito
+# ficaria com os padroes ate a sincronia da proxima rodada de cinco minutos, e
+# o primeiro alerta do servidor sairia pelo limiar errado.
+if [[ $DASHBOARD_ENABLED -eq 1 ]] && [[ "${AGENTE_OK}" -eq 1 ]]; then
+  if /usr/local/bin/monitoring-agent.sh sincronizar >/dev/null 2>&1; then
+    log_ok "Configuracao e templates sincronizados com o painel."
+  else
+    log_warn "Nao consegui sincronizar agora. A proxima rodada do agente tenta de novo, em ate 5 minutos."
+    INSTALL_WARNINGS+=("Sincronia com o painel nao concluida na instalacao.")
+  fi
+fi
+
 # --- 8. E-mail e Telegram de boas-vindas (confirmar que tudo esta ok) ---
 log_step "E-mail e Telegram de boas-vindas"
 if [[ $EMAIL_ENABLED -eq 1 ]] && [[ -n "$RECIPIENTS" ]]; then
@@ -1267,19 +1303,6 @@ if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$TELEGRAM_CHAT_ID" ]]; then
 else
   [[ -n "$TELEGRAM_BOT_TOKEN" ]] && log_info "Telegram configurado; execute sudo /usr/local/bin/telegram-get-chat-id.sh e depois teste o envio."
 fi
-# A instalacao so termina quando a maquina esta valendo o que o painel diz:
-# limiares, idioma, templates e canais. Sem isto, o agent.conf recem-escrito
-# ficaria com os padroes ate a sincronia da proxima rodada de cinco minutos, e
-# o primeiro alerta do servidor sairia pelo limiar errado.
-if [[ $DASHBOARD_ENABLED -eq 1 ]] && [[ "${AGENTE_OK}" -eq 1 ]]; then
-  if /usr/local/bin/monitoring-agent.sh sincronizar >/dev/null 2>&1; then
-    log_ok "Configuracao e templates sincronizados com o painel."
-  else
-    log_warn "Nao consegui sincronizar agora. A proxima rodada do agente tenta de novo, em ate 5 minutos."
-    INSTALL_WARNINGS+=("Sincronia com o painel nao concluida na instalacao.")
-  fi
-fi
-
 if [[ $DASHBOARD_ENABLED -eq 1 ]] && [[ -n "$DASHBOARD_SERVER_UUID" ]]; then
   log_info "Enviando primeira notificacao completa (CPU, Memoria, Disco) ao Dashboard..."
   if /usr/local/bin/monitor_cpu.sh 2>/dev/null; then
