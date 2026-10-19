@@ -28,6 +28,30 @@
       "tests_roda_testes_zera_estado"
     ],
     "1": [
+      "tests_testa_servicos",
+      "tests_testa_servicos_agente_bin",
+      "tests_testa_servicos_agente_estado",
+      "tests_testa_servicos_agente_log",
+      "tests_testa_servicos_agente_raiz",
+      "tests_testa_servicos_agente_so_carregar",
+      "tests_testa_servicos_chmod_funciona",
+      "tests_testa_servicos_conta_do_painel",
+      "tests_testa_servicos_contem",
+      "tests_testa_servicos_envia_agora",
+      "tests_testa_servicos_falha",
+      "tests_testa_servicos_grupo",
+      "tests_testa_servicos_igual",
+      "tests_testa_servicos_mentira",
+      "tests_testa_servicos_nao_contem",
+      "tests_testa_servicos_ok",
+      "tests_testa_servicos_permissao_600",
+      "tests_testa_servicos_postfix_main",
+      "tests_testa_servicos_postfix_sasl",
+      "tests_testa_servicos_pulado",
+      "tests_testa_servicos_sh__entry",
+      "tests_testa_servicos_verdade"
+    ],
+    "2": [
       "tests_testa_destinatario",
       "tests_testa_destinatario_agente_bin",
       "tests_testa_destinatario_agente_estado",
@@ -48,28 +72,6 @@
       "tests_testa_destinatario_resposta_do_painel",
       "tests_testa_destinatario_roda_funcao",
       "tests_testa_destinatario_sh__entry"
-    ],
-    "2": [
-      "tests_testa_servicos",
-      "tests_testa_servicos_agente_bin",
-      "tests_testa_servicos_agente_estado",
-      "tests_testa_servicos_agente_log",
-      "tests_testa_servicos_agente_raiz",
-      "tests_testa_servicos_agente_so_carregar",
-      "tests_testa_servicos_chmod_funciona",
-      "tests_testa_servicos_contem",
-      "tests_testa_servicos_falha",
-      "tests_testa_servicos_grupo",
-      "tests_testa_servicos_igual",
-      "tests_testa_servicos_mentira",
-      "tests_testa_servicos_nao_contem",
-      "tests_testa_servicos_ok",
-      "tests_testa_servicos_permissao_600",
-      "tests_testa_servicos_postfix_main",
-      "tests_testa_servicos_postfix_sasl",
-      "tests_testa_servicos_pulado",
-      "tests_testa_servicos_sh__entry",
-      "tests_testa_servicos_verdade"
     ],
     "3": [
       "tests_testa_remetente",
@@ -311,6 +313,19 @@
       "src_agent_80_bootstrap_sou_root"
     ],
     "17": [
+      "src_envio_send_html_alert",
+      "src_envio_send_html_alert_codifica_cabecalho",
+      "src_envio_send_html_alert_envia_direto",
+      "src_envio_send_html_alert_monta_mime",
+      "src_envio_send_html_alert_mta_e_nosso",
+      "src_envio_send_html_alert_registra",
+      "src_envio_send_html_alert_relay_e_do_painel",
+      "src_envio_send_html_alert_respostas_do_servidor",
+      "src_envio_send_html_alert_sh__entry",
+      "src_envio_send_html_alert_tem_smtp_do_painel",
+      "src_envio_send_html_alert_usa_smtp_direto"
+    ],
+    "18": [
       "json",
       "path",
       "pathlib",
@@ -322,7 +337,7 @@
       "scripts_gerar_grafo_rationale_2",
       "sys"
     ],
-    "18": [
+    "19": [
       "src_agent_60_notificar",
       "src_agent_60_notificar_despacha_agregado",
       "src_agent_60_notificar_envia_alerta",
@@ -334,7 +349,7 @@
       "src_agent_60_notificar_sh__entry",
       "src_agent_60_notificar_template_de"
     ],
-    "19": [
+    "20": [
       "src_agent_70_autoupdate",
       "src_agent_70_autoupdate_atualiza_agente",
       "src_agent_70_autoupdate_baixa",
@@ -345,18 +360,6 @@
       "src_agent_70_autoupdate_sha256_de",
       "src_agent_70_autoupdate_versao_instalada",
       "src_agent_70_autoupdate_versao_maior"
-    ],
-    "20": [
-      "src_envio_send_html_alert",
-      "src_envio_send_html_alert_codifica_cabecalho",
-      "src_envio_send_html_alert_envia_direto",
-      "src_envio_send_html_alert_monta_mime",
-      "src_envio_send_html_alert_mta_e_nosso",
-      "src_envio_send_html_alert_registra",
-      "src_envio_send_html_alert_respostas_do_servidor",
-      "src_envio_send_html_alert_sh__entry",
-      "src_envio_send_html_alert_tem_smtp_do_painel",
-      "src_envio_send_html_alert_usa_smtp_direto"
     ],
     "21": [
       "src_agent_28_remetente",
@@ -410,8 +413,8 @@
   },
   "cohesion": {
     "0": 0.12333333333333334,
-    "1": 0.16842105263157894,
-    "2": 0.20526315789473684,
+    "1": 0.18614718614718614,
+    "2": 0.16842105263157894,
     "3": 0.1871345029239766,
     "4": 0.1437908496732026,
     "5": 0.2549019607843137,
@@ -426,10 +429,10 @@
     "14": 0.3333333333333333,
     "15": 0.2,
     "16": 0.3090909090909091,
-    "17": 0.26666666666666666,
-    "18": 0.28888888888888886,
-    "19": 0.3333333333333333,
-    "20": 0.37777777777777777,
+    "17": 0.34545454545454546,
+    "18": 0.26666666666666666,
+    "19": 0.28888888888888886,
+    "20": 0.3333333333333333,
     "21": 0.42857142857142855,
     "22": 0.32142857142857145,
     "23": 0.4,
@@ -443,6 +446,11 @@
       "id": "tests_testa_envio_email_sh__entry",
       "label": "testa-envio-email.sh script",
       "degree": 11
+    },
+    {
+      "id": "tests_testa_servicos_sh__entry",
+      "label": "testa-servicos.sh script",
+      "degree": 10
     },
     {
       "id": "src_agent_25_idioma_t",
@@ -477,11 +485,6 @@
     {
       "id": "tests_testa_idioma_sh__entry",
       "label": "testa-idioma.sh script",
-      "degree": 8
-    },
-    {
-      "id": "tests_testa_servicos_sh__entry",
-      "label": "testa-servicos.sh script",
       "degree": 8
     },
     {

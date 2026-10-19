@@ -175,6 +175,40 @@ instalação silenciosa em vez de seguir sem configuração.
 
 Desenho em `docs/SDD_INSTALACAO_SILENCIOSA.md`.
 
+## O Postfix da maquina so vale com o relay da conta do painel
+
+"Postfix nosso" nao basta para entregar a mensagem a ele. O relay dele precisa
+ser a conta que o painel mandou.
+
+Em 19/10/2026 um servidor tinha Postfix nosso com o relay de um provedor
+antigo e, no `smtp.conf`, a conta nova escolhida no painel. O enviador via
+"Postfix nosso" e entregava a mensagem para ele, que relayava para o provedor
+velho, que recusava:
+
+```
+550 From header sender domain not verified (edeniva.com.br)
+```
+
+O `mail` aceita na fila e volta com código 0, então a instalação dizia
+"E-mail de boas-vindas enviado". A recusa chegava depois, assíncrona, na caixa
+local do root, que ninguém lê. **Dois dias de "o e-mail nunca sai", com o
+instalador dizendo que tinha saído.**
+
+`relay_e_do_painel()` compara o `relayhost` com a conta do `smtp.conf`. Não
+batendo, o agente fala direto com o servidor de e-mail da conta: melhor um
+envio por fora do que um alerta entregue a um provedor que não aceita mais o
+nosso remetente. Isso se conserta sozinho: quando a sincronia conseguir
+aplicar a conta no relay, o envio volta a sair pela máquina.
+
+**O `relayhost` é lido com `tail`, não com `head`.** O `main.cf` acumula
+linhas quando o instalador roda mais de uma vez, e o Postfix usa a **última**.
+O próprio log do servidor dizia isso, em `overriding earlier entry:
+relayhost=`.
+
+**A sincronia vem antes do e-mail de boas-vindas.** Na ordem inversa, num
+servidor que trocou de provedor no painel, a mensagem de boas-vindas sai pela
+conta antiga.
+
 ## A mensagem sai com CRLF, e isso foi um defeito de dois dias
 
 O RFC 5322 exige CRLF no fim de cada linha. O arquivo que o

@@ -239,6 +239,14 @@ chmod +x "${SANDBOX}/falso/mail"
 #
 # A marca no main.cf e o que separa um caso do outro: e a linha que o nosso
 # instalador escreve quando e ele quem configura o Postfix.
+#
+# Falta uma condicao, e ela custou dois dias em 19/10/2026: "nosso" nao basta,
+# o relay dele precisa ser a conta que o painel mandou. Naquele servidor o
+# Postfix era nosso com o relay de um provedor antigo e a conta nova estava no
+# smtp.conf. Todo alerta era entregue ao Postfix, relayado para o provedor
+# velho e recusado com "550 From header sender domain not verified". O `mail`
+# aceita na fila e volta com 0, entao a instalacao dizia "enviado" e a recusa
+# ia para a caixa local do root.
 
 MARCA='# --- Sistema de Monitoramento de Servidores ---'
 printf '%s
@@ -272,21 +280,63 @@ contem "a linha de terceiro foi preservada" "$SASL" "[outro.destino.com]:25 terc
 contem "o relayhost aponta para o novo"     "$MAIN" "relayhost = [smtp.novo.com]:2525"
 contem "e a marca do instalador continua la" "$MAIN" "$MARCA"
 
-# Com Postfix nosso, o enviador NAO vai por fora, mesmo tendo conta do painel.
-printf 'SMTP_HOST="smtp.gmail.com"
-SMTP_PORTA="587"
-SMTP_SEGURO="0"
-SMTP_USUARIO="avisos@empresa.com"
-SMTP_SENHA="abcd efgh"
-' >"${SANDBOX}/envio/smtp.conf"
-: >"$CHAMADAS"
-PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" POSTFIX_MAIN="${SANDBOX}/etc/postfix/main.cf"   AGENTE_RAIZ="${SANDBOX}/envio" bash "$ENVIA_REAL" "${SANDBOX}/templates/alert.html" "um@empresa.com" "[OK] teste" "T" "<p>c</p>"   >/dev/null 2>&1
+envia_agora() {
+  : >"$CHAMADAS"
+  PATH="${SANDBOX}/falso:${PATH}" CURL_LOG="$CHAMADAS" POSTFIX_MAIN="${SANDBOX}/etc/postfix/main.cf" \
+    AGENTE_RAIZ="${SANDBOX}/envio" bash "$ENVIA_REAL" "${SANDBOX}/templates/alert.html" \
+    "um@empresa.com" "[OK] teste" "T" "<p>c</p>" >/dev/null 2>&1
+  cat "$CHAMADAS"
+}
 
-contem     "com Postfix nosso, envia pela maquina" "$(cat "$CHAMADAS")" "MAIL_USADO"
-nao_contem "e nao chama o SMTP por fora"           "$(cat "$CHAMADAS")" "URL=smtp"
+conta_do_painel() {
+  printf 'SMTP_HOST="%s"\nSMTP_PORTA="%s"\nSMTP_SEGURO="0"\nSMTP_USUARIO="avisos@empresa.com"\nSMTP_SENHA="abcd efgh"\n' \
+    "$1" "$2" >"${SANDBOX}/envio/smtp.conf"
+}
+
+# 1. Postfix nosso com o relay da conta do painel: sai pela maquina, como o
+#    dono quer. O relayhost ficou em [smtp.novo.com]:2525 na troca acima.
+conta_do_painel "smtp.novo.com" "2525"
+SAIDA="$(envia_agora)"
+contem     "relay igual a conta do painel: envia pela maquina" "$SAIDA" "MAIL_USADO"
+nao_contem "e nao chama o SMTP por fora"                       "$SAIDA" "URL=smtp"
+
+# 2. O caso de 19/10/2026: Postfix nosso, relay de outro provedor, conta nova
+#    no painel. Entregar ao Postfix aqui e entregar ao provedor errado.
+conta_do_painel "smtp.gmail.com" "587"
+SAIDA="$(envia_agora)"
+contem     "relay velho: vai direto pela conta do painel" "$SAIDA" "URL=smtp://smtp.gmail.com:587"
+nao_contem "e nao entrega ao Postfix com o relay errado"  "$SAIDA" "MAIL_USADO"
+
+# 3. O main.cf acumula linhas quando o instalador roda mais de uma vez, e o
+#    Postfix usa a ULTIMA. Era o que o log do servidor dizia, em "overriding
+#    earlier entry: relayhost=". Ler a primeira mandaria pelo caminho errado.
+printf '%s
+relayhost = [smtp.gmail.com]:587
+relayhost = [smtp.outro.com]:587
+myhostname = loja.exemplo
+' "$MARCA" >"${SANDBOX}/etc/postfix/main.cf"
+SAIDA="$(envia_agora)"
+contem     "com relayhost repetido, vale o ultimo" "$SAIDA" "URL=smtp://smtp.gmail.com:587"
+nao_contem "e o primeiro nao decide"               "$SAIDA" "MAIL_USADO"
+
+printf '%s
+relayhost = [smtp.outro.com]:587
+relayhost = [smtp.gmail.com]:587
+myhostname = loja.exemplo
+' "$MARCA" >"${SANDBOX}/etc/postfix/main.cf"
+SAIDA="$(envia_agora)"
+contem     "o ultimo sendo o do painel, sai pela maquina" "$SAIDA" "MAIL_USADO"
+nao_contem "e nao vai por fora"                           "$SAIDA" "URL=smtp"
+
+# Volta ao main.cf da troca de relay para o resto do grupo.
+printf '%s
+relayhost = [smtp.novo.com]:2525
+myhostname = loja.exemplo
+' "$MARCA" >"${SANDBOX}/etc/postfix/main.cf"
 
 # Tirando a marca, o mesmo servidor vira "MTA de outra pessoa" e o envio passa
 # a ir por fora, sem tocar em nada.
+conta_do_painel "smtp.gmail.com" "587"
 printf 'relayhost = [smtp.doutro.com]:587
 myhostname = loja.exemplo
 ' >"${SANDBOX}/etc/postfix/main.cf"

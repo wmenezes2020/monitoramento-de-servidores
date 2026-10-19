@@ -15,7 +15,7 @@ set -uo pipefail
 # A versao e o unico carimbo. Carimbar o commit tornaria o bundle diferente a
 # cada commit mesmo sem mudanca em src/, o checksum do manifesto mudaria
 # sozinho, e o "build --check" do CI reprovaria sempre.
-AGENTE_VERSAO="2.6.4"
+AGENTE_VERSAO="2.6.5"
 
 
 # ---------------------------------------------------------------------------
